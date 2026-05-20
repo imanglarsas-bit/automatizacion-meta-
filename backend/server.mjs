@@ -1,0 +1,290 @@
+import { createServer } from "node:http";
+import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { extname, join, normalize } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(fileURLToPath(new URL("..", import.meta.url)));
+const dataDir = join(root, "backend", "data");
+const trainingPath = join(dataDir, "training.json");
+
+const env = {
+  port: Number(process.env.PORT || 3000),
+  verifyToken: process.env.META_VERIFY_TOKEN || "dev_verify_token",
+  graphVersion: process.env.GRAPH_API_VERSION || "v22.0",
+  whatsappToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
+  whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+  pageAccessToken: process.env.PAGE_ACCESS_TOKEN || "",
+};
+
+const contentTypes = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+};
+
+function sendJson(response, status, payload) {
+  response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  response.end(JSON.stringify(payload));
+}
+
+async function readBody(request) {
+  const chunks = [];
+  for await (const chunk of request) {
+    chunks.push(chunk);
+  }
+
+  const raw = Buffer.concat(chunks).toString("utf8");
+  return raw ? JSON.parse(raw) : {};
+}
+
+async function readTraining() {
+  if (!existsSync(trainingPath)) {
+    return [];
+  }
+
+  return JSON.parse(await readFile(trainingPath, "utf8"));
+}
+
+async function saveTraining(items) {
+  await writeFile(trainingPath, JSON.stringify(items, null, 2));
+}
+
+function normalizeText(text) {
+  return String(text)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function findBestAnswer(message, training) {
+  const messageWords = normalizeText(message).split(/\W+/).filter(Boolean);
+  const ranked = training
+    .map((item) => {
+      const questionWords = normalizeText(item.question).split(/\W+/).filter(Boolean);
+      const score = questionWords.filter((word) => messageWords.includes(word)).length;
+      return { item, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  return ranked[0]?.score > 0 ? ranked[0].item : null;
+}
+
+function extractWhatsAppMessage(payload) {
+  const value = payload.entry?.[0]?.changes?.[0]?.value;
+  const message = value?.messages?.[0];
+
+  if (!message?.text?.body) {
+    return null;
+  }
+
+  return {
+    channel: "whatsapp",
+    senderId: message.from,
+    text: message.text.body,
+    phoneNumberId: value.metadata?.phone_number_id,
+  };
+}
+
+function extractMessengerMessage(payload) {
+  const messaging = payload.entry?.[0]?.messaging?.[0];
+  const text = messaging?.message?.text;
+
+  if (!text) {
+    return null;
+  }
+
+  return {
+    channel: payload.object === "instagram" ? "instagram" : "messenger",
+    senderId: messaging.sender?.id,
+    text,
+  };
+}
+
+function extractIncomingMessage(payload) {
+  return extractWhatsAppMessage(payload) || extractMessengerMessage(payload);
+}
+
+async function sendWhatsAppText(to, text, phoneNumberId = env.whatsappPhoneNumberId) {
+  if (!env.whatsappToken || !phoneNumberId) {
+    return { skipped: true, reason: "Missing WhatsApp token or phone number id." };
+  }
+
+  const response = await fetch(
+    `https://graph.facebook.com/${env.graphVersion}/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.whatsappToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: text },
+      }),
+    },
+  );
+
+  return response.json();
+}
+
+async function sendMessengerText(recipientId, text) {
+  if (!env.pageAccessToken) {
+    return { skipped: true, reason: "Missing Page access token." };
+  }
+
+  const response = await fetch(
+    `https://graph.facebook.com/${env.graphVersion}/me/messages?access_token=${env.pageAccessToken}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient: { id: recipientId },
+        message: { text },
+      }),
+    },
+  );
+
+  return response.json();
+}
+
+async function respondToIncomingMessage(incoming) {
+  const training = await readTraining();
+  const match = findBestAnswer(incoming.text, training);
+  const reply = match
+    ? match.answer
+    : "Gracias por escribirnos. Ya recibimos tu mensaje y un asesor lo revisará en breve.";
+
+  if (incoming.channel === "whatsapp") {
+    return sendWhatsAppText(incoming.senderId, reply, incoming.phoneNumberId);
+  }
+
+  return sendMessengerText(incoming.senderId, reply);
+}
+
+async function handleWebhookVerification(request, response) {
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const mode = url.searchParams.get("hub.mode");
+  const token = url.searchParams.get("hub.verify_token");
+  const challenge = url.searchParams.get("hub.challenge");
+
+  if (mode === "subscribe" && token === env.verifyToken) {
+    response.writeHead(200, { "Content-Type": "text/plain" });
+    response.end(challenge);
+    return;
+  }
+
+  response.writeHead(403);
+  response.end("Verification failed");
+}
+
+async function handleWebhookEvent(request, response) {
+  const payload = await readBody(request);
+  const incoming = extractIncomingMessage(payload);
+
+  if (incoming) {
+    await respondToIncomingMessage(incoming);
+  }
+
+  sendJson(response, 200, { ok: true, received: Boolean(incoming) });
+}
+
+async function handleApi(request, response) {
+  const url = new URL(request.url, `http://${request.headers.host}`);
+
+  if (request.method === "GET" && url.pathname === "/api/training") {
+    sendJson(response, 200, await readTraining());
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/training") {
+    const body = await readBody(request);
+    const training = await readTraining();
+    const nextItem = {
+      id: `server-${Date.now()}`,
+      question: String(body.question || "").trim(),
+      answer: String(body.answer || "").trim(),
+      category: body.category || "General",
+      channel: body.channel || "Todos",
+    };
+
+    if (!nextItem.question || !nextItem.answer) {
+      sendJson(response, 400, { error: "question and answer are required" });
+      return true;
+    }
+
+    await saveTraining([nextItem, ...training]);
+    sendJson(response, 201, nextItem);
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/test") {
+    const body = await readBody(request);
+    const match = findBestAnswer(body.message || "", await readTraining());
+    sendJson(response, 200, {
+      answer:
+        match?.answer ||
+        "No encontré una respuesta entrenada. Este caso debería derivarse a un asesor.",
+      matched: Boolean(match),
+    });
+    return true;
+  }
+
+  return false;
+}
+
+async function serveStatic(request, response) {
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
+  const safePath = normalize(decodeURIComponent(requestedPath)).replace(/^(\.\.[/\\])+/, "");
+  const filePath = join(root, safePath);
+
+  if (!filePath.startsWith(root)) {
+    response.writeHead(403);
+    response.end("Forbidden");
+    return;
+  }
+
+  try {
+    const file = await readFile(filePath);
+    response.writeHead(200, {
+      "Content-Type": contentTypes[extname(filePath)] || "application/octet-stream",
+    });
+    response.end(file);
+  } catch {
+    response.writeHead(404);
+    response.end("Not found");
+  }
+}
+
+createServer(async (request, response) => {
+  try {
+    const url = new URL(request.url, `http://${request.headers.host}`);
+
+    if (request.method === "GET" && url.pathname === "/webhooks/meta") {
+      await handleWebhookVerification(request, response);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/webhooks/meta") {
+      await handleWebhookEvent(request, response);
+      return;
+    }
+
+    if (await handleApi(request, response)) {
+      return;
+    }
+
+    await serveStatic(request, response);
+  } catch (error) {
+    console.error(error);
+    sendJson(response, 500, { error: "Internal server error" });
+  }
+}).listen(env.port, () => {
+  console.log(`Respuesta360 running on http://localhost:${env.port}`);
+});
