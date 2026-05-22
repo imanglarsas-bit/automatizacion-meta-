@@ -112,7 +112,9 @@ textarea {
 .platform-header,
 .panel-heading,
 .header-tools,
-.form-row {
+.form-row,
+.client-summary,
+.client-form {
   display: flex;
   align-items: center;
 }
@@ -155,6 +157,19 @@ h2 {
 .header-tools {
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.header-tools form {
+  margin: 0;
+}
+
+.client-picker {
+  min-width: min(280px, 100%);
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
 }
 
 .solid-button,
@@ -229,6 +244,25 @@ h2 {
   justify-content: space-between;
   gap: 18px;
   margin-bottom: 18px;
+}
+
+.client-summary {
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.client-summary p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.client-form {
+  width: min(520px, 100%);
+  gap: 12px;
+}
+
+.client-form label {
+  flex: 1;
 }
 
 .panel-heading.compact {
@@ -571,7 +605,9 @@ a:focus {
 
   .platform-header,
   .panel-heading,
-  .form-row {
+  .form-row,
+  .client-summary,
+  .client-form {
     align-items: stretch;
     flex-direction: column;
   }

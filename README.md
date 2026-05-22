@@ -14,6 +14,15 @@ cp .env.example .env   # edita con tus credenciales reales
 npm start              # http://localhost:3000
 ```
 
+La plataforma privada se abre en `/plataforma.html`, pero ahora exige contraseña.
+Configúrala con:
+
+```env
+PLATFORM_PASSWORD=tu_contraseña_privada
+```
+
+La landing (`/`) sigue siendo pública. El panel y las APIs internas quedan protegidas por sesión.
+
 ---
 
 ## Endpoints disponibles
@@ -75,6 +84,8 @@ Respuesta esperada:
 2. Copia el bloque de `inversiones-manglar` y ajusta `companyId`, `name`, `units`, `channels`, etc.
 3. Crea el archivo de prompt en `backend/prompts/<companyId>.txt`.
 4. Reinicia el servidor (`npm start`).
+
+En la interfaz también puedes crear perfiles de cliente desde el panel. Cada perfil mantiene separados sus canales, respuestas entrenadas y reglas en el navegador.
 
 ---
 

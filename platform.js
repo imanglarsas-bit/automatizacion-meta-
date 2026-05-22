@@ -56,28 +56,59 @@ const defaultTraining = [
   },
 ];
 
+const defaultClients = [
+  {
+    id: "ev-car-electricol",
+    name: "Ev Car Electricol",
+    description: "Perfil principal para pruebas de automatización y conexión con Meta.",
+  },
+];
+
 const storage = {
+  get clients() {
+    const saved = localStorage.getItem("r360_clients");
+    return saved ? JSON.parse(saved) : defaultClients;
+  },
+  set clients(value) {
+    localStorage.setItem("r360_clients", JSON.stringify(value));
+  },
+  get activeClientId() {
+    return localStorage.getItem("r360_active_client") || this.clients[0].id;
+  },
+  set activeClientId(value) {
+    localStorage.setItem("r360_active_client", value);
+  },
+  get activeClient() {
+    return this.clients.find((client) => client.id === this.activeClientId) || this.clients[0];
+  },
+  key(name) {
+    return `r360_${this.activeClientId}_${name}`;
+  },
   get channels() {
-    return JSON.parse(localStorage.getItem("r360_channels") || "{}");
+    return JSON.parse(localStorage.getItem(this.key("channels")) || "{}");
   },
   set channels(value) {
-    localStorage.setItem("r360_channels", JSON.stringify(value));
+    localStorage.setItem(this.key("channels"), JSON.stringify(value));
   },
   get training() {
-    const saved = localStorage.getItem("r360_training");
+    const saved = localStorage.getItem(this.key("training"));
     return saved ? JSON.parse(saved) : defaultTraining;
   },
   set training(value) {
-    localStorage.setItem("r360_training", JSON.stringify(value));
+    localStorage.setItem(this.key("training"), JSON.stringify(value));
   },
   get confidence() {
-    return Number(localStorage.getItem("r360_confidence") || 75);
+    return Number(localStorage.getItem(this.key("confidence")) || 75);
   },
   set confidence(value) {
-    localStorage.setItem("r360_confidence", String(value));
+    localStorage.setItem(this.key("confidence"), String(value));
   },
 };
 
+const clientSelect = document.querySelector("#clientSelect");
+const clientName = document.querySelector("#clientName");
+const clientDescription = document.querySelector("#clientDescription");
+const clientForm = document.querySelector("#clientForm");
 const connectionGrid = document.querySelector("#connectionGrid");
 const activeChannels = document.querySelector("#activeChannels");
 const trainedAnswers = document.querySelector("#trainedAnswers");
@@ -105,6 +136,28 @@ function escapeHTML(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function slugify(value) {
+  return normalize(value)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 42);
+}
+
+function renderClients() {
+  const clients = storage.clients;
+  const activeClient = storage.activeClient;
+
+  clientSelect.innerHTML = clients
+    .map(
+      (client) =>
+        `<option value="${escapeHTML(client.id)}" ${client.id === activeClient.id ? "selected" : ""}>${escapeHTML(client.name)}</option>`,
+    )
+    .join("");
+
+  clientName.textContent = activeClient.name;
+  clientDescription.textContent = activeClient.description;
 }
 
 function renderConnections() {
@@ -182,10 +235,37 @@ function renderMetrics() {
 }
 
 function renderAll() {
+  renderClients();
   renderConnections();
   renderTraining();
   renderMetrics();
 }
+
+clientSelect.addEventListener("change", () => {
+  storage.activeClientId = clientSelect.value;
+  renderAll();
+  showToast("Perfil de cliente cambiado.");
+});
+
+clientForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(clientForm);
+  const name = data.get("clientName").trim();
+  const id = `${slugify(name)}-${Date.now().toString(36)}`;
+
+  storage.clients = [
+    ...storage.clients,
+    {
+      id,
+      name,
+      description: "Nuevo perfil privado para entrenar respuestas y conectar canales propios.",
+    },
+  ];
+  storage.activeClientId = id;
+  clientForm.reset();
+  renderAll();
+  showToast("Perfil de cliente creado.");
+});
 
 function deleteTraining(id) {
   storage.training = storage.training.filter((item) => item.id !== id);

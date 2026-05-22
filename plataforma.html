@@ -22,10 +22,11 @@
         <a href="#entrenamiento">Entrenar bot</a>
         <a href="#pruebas">Probar respuesta</a>
         <a href="#reglas">Reglas</a>
+        <a href="#clientes">Clientes</a>
       </nav>
       <div class="sidebar-note">
-        <strong>Modo prototipo</strong>
-        <span>Los datos se guardan localmente en este navegador.</span>
+        <strong>Panel privado</strong>
+        <span>Trabaja por perfiles de cliente y mantén cada bot separado.</span>
       </div>
     </aside>
 
@@ -36,10 +37,32 @@
           <h1>Panel de conexión y entrenamiento del bot</h1>
         </div>
         <div class="header-tools">
+          <label class="client-picker">
+            Perfil activo
+            <select id="clientSelect"></select>
+          </label>
           <a class="ghost-button" href="index.html">Ver landing</a>
+          <form method="post" action="/logout">
+            <button class="ghost-button" type="submit">Salir</button>
+          </form>
           <button class="solid-button" type="button" id="publishButton">Publicar cambios</button>
         </div>
       </header>
+
+      <section class="panel client-summary" id="clientes">
+        <div>
+          <p class="kicker">Perfil del cliente</p>
+          <h2 id="clientName">Cliente activo</h2>
+          <p id="clientDescription">Configura canales, respuestas y reglas solo para este cliente.</p>
+        </div>
+        <form class="client-form" id="clientForm">
+          <label>
+            Nuevo cliente
+            <input name="clientName" type="text" placeholder="Ej. Clínica Norte" required />
+          </label>
+          <button class="solid-button" type="submit">Crear perfil</button>
+        </form>
+      </section>
 
       <section class="metric-grid" aria-label="Resumen operativo">
         <article class="metric-card">

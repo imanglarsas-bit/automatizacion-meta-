@@ -25,6 +25,7 @@ const env = {
   whatsappToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
   pageAccessToken: process.env.PAGE_ACCESS_TOKEN || "",
+  platformPassword: process.env.PLATFORM_PASSWORD || "dev_admin",
 };
 
 const contentTypes = {
@@ -35,6 +36,50 @@ const contentTypes = {
   ".png": "image/png",
   ".svg": "image/svg+xml",
 };
+
+const privatePaths = new Set(["/plataforma.html", "/platform.css", "/platform.js"]);
+
+function parseCookies(request) {
+  return Object.fromEntries(
+    String(request.headers.cookie || "")
+      .split(";")
+      .map((part) => part.trim().split("="))
+      .filter((pair) => pair.length === 2),
+  );
+}
+
+function isAuthenticated(request) {
+  return parseCookies(request).r360_session === "active";
+}
+
+function isSecureRequest(request) {
+  const host = request.headers.host || "";
+  const isLocalhost = host.includes("localhost") || host.includes("127.0.0.1") || host.includes("[::1]");
+  return request.headers["x-forwarded-proto"] === "https" || !isLocalhost;
+}
+
+function redirect(response, location) {
+  response.writeHead(302, { Location: location });
+  response.end();
+}
+
+function sendLoginCookie(request, response) {
+  const secure = isSecureRequest(request) ? "; Secure" : "";
+  response.writeHead(302, {
+    Location: "/plataforma.html",
+    "Set-Cookie": `r360_session=active; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800${secure}`,
+  });
+  response.end();
+}
+
+function sendLogoutCookie(request, response) {
+  const secure = isSecureRequest(request) ? "; Secure" : "";
+  response.writeHead(302, {
+    Location: "/login.html",
+    "Set-Cookie": `r360_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`,
+  });
+  response.end();
+}
 
 function sendJson(response, status, payload) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
@@ -49,6 +94,28 @@ async function readBody(request) {
 
   const raw = Buffer.concat(chunks).toString("utf8");
   return raw ? JSON.parse(raw) : {};
+}
+
+async function readRawBody(request) {
+  const chunks = [];
+  for await (const chunk of request) {
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+async function handleLogin(request, response) {
+  const raw = await readRawBody(request);
+  const form = new URLSearchParams(raw);
+  const password = form.get("password");
+
+  if (password === env.platformPassword) {
+    sendLoginCookie(request, response);
+    return;
+  }
+
+  redirect(response, "/login.html?error=1");
 }
 
 async function readTraining() {
@@ -207,6 +274,15 @@ async function handleWebhookEvent(request, response) {
 async function handleApi(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
 
+  if (!url.pathname.startsWith("/api/")) {
+    return false;
+  }
+
+  if (!isAuthenticated(request)) {
+    sendJson(response, 401, { error: "Authentication required" });
+    return true;
+  }
+
   if (request.method === "GET" && url.pathname === "/api/training") {
     sendJson(response, 200, await readTraining());
     return true;
@@ -296,6 +372,12 @@ async function handleApi(request, response) {
 async function serveStatic(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
+
+  if (privatePaths.has(requestedPath) && !isAuthenticated(request)) {
+    redirect(response, "/login.html");
+    return;
+  }
+
   const safePath = normalize(decodeURIComponent(requestedPath)).replace(/^(\.\.[/\\])+/, "");
   const filePath = join(root, safePath);
 
@@ -328,6 +410,16 @@ createServer(async (request, response) => {
 
     if (request.method === "POST" && url.pathname === "/webhooks/meta") {
       await handleWebhookEvent(request, response);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/login") {
+      await handleLogin(request, response);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/logout") {
+      sendLogoutCookie(request, response);
       return;
     }
 

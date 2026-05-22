@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Respuesta360 | Acceso privado</title>
+    <meta name="description" content="Acceso privado para clientes de la plataforma Respuesta360." />
+    <link rel="stylesheet" href="login.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <section class="login-copy">
+        <a class="brand" href="index.html">
+          <span>R</span>
+          Respuesta360
+        </a>
+        <p class="kicker">Portal privado</p>
+        <h1>Acceso para clientes y administradores</h1>
+        <p>
+          La landing puede ser pública. Esta plataforma queda reservada para operar perfiles,
+          entrenar bots y revisar conexiones de cada cliente.
+        </p>
+      </section>
+
+      <form class="login-card" method="post" action="/login">
+        <h2>Entrar a la plataforma</h2>
+        <label>
+          Contraseña de acceso
+          <input name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit">Entrar</button>
+        <p class="login-note">
+          En producción, esto debe evolucionar a usuarios por cliente con correo, contraseña y permisos.
+        </p>
+      </form>
+    </main>
+  </body>
+</html>
