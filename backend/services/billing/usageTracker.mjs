@@ -1,21 +1,24 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { logger } from "../../utils/logger.mjs";
+import { ensureDataFile } from "../../utils/dataPaths.mjs";
 
-const dir = dirname(fileURLToPath(import.meta.url));
-const usagePath = join(dir, "../../data/usage.mock.json");
+let usagePath = null;
+
+async function getUsagePath() {
+  usagePath = usagePath || await ensureDataFile("usage.mock.json");
+  return usagePath;
+}
 
 async function readUsage() {
   try {
-    return JSON.parse(await readFile(usagePath, "utf8"));
+    return JSON.parse(await readFile(await getUsagePath(), "utf8"));
   } catch {
     return {};
   }
 }
 
 async function writeUsage(data) {
-  await writeFile(usagePath, JSON.stringify(data, null, 2));
+  await writeFile(await getUsagePath(), JSON.stringify(data, null, 2));
 }
 
 function currentMonth() {

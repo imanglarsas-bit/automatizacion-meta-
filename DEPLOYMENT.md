@@ -40,6 +40,7 @@ WHATSAPP_PHONE_NUMBER_ID=id_real
 PAGE_ACCESS_TOKEN=token_real
 PAGE_ID=id_real
 ADMIN_PASSWORD=una_contraseña_privada_para_admin
+DATA_DIR=/var/data
 ```
 
 ## 3. Configurar DNS
@@ -105,9 +106,27 @@ Producción:
 
 ## 7. Importante para producción
 
+### Guardar perfiles creados en Render
+
+Los perfiles de clientes, usuarios, entrenamientos y métricas no deben depender de los archivos del repositorio, porque Render puede reiniciar o redeployar el servicio y volver al estado inicial.
+
+Para que queden guardados:
+
+1. En Render, abre tu servicio.
+2. Entra a la sección de discos o almacenamiento persistente.
+3. Crea un Persistent Disk.
+4. Usa como ruta de montaje: `/var/data`.
+5. En Environment Variables agrega:
+
+```txt
+DATA_DIR=/var/data
+```
+
+Desde ese momento, los perfiles nuevos se guardan en esa carpeta persistente. Si no configuras `DATA_DIR` con un disco persistente, los perfiles pueden perderse después de reinicios o nuevos deploys.
+
 Antes de clientes reales, falta endurecer:
 
-- Base de datos real en vez de `backend/data/training.json`.
+- Base de datos real o disco persistente para datos operativos.
 - Login de usuarios.
 - Cifrado y rotación de tokens.
 - Validación de firma de webhooks de Meta.

@@ -19,12 +19,11 @@ import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleWebhookVerification as saasWebhookVerify,
          handleWebhookEvent as saasWebhookEvent } from "./routes/metaWebhook.mjs";
+import { ensureDataFile } from "./utils/dataPaths.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 
-const root = join(fileURLToPath(new URL("..", import.meta.url)));
-const dataDir = join(root, "backend", "data");
-const trainingPath = join(dataDir, "training.json");
-const clientUsersPath = join(dataDir, "client-users.mock.json");
+let trainingPath = null;
+let clientUsersPath = null;
 
 const env = {
   port: Number(process.env.PORT || 3000),
@@ -146,6 +145,7 @@ async function handleLogin(request, response) {
   const username = form.get("username")?.trim().toLowerCase();
   const password = form.get("password")?.trim();
 
+  clientUsersPath = clientUsersPath || await ensureDataFile("client-users.mock.json");
   const users = JSON.parse(await readFile(clientUsersPath, "utf8"));
   const user = users.find((item) => item.username === username && item.password === password);
 
@@ -171,6 +171,7 @@ async function handleAdminLogin(request, response) {
 }
 
 async function readTraining() {
+  trainingPath = trainingPath || await ensureDataFile("training.json");
   if (!existsSync(trainingPath)) {
     return [];
   }
@@ -179,6 +180,7 @@ async function readTraining() {
 }
 
 async function saveTraining(items) {
+  trainingPath = trainingPath || await ensureDataFile("training.json");
   await writeFile(trainingPath, JSON.stringify(items, null, 2));
 }
 

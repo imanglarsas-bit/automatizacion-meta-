@@ -1,15 +1,13 @@
 import { readFile, writeFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { logger } from "../../utils/logger.mjs";
-
-const dir = dirname(fileURLToPath(import.meta.url));
-const companiesPath = join(dir, "../../data/companies.mock.json");
+import { ensureDataFile } from "../../utils/dataPaths.mjs";
 
 let cache = null;
+let companiesPath = null;
 
 async function loadCompanies() {
   if (cache) return cache;
+  companiesPath = companiesPath || await ensureDataFile("companies.mock.json");
   const raw = await readFile(companiesPath, "utf8");
   cache = JSON.parse(raw);
   return cache;
@@ -45,6 +43,7 @@ export async function createCompany(company) {
   }
 
   companies.push(company);
+  companiesPath = companiesPath || await ensureDataFile("companies.mock.json");
   await writeFile(companiesPath, JSON.stringify(companies, null, 2));
   cache = companies;
   return company;

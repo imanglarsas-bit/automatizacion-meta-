@@ -2,13 +2,24 @@
 // POST /api/companies          — crea empresa y usuario cliente
 // GET  /api/companies/:id      — empresa por companyId
 import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { createCompany, getAllCompanies, getCompany } from "../services/company/companyConfigService.mjs";
 import { getPlan, isValidPlan, listPlans, normalizePlanKey } from "../services/billing/plans.mjs";
+import { ensureDataFile } from "../utils/dataPaths.mjs";
 
-const dataDir = fileURLToPath(new URL("../data/", import.meta.url));
-const usersPath = join(dataDir, "client-users.mock.json");
+let usersPath = null;
+
+async function getUsersPath() {
+  usersPath = usersPath || await ensureDataFile("client-users.mock.json");
+  return usersPath;
+}
+
+async function readUsers() {
+  return JSON.parse(await readFile(await getUsersPath(), "utf8"));
+}
+
+async function writeUsers(users) {
+  await writeFile(await getUsersPath(), JSON.stringify(users, null, 2));
+}
 
 export async function handleGetCompanies() {
   const companies = await getAllCompanies();
@@ -44,7 +55,7 @@ export async function handleCreateCompany(body) {
 
   const plan = getPlan(planKey);
   const companyId = slugify(name);
-  const users = JSON.parse(await readFile(usersPath, "utf8"));
+  const users = await readUsers();
   if (users.some((user) => user.username === username)) {
     return { status: 409, body: { error: "Ya existe un usuario cliente con ese nombre." } };
   }
@@ -89,7 +100,7 @@ export async function handleCreateCompany(body) {
   }
 
   users.push({ username, password, companyId, name });
-  await writeFile(usersPath, JSON.stringify(users, null, 2));
+  await writeUsers(users);
 
   return {
     status: 201,
@@ -101,7 +112,7 @@ export async function handleCreateCompany(body) {
 }
 
 export async function handleGetClientUsers() {
-  const users = JSON.parse(await readFile(usersPath, "utf8"));
+  const users = await readUsers();
   return {
     status: 200,
     body: users.map(({ password, ...user }) => user),
@@ -110,7 +121,7 @@ export async function handleGetClientUsers() {
 
 export async function handleDeleteClientUser(username) {
   const normalizedUsername = String(username || "").trim().toLowerCase();
-  const users = JSON.parse(await readFile(usersPath, "utf8"));
+  const users = await readUsers();
   const nextUsers = users.filter((user) => user.username !== normalizedUsername);
 
   if (nextUsers.length === users.length) {
@@ -120,7 +131,7 @@ export async function handleDeleteClientUser(username) {
     };
   }
 
-  await writeFile(usersPath, JSON.stringify(nextUsers, null, 2));
+  await writeUsers(nextUsers);
   return {
     status: 200,
     body: { ok: true, username: normalizedUsername },
