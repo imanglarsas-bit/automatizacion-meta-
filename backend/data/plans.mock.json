@@ -1,0 +1,71 @@
+{
+  "start": {
+    "key": "start",
+    "name": "Start",
+    "monthlyMessageLimit": 1000,
+    "monthlyConversationLimit": 1000,
+    "monthlyAiRequestLimit": 0,
+    "userLimit": 1,
+    "channels": ["whatsapp", "instagram", "facebook"],
+    "automationMode": "rules",
+    "description": "Automatizaciones, respuestas rápidas, formularios y captura básica de leads sin APIs de IA.",
+    "features": {
+      "aiApi": false,
+      "limitedAiApi": false,
+      "advancedAutomations": false,
+      "advancedIntegrations": false,
+      "businessDashboard": false,
+      "multiUser": false,
+      "formAutomations": true,
+      "customIntegrations": false,
+      "metaIntegration": true,
+      "leadCapture": true
+    }
+  },
+  "pro": {
+    "key": "pro",
+    "name": "Pro",
+    "monthlyMessageLimit": 5000,
+    "monthlyConversationLimit": 5000,
+    "monthlyAiRequestLimit": 150,
+    "userLimit": 3,
+    "channels": ["whatsapp", "instagram", "facebook", "messenger"],
+    "automationMode": "hybrid-limited-ai",
+    "description": "Automatizaciones avanzadas con acceso limitado y controlado a funciones puntuales por API.",
+    "features": {
+      "aiApi": true,
+      "limitedAiApi": true,
+      "advancedAutomations": true,
+      "advancedIntegrations": false,
+      "businessDashboard": false,
+      "multiUser": true,
+      "formAutomations": true,
+      "customIntegrations": false,
+      "metaIntegration": true,
+      "leadCapture": true
+    }
+  },
+  "business": {
+    "key": "business",
+    "name": "Business",
+    "monthlyMessageLimit": 15000,
+    "monthlyConversationLimit": 15000,
+    "monthlyAiRequestLimit": null,
+    "userLimit": null,
+    "channels": ["whatsapp", "instagram", "facebook", "messenger"],
+    "automationMode": "full-ai",
+    "description": "Acceso completo a APIs, IA, integraciones empresariales y funcionalidades premium.",
+    "features": {
+      "aiApi": true,
+      "limitedAiApi": false,
+      "advancedAutomations": true,
+      "advancedIntegrations": true,
+      "businessDashboard": true,
+      "multiUser": true,
+      "formAutomations": true,
+      "customIntegrations": true,
+      "metaIntegration": true,
+      "leadCapture": true
+    }
+  }
+}

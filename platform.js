@@ -149,6 +149,7 @@ const storage = {
   },
 };
 
+const planEditorGrid = document.querySelector("#planEditorGrid");
 const clientSelect = document.querySelector("#clientSelect");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
@@ -381,6 +382,101 @@ function renderLeadRules() {
   `;
 }
 
+const FEATURE_LABELS = {
+  aiApi: "IA completa (API)",
+  limitedAiApi: "IA limitada",
+  advancedAutomations: "Automatizaciones avanzadas",
+  advancedIntegrations: "Integraciones avanzadas",
+  businessDashboard: "Dashboard empresarial",
+  multiUser: "Múltiples usuarios",
+};
+
+function renderPlanEditor() {
+  if (!planEditorGrid) return;
+
+  planEditorGrid.innerHTML = storage.plans
+    .map((plan) => `
+      <article class="plan-editor-card">
+        <form class="plan-editor-form" data-plan-key="${escapeHTML(plan.key)}">
+          <h3>${escapeHTML(plan.name)}</h3>
+          <label>
+            Nombre del plan
+            <input name="name" type="text" value="${escapeHTML(plan.name)}" required />
+          </label>
+          <label>
+            Descripción
+            <textarea name="description" rows="2">${escapeHTML(plan.description || "")}</textarea>
+          </label>
+          <div class="form-row">
+            <label>
+              Mensajes/mes
+              <input name="monthlyMessageLimit" type="number" min="0" value="${plan.monthlyMessageLimit ?? ""}" placeholder="sin límite" />
+            </label>
+            <label>
+              Solicitudes IA/mes
+              <input name="monthlyAiRequestLimit" type="number" min="0" value="${plan.monthlyAiRequestLimit ?? ""}" placeholder="sin límite" />
+            </label>
+          </div>
+          <label>
+            Usuarios máximos
+            <input name="userLimit" type="number" min="1" value="${plan.userLimit ?? ""}" placeholder="sin límite" />
+          </label>
+          <fieldset class="feature-checks">
+            <legend>Funciones incluidas</legend>
+            ${Object.entries(FEATURE_LABELS).map(([key, label]) => `
+              <label class="check-row">
+                <input type="checkbox" name="feature_${key}" ${plan.features?.[key] ? "checked" : ""} />
+                ${escapeHTML(label)}
+              </label>
+            `).join("")}
+          </fieldset>
+          <button class="solid-button full" type="submit">Guardar plan ${escapeHTML(plan.name)}</button>
+        </form>
+      </article>
+    `)
+    .join("");
+
+  planEditorGrid.querySelectorAll(".plan-editor-form").forEach((form) => {
+    form.addEventListener("submit", handlePlanFormSubmit);
+  });
+}
+
+async function handlePlanFormSubmit(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const planKey = form.dataset.planKey;
+  const data = new FormData(form);
+
+  const features = {};
+  Object.keys(FEATURE_LABELS).forEach((key) => {
+    features[key] = form.querySelector(`[name="feature_${key}"]`)?.checked || false;
+  });
+
+  const payload = {
+    name: data.get("name").trim(),
+    description: data.get("description").trim(),
+    monthlyMessageLimit: data.get("monthlyMessageLimit") || null,
+    monthlyAiRequestLimit: data.get("monthlyAiRequestLimit") || null,
+    userLimit: data.get("userLimit") || null,
+    features,
+  };
+
+  try {
+    const updated = await getJSON(`/api/plans/${encodeURIComponent(planKey)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const idx = storage.plans.findIndex((p) => p.key === planKey);
+    if (idx !== -1) storage.plans[idx] = updated;
+    renderPlanEditor();
+    renderPlanOptions();
+    showToast(`Plan ${updated.name} guardado.`);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 function renderMetrics() {
   const connectedCount = Object.values(storage.channels).filter(Boolean).length;
   activeChannels.textContent = connectedCount;
@@ -392,6 +488,7 @@ function renderMetrics() {
 function renderAll() {
   renderClients();
   renderPlanOptions();
+  renderPlanEditor();
   renderConnections();
   renderTraining();
   renderLeadRules();
