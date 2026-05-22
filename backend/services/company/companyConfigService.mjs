@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { logger } from "../../utils/logger.mjs";
@@ -36,4 +36,16 @@ export async function getActiveCompanies() {
 
 export function invalidateCache() {
   cache = null;
+}
+
+export async function createCompany(company) {
+  const companies = await loadCompanies();
+  if (companies.some((item) => item.companyId === company.companyId)) {
+    return null;
+  }
+
+  companies.push(company);
+  await writeFile(companiesPath, JSON.stringify(companies, null, 2));
+  cache = companies;
+  return company;
 }

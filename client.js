@@ -77,6 +77,7 @@ async function loadCompanies() {
         `<option value="${escapeHTML(company.companyId)}" ${company.companyId === activeCompanyId ? "selected" : ""}>${escapeHTML(company.name)}</option>`,
     )
     .join("");
+  companySelect.disabled = companies.length === 1;
 }
 
 async function loadConversations() {

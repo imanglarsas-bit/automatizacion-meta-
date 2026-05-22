@@ -15,11 +15,8 @@ npm start              # http://localhost:3000
 ```
 
 El portal cliente se abre en `/login.html` y entra a `/cliente.html`.
-Configúralo con:
-
-```env
-PLATFORM_PASSWORD=tu_contraseña_privada
-```
+Los usuarios cliente están temporalmente en `backend/data/client-users.mock.json`.
+Cuando el admin crea una empresa desde el panel, también se crea su usuario cliente.
 
 El panel administrador se abre en `/admin-login.html` y entra a `/plataforma.html`.
 Configúralo con:
@@ -31,6 +28,13 @@ ADMIN_PASSWORD=tu_contraseña_admin
 La landing (`/`) sigue siendo pública. El panel admin, el portal cliente y las APIs internas quedan protegidas por sesión.
 
 El portal cliente muestra la bandeja humana: conversaciones derivadas por el bot, historial y formulario para responder desde la plataforma.
+
+Usuarios cliente iniciales de prueba:
+
+```txt
+manglar / manglar123
+evcar / evcar123
+```
 
 ---
 

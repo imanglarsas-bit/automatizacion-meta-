@@ -100,5 +100,43 @@
         "createdAt": "2026-05-21T18:20:00.000Z"
       }
     ]
+  },
+  {
+    "companyId": "ev-car-electricol",
+    "conversationId": "conv-ev-001",
+    "customerName": "Julián Pérez",
+    "customerId": "573005551212",
+    "channel": "whatsapp",
+    "unit": "Ventas",
+    "status": "human_required",
+    "priority": "alta",
+    "lastMessageAt": "2026-05-22T13:20:00.000Z",
+    "summary": "Solicita cotización para instalar cargador residencial y requiere visita técnica.",
+    "messages": [
+      {
+        "id": "ev-msg-001",
+        "sender": "customer",
+        "text": "Hola, quiero instalar un cargador para mi carro eléctrico en casa.",
+        "createdAt": "2026-05-22T13:15:00.000Z"
+      },
+      {
+        "id": "ev-msg-002",
+        "sender": "bot",
+        "text": "Podemos ayudarte. Para orientar la cotización necesito ciudad, tipo de vivienda y capacidad eléctrica disponible.",
+        "createdAt": "2026-05-22T13:16:00.000Z"
+      },
+      {
+        "id": "ev-msg-003",
+        "sender": "customer",
+        "text": "Estoy en Bogotá, es una casa. No sé la capacidad eléctrica, necesito que alguien revise.",
+        "createdAt": "2026-05-22T13:20:00.000Z"
+      },
+      {
+        "id": "ev-msg-004",
+        "sender": "system",
+        "text": "Derivado a humano: requiere visita técnica para cotización.",
+        "createdAt": "2026-05-22T13:20:05.000Z"
+      }
+    ]
   }
 ]

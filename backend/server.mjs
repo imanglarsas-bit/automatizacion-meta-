@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 // ── SaaS layer (non-destructive additions) ───────────────────────────────────
 import { handleTestMessage }      from "./routes/testRoutes.mjs";
-import { handleGetCompanies, handleGetCompany } from "./routes/companies.mjs";
+import { handleCreateCompany, handleGetCompanies, handleGetCompany } from "./routes/companies.mjs";
 import { handleGetMetrics }       from "./routes/metrics.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
@@ -17,6 +17,7 @@ import { handleWebhookVerification as saasWebhookVerify,
 const root = join(fileURLToPath(new URL("..", import.meta.url)));
 const dataDir = join(root, "backend", "data");
 const trainingPath = join(dataDir, "training.json");
+const clientUsersPath = join(dataDir, "client-users.mock.json");
 
 const env = {
   port: Number(process.env.PORT || 3000),
@@ -57,7 +58,13 @@ function parseCookies(request) {
 }
 
 function sessionRole(request) {
-  return parseCookies(request).r360_session || "";
+  return parseCookies(request).r360_session?.split(":")[0] || "";
+}
+
+function sessionCompanyId(request) {
+  const cookie = parseCookies(request).r360_session || "";
+  const [, companyId] = cookie.split(":");
+  return companyId || "";
 }
 
 function isClientAuthenticated(request) {
@@ -129,10 +136,14 @@ async function readRawBody(request) {
 async function handleLogin(request, response) {
   const raw = await readRawBody(request);
   const form = new URLSearchParams(raw);
+  const username = form.get("username")?.trim().toLowerCase();
   const password = form.get("password")?.trim();
 
-  if (password === env.platformPassword) {
-    sendLoginCookie(request, response, "client", "/cliente.html");
+  const users = JSON.parse(await readFile(clientUsersPath, "utf8"));
+  const user = users.find((item) => item.username === username && item.password === password);
+
+  if (user) {
+    sendLoginCookie(request, response, `client:${user.companyId}`, "/cliente.html");
     return;
   }
 
@@ -317,6 +328,14 @@ async function handleApi(request, response) {
     return true;
   }
 
+  const role = sessionRole(request);
+  const companyId = sessionCompanyId(request);
+
+  if (request.method === "GET" && url.pathname === "/api/session") {
+    sendJson(response, 200, { role, companyId });
+    return true;
+  }
+
   if (request.method === "GET" && url.pathname === "/api/training") {
     sendJson(response, 200, await readTraining());
     return true;
@@ -365,7 +384,25 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/companies") {
+    if (role === "client") {
+      const result = await handleGetCompany(companyId);
+      sendJson(response, result.status, result.status === 200 ? [result.body] : result.body);
+      return true;
+    }
+
     const result = await handleGetCompanies();
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/companies") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const body = await readBody(request);
+    const result = await handleCreateCompany(body);
     sendJson(response, result.status, result.body);
     return true;
   }
@@ -385,14 +422,24 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "GET" && url.pathname.startsWith("/api/conversations/")) {
-    const companyId = url.pathname.replace("/api/conversations/", "");
-    const result = await handleGetConversations(companyId);
+    const requestedCompanyId = url.pathname.replace("/api/conversations/", "");
+    if (role === "client" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes ver otra empresa." });
+      return true;
+    }
+
+    const result = await handleGetConversations(requestedCompanyId);
     sendJson(response, result.status, result.body);
     return true;
   }
 
   if (request.method === "GET" && url.pathname.startsWith("/api/messages/")) {
     const parts = url.pathname.replace("/api/messages/", "").split("/");
+    if (role === "client" && parts[0] !== companyId) {
+      sendJson(response, 403, { error: "No puedes ver otra empresa." });
+      return true;
+    }
+
     const result = await handleGetMessages(parts[0], parts[1]);
     sendJson(response, result.status, result.body);
     return true;
@@ -401,6 +448,11 @@ async function handleApi(request, response) {
   if (request.method === "POST" && url.pathname.startsWith("/api/messages/")) {
     const parts = url.pathname.replace("/api/messages/", "").split("/");
     if (parts[2] === "reply") {
+      if (role === "client" && parts[0] !== companyId) {
+        sendJson(response, 403, { error: "No puedes responder otra empresa." });
+        return true;
+      }
+
       const body = await readBody(request);
       const result = await handleReplyToConversation(parts[0], parts[1], body);
       sendJson(response, result.status, result.body);

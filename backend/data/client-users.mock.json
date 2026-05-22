@@ -1,0 +1,14 @@
+[
+  {
+    "username": "manglar",
+    "password": "manglar123",
+    "companyId": "inversiones-manglar",
+    "name": "Inversiones Manglar"
+  },
+  {
+    "username": "evcar",
+    "password": "evcar123",
+    "companyId": "ev-car-electricol",
+    "name": "EV Car Electricol"
+  }
+]

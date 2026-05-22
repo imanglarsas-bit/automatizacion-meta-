@@ -52,5 +52,51 @@
       "email": "consultasjuridicasgje@gmail.com",
       "website": "https://imanglar.com"
     }
+  },
+  {
+    "companyId": "ev-car-electricol",
+    "name": "EV Car Electricol",
+    "active": true,
+    "plan": "business",
+    "monthlyConversationLimit": 500,
+    "currentUsage": 0,
+    "billingEnabled": false,
+    "aiProvider": "anthropic",
+    "model": "claude-3-5-sonnet-20241022",
+    "fallbackProvider": "openai",
+    "fallbackModel": "gpt-4o-mini",
+    "tone": "profesional",
+    "promptFile": "ev-car-electricol.txt",
+    "channels": ["whatsapp", "instagram", "facebook"],
+    "units": [
+      {
+        "id": "ventas",
+        "name": "Ventas",
+        "type": "sales",
+        "contact": {
+          "whatsapp": "573224591377",
+          "email": "contacto@evcarcol.com"
+        }
+      },
+      {
+        "id": "soporte-tecnico",
+        "name": "Soporte técnico",
+        "type": "support",
+        "contact": {
+          "whatsapp": "573224591377",
+          "email": "soporte@evcarcol.com"
+        }
+      }
+    ],
+    "schedule": {
+      "timezone": "America/Bogota",
+      "hours": { "open": "08:00", "close": "18:00" },
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    },
+    "contact": {
+      "whatsapp": "573224591377",
+      "email": "contacto@evcarcol.com",
+      "website": "https://evcarcol.com"
+    }
   }
 ]

@@ -39,7 +39,6 @@ WHATSAPP_ACCESS_TOKEN=token_real
 WHATSAPP_PHONE_NUMBER_ID=id_real
 PAGE_ACCESS_TOKEN=token_real
 PAGE_ID=id_real
-PLATFORM_PASSWORD=una_contraseña_privada_para_el_panel
 ADMIN_PASSWORD=una_contraseña_privada_para_admin
 ```
 

@@ -58,28 +58,28 @@ const defaultTraining = [
 
 const defaultClients = [
   {
-    id: "ev-car-electricol",
-    name: "Ev Car Electricol",
+    companyId: "inversiones-manglar",
+    name: "Inversiones Manglar",
     description: "Perfil principal para pruebas de automatización y conexión con Meta.",
   },
 ];
 
 const storage = {
+  companies: defaultClients,
   get clients() {
-    const saved = localStorage.getItem("r360_clients");
-    return saved ? JSON.parse(saved) : defaultClients;
+    return this.companies;
   },
   set clients(value) {
-    localStorage.setItem("r360_clients", JSON.stringify(value));
+    this.companies = value;
   },
   get activeClientId() {
-    return localStorage.getItem("r360_active_client") || this.clients[0].id;
+    return localStorage.getItem("r360_active_client") || this.clients[0].companyId;
   },
   set activeClientId(value) {
     localStorage.setItem("r360_active_client", value);
   },
   get activeClient() {
-    return this.clients.find((client) => client.id === this.activeClientId) || this.clients[0];
+    return this.clients.find((client) => client.companyId === this.activeClientId) || this.clients[0];
   },
   key(name) {
     return `r360_${this.activeClientId}_${name}`;
@@ -122,6 +122,21 @@ const publishButton = document.querySelector("#publishButton");
 const confidenceRange = document.querySelector("#confidenceRange");
 const toast = document.querySelector("#toast");
 
+async function getJSON(url, options) {
+  const response = await fetch(url, options);
+  if (response.status === 401) {
+    window.location.href = "/admin-login.html";
+    return null;
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: "No se pudo completar la acción." }));
+    throw new Error(error.error || "No se pudo completar la acción.");
+  }
+
+  return response.json();
+}
+
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("visible");
@@ -152,12 +167,12 @@ function renderClients() {
   clientSelect.innerHTML = clients
     .map(
       (client) =>
-        `<option value="${escapeHTML(client.id)}" ${client.id === activeClient.id ? "selected" : ""}>${escapeHTML(client.name)}</option>`,
+        `<option value="${escapeHTML(client.companyId)}" ${client.companyId === activeClient.companyId ? "selected" : ""}>${escapeHTML(client.name)}</option>`,
     )
     .join("");
 
   clientName.textContent = activeClient.name;
-  clientDescription.textContent = activeClient.description;
+  clientDescription.textContent = `${activeClient.plan || "business"} · ${activeClient.channels?.join(", ") || "sin canales"}`;
 }
 
 function renderConnections() {
@@ -247,24 +262,28 @@ clientSelect.addEventListener("change", () => {
   showToast("Perfil de cliente cambiado.");
 });
 
-clientForm.addEventListener("submit", (event) => {
+clientForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(clientForm);
   const name = data.get("clientName").trim();
-  const id = `${slugify(name)}-${Date.now().toString(36)}`;
+  const username = data.get("username").trim();
+  const password = data.get("password").trim();
 
-  storage.clients = [
-    ...storage.clients,
-    {
-      id,
-      name,
-      description: "Nuevo perfil privado para entrenar respuestas y conectar canales propios.",
-    },
-  ];
-  storage.activeClientId = id;
-  clientForm.reset();
-  renderAll();
-  showToast("Perfil de cliente creado.");
+  try {
+    const result = await getJSON("/api/companies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, username, password }),
+    });
+
+    storage.clients = [...storage.clients, result.company];
+    storage.activeClientId = result.company.companyId;
+    clientForm.reset();
+    renderAll();
+    showToast(`Cliente creado. Usuario: ${result.user.username}`);
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
 function deleteTraining(id) {
@@ -334,4 +353,20 @@ confidenceRange.addEventListener("input", () => {
   renderMetrics();
 });
 
-renderAll();
+async function init() {
+  const companies = await getJSON("/api/companies");
+  if (companies?.length) {
+    storage.clients = companies;
+  }
+
+  if (!storage.clients.some((client) => client.companyId === storage.activeClientId)) {
+    storage.activeClientId = storage.clients[0].companyId;
+  }
+
+  renderAll();
+}
+
+init().catch((error) => {
+  showToast(error.message || "No se pudo cargar la plataforma.");
+  renderAll();
+});
