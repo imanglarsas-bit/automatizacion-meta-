@@ -1,0 +1,34 @@
+{
+  "inversiones-manglar": {
+    "month": "2026-05",
+    "conversations": 1,
+    "messages": 1,
+    "estimatedCostUSD": 0,
+    "byProvider": {
+      "anthropic": {
+        "calls": 1,
+        "estimatedCostUSD": 0
+      },
+      "openai": {
+        "calls": 0,
+        "estimatedCostUSD": 0
+      },
+      "mock": {
+        "calls": 0,
+        "estimatedCostUSD": 0
+      }
+    },
+    "byChannel": {
+      "whatsapp": 1,
+      "instagram": 0,
+      "messenger": 0,
+      "facebook": 0
+    },
+    "daily": [
+      {
+        "date": "2026-05-22",
+        "messages": 1
+      }
+    ]
+  }
+}

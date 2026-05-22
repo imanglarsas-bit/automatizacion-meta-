@@ -1,0 +1,16 @@
+[
+  {
+    "id": "seed-price",
+    "question": "precio costo valor plan mensual",
+    "answer": "Tenemos planes según el volumen de mensajes y los canales que quieras conectar. ¿Cuántos mensajes reciben al día y cuál es tu canal principal?",
+    "category": "Ventas",
+    "channel": "Todos"
+  },
+  {
+    "id": "seed-hours",
+    "question": "horario atienden abierto soporte",
+    "answer": "Atendemos de lunes a viernes de 8:00 a. m. a 6:00 p. m. El bot puede recibir tus datos ahora y un asesor continuará el caso.",
+    "category": "Soporte",
+    "channel": "Todos"
+  }
+]

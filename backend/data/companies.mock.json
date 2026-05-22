@@ -1,0 +1,56 @@
+[
+  {
+    "companyId": "inversiones-manglar",
+    "name": "Inversiones Manglar",
+    "active": true,
+    "plan": "business",
+    "monthlyConversationLimit": 500,
+    "currentUsage": 0,
+    "billingEnabled": false,
+    "aiProvider": "anthropic",
+    "model": "claude-3-5-sonnet-20241022",
+    "fallbackProvider": "openai",
+    "fallbackModel": "gpt-4o-mini",
+    "tone": "profesional",
+    "promptFile": "inversiones-manglar.txt",
+    "channels": ["whatsapp", "instagram", "messenger", "facebook"],
+    "units": [
+      {
+        "id": "cardenas-romero",
+        "name": "Cárdenas Romero Abogados",
+        "type": "juridico",
+        "contact": {
+          "whatsapp": "573224591377",
+          "email": "consultasjuridicasgje@gmail.com"
+        }
+      },
+      {
+        "id": "src-consulting",
+        "name": "SRC Consulting",
+        "type": "consulting",
+        "contact": {
+          "whatsapp": "573224591377",
+          "email": "consultasjuridicasgje@gmail.com"
+        }
+      },
+      {
+        "id": "mucuba",
+        "name": "Mucuba Hotel & Glamping",
+        "type": "hotel",
+        "contact": {
+          "whatsapp": "573224591377"
+        }
+      }
+    ],
+    "schedule": {
+      "timezone": "America/Bogota",
+      "hours": { "open": "08:00", "close": "18:00" },
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    },
+    "contact": {
+      "whatsapp": "573224591377",
+      "email": "consultasjuridicasgje@gmail.com",
+      "website": "https://imanglar.com"
+    }
+  }
+]

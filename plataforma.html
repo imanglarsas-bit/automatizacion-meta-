@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Respuesta360 | Plataforma</title>
+    <meta
+      name="description"
+      content="Panel para conectar canales de Meta, entrenar respuestas y probar automatizaciones del bot."
+    />
+    <link rel="stylesheet" href="platform.css" />
+  </head>
+  <body>
+    <aside class="sidebar" aria-label="Navegación de plataforma">
+      <a class="platform-brand" href="index.html" aria-label="Volver al sitio">
+        <span>R</span>
+        Respuesta360
+      </a>
+      <nav class="side-nav">
+        <a href="#resumen" class="active">Resumen</a>
+        <a href="#conexiones">Conexiones Meta</a>
+        <a href="#entrenamiento">Entrenar bot</a>
+        <a href="#pruebas">Probar respuesta</a>
+        <a href="#reglas">Reglas</a>
+      </nav>
+      <div class="sidebar-note">
+        <strong>Modo prototipo</strong>
+        <span>Los datos se guardan localmente en este navegador.</span>
+      </div>
+    </aside>
+
+    <main class="platform-shell">
+      <header class="platform-header" id="resumen">
+        <div>
+          <p class="kicker">Centro de automatización</p>
+          <h1>Panel de conexión y entrenamiento del bot</h1>
+        </div>
+        <div class="header-tools">
+          <a class="ghost-button" href="index.html">Ver landing</a>
+          <button class="solid-button" type="button" id="publishButton">Publicar cambios</button>
+        </div>
+      </header>
+
+      <section class="metric-grid" aria-label="Resumen operativo">
+        <article class="metric-card">
+          <span>Canales activos</span>
+          <strong id="activeChannels">0</strong>
+          <small>conectados a Meta</small>
+        </article>
+        <article class="metric-card">
+          <span>Respuestas entrenadas</span>
+          <strong id="trainedAnswers">0</strong>
+          <small>en la base del bot</small>
+        </article>
+        <article class="metric-card">
+          <span>Confianza mínima</span>
+          <strong id="confidenceLabel">75%</strong>
+          <small>antes de responder solo</small>
+        </article>
+        <article class="metric-card">
+          <span>Derivación humana</span>
+          <strong>Activa</strong>
+          <small>cuando el bot no sabe</small>
+        </article>
+      </section>
+
+      <section class="panel" id="conexiones">
+        <div class="panel-heading">
+          <div>
+            <p class="kicker">Conexiones Meta</p>
+            <h2>Activa los canales que vas a automatizar</h2>
+          </div>
+          <span class="status-pill">Permisos oficiales requeridos</span>
+        </div>
+        <div class="connection-grid" id="connectionGrid"></div>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="panel" id="entrenamiento">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Entrenamiento</p>
+              <h2>Base de conocimiento</h2>
+            </div>
+          </div>
+          <form class="training-form" id="trainingForm">
+            <label>
+              Pregunta o intención del cliente
+              <input name="question" type="text" placeholder="Ej. ¿Cuánto cuesta el plan mensual?" required />
+            </label>
+            <label>
+              Respuesta aprobada del bot
+              <textarea
+                name="answer"
+                rows="5"
+                placeholder="Escribe la respuesta que el bot debe usar."
+                required
+              ></textarea>
+            </label>
+            <div class="form-row">
+              <label>
+                Categoría
+                <select name="category">
+                  <option>Ventas</option>
+                  <option>Reservas</option>
+                  <option>Soporte</option>
+                  <option>Envíos</option>
+                  <option>Pagos</option>
+                </select>
+              </label>
+              <label>
+                Canal
+                <select name="channel">
+                  <option>Todos</option>
+                  <option>Instagram</option>
+                  <option>Facebook</option>
+                  <option>Messenger</option>
+                  <option>WhatsApp Business</option>
+                </select>
+              </label>
+            </div>
+            <button class="solid-button full" type="submit">Guardar entrenamiento</button>
+          </form>
+        </article>
+
+        <article class="panel answer-bank">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Respuestas</p>
+              <h2>Entrenamientos guardados</h2>
+            </div>
+            <button class="ghost-button danger" type="button" id="clearTraining">Limpiar</button>
+          </div>
+          <div class="answer-list" id="answerList"></div>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <article class="panel" id="pruebas">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Prueba del bot</p>
+              <h2>Simula una pregunta real</h2>
+            </div>
+          </div>
+          <form class="test-form" id="testForm">
+            <label>
+              Mensaje del cliente
+              <textarea
+                name="prompt"
+                rows="4"
+                placeholder="Ej. Hola, quiero saber el precio y si hacen envíos."
+                required
+              ></textarea>
+            </label>
+            <button class="solid-button full" type="submit">Generar respuesta</button>
+          </form>
+          <div class="bot-preview" aria-live="polite">
+            <span>Respuesta sugerida</span>
+            <p id="botPreview">Entrena una respuesta o escribe una pregunta para probar el bot.</p>
+          </div>
+        </article>
+
+        <article class="panel" id="reglas">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Reglas de seguridad</p>
+              <h2>Control de respuestas</h2>
+            </div>
+          </div>
+          <div class="rule-list">
+            <label class="switch-row">
+              <span>
+                Pedir datos antes de cotizar
+                <small>Nombre, teléfono y necesidad principal.</small>
+              </span>
+              <input type="checkbox" id="askData" checked />
+            </label>
+            <label class="switch-row">
+              <span>
+                Derivar preguntas sensibles
+                <small>Quejas, pagos fallidos o solicitudes legales.</small>
+              </span>
+              <input type="checkbox" id="humanHandoff" checked />
+            </label>
+            <label class="range-row">
+              <span>
+                Confianza mínima para responder
+                <small>Si baja de este valor, se envía a un asesor.</small>
+              </span>
+              <input type="range" id="confidenceRange" min="50" max="95" value="75" />
+            </label>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel roadmap">
+        <div>
+          <p class="kicker">Siguiente fase</p>
+          <h2>Lo que falta para conectarlo de verdad con Meta</h2>
+        </div>
+        <div class="roadmap-grid">
+          <article>
+            <strong>1. App de Meta Developers</strong>
+            <span>Configurar permisos, webhooks y revisión de acceso.</span>
+          </article>
+          <article>
+            <strong>2. Backend seguro</strong>
+            <span>Guardar tokens, recibir eventos y enviar respuestas.</span>
+          </article>
+          <article>
+            <strong>3. Motor del bot</strong>
+            <span>Conectar la base de conocimiento con IA y reglas de negocio.</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel api-flow" id="api">
+        <div>
+          <p class="kicker">Manejo con API</p>
+          <h2>Así viajaría cada respuesta automática</h2>
+        </div>
+        <div class="api-steps">
+          <article>
+            <span>Webhook</span>
+            <strong>Meta envía el mensaje</strong>
+            <p>Instagram, Facebook, Messenger o WhatsApp notifican tu servidor cuando entra una conversación.</p>
+          </article>
+          <article>
+            <span>Backend</span>
+            <strong>Tu servidor decide</strong>
+            <p>Valida el canal, guarda la conversación, consulta la base entrenada y aplica reglas de seguridad.</p>
+          </article>
+          <article>
+            <span>Bot</span>
+            <strong>Se genera la respuesta</strong>
+            <p>El motor busca una respuesta aprobada o usa IA con contexto del negocio y límites definidos.</p>
+          </article>
+          <article>
+            <span>Graph API</span>
+            <strong>Se responde al cliente</strong>
+            <p>El servidor envía la respuesta por el endpoint oficial del canal correspondiente.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="platform.js"></script>
+  </body>
+</html>
