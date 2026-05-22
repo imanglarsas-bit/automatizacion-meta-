@@ -2,7 +2,7 @@
 // POST /api/companies          — crea empresa y usuario cliente
 // GET  /api/companies/:id      — empresa por companyId
 import { readFile, writeFile } from "node:fs/promises";
-import { createCompany, getAllCompanies, getCompany } from "../services/company/companyConfigService.mjs";
+import { createCompany, getAllCompanies, getCompany, updateCompanyPlan } from "../services/company/companyConfigService.mjs";
 import { getPlan, isValidPlan, listPlans, normalizePlanKey } from "../services/billing/plans.mjs";
 import { ensureDataFile } from "../utils/dataPaths.mjs";
 
@@ -109,6 +109,28 @@ export async function handleCreateCompany(body) {
       user: { username, companyId, name },
     },
   };
+}
+
+export async function handleUpdateCompanyPlan(companyId, body) {
+  const planKey = normalizePlanKey(body.plan);
+  if (!isValidPlan(planKey)) {
+    return { status: 400, body: { error: "Plan no válido." } };
+  }
+
+  const plansFilePath = await ensureDataFile("plans.mock.json");
+  const plansStore = JSON.parse(await readFile(plansFilePath, "utf8"));
+  const planData = plansStore[planKey];
+
+  if (!planData) {
+    return { status: 404, body: { error: "Definición de plan no encontrada." } };
+  }
+
+  const updated = await updateCompanyPlan(companyId, planData);
+  if (!updated) {
+    return { status: 404, body: { error: "Empresa no encontrada." } };
+  }
+
+  return { status: 200, body: updated };
 }
 
 export async function handleGetClientUsers() {

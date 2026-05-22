@@ -48,3 +48,28 @@ export async function createCompany(company) {
   cache = companies;
   return company;
 }
+
+export async function updateCompanyPlan(companyId, planData) {
+  const companies = await loadCompanies();
+  const idx = companies.findIndex((c) => c.companyId === companyId);
+  if (idx === -1) return null;
+
+  const current = companies[idx];
+  companies[idx] = {
+    ...current,
+    plan: planData.key,
+    monthlyMessageLimit: planData.monthlyMessageLimit,
+    monthlyConversationLimit: planData.monthlyConversationLimit,
+    monthlyAiRequestLimit: planData.monthlyAiRequestLimit,
+    planFeatures: planData.features,
+    aiProvider: planData.features?.aiApi ? (current.aiProvider || "anthropic") : null,
+    fallbackProvider: planData.features?.aiApi ? (current.fallbackProvider || "openai") : null,
+    channels: planData.channels || current.channels,
+    planUpdatedAt: new Date().toISOString(),
+  };
+
+  companiesPath = companiesPath || await ensureDataFile("companies.mock.json");
+  await writeFile(companiesPath, JSON.stringify(companies, null, 2));
+  cache = companies;
+  return companies[idx];
+}

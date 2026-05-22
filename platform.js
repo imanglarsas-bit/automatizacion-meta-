@@ -150,6 +150,7 @@ const storage = {
 };
 
 const planEditorGrid = document.querySelector("#planEditorGrid");
+const subscriptionList = document.querySelector("#subscriptionList");
 const clientSelect = document.querySelector("#clientSelect");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
@@ -382,6 +383,164 @@ function renderLeadRules() {
   `;
 }
 
+const PLAN_BADGE = {
+  start: { label: "Start", cls: "badge-start" },
+  pro: { label: "Pro", cls: "badge-pro" },
+  business: { label: "Business", cls: "badge-business" },
+};
+
+function planBadge(planKey) {
+  const p = PLAN_BADGE[planKey] || { label: planKey, cls: "badge-start" };
+  return `<span class="plan-badge ${p.cls}">${escapeHTML(p.label)}</span>`;
+}
+
+function renderSubscriptions() {
+  if (!subscriptionList) return;
+  const companies = storage.clients;
+  const plans = storage.plans;
+
+  if (!companies.length) {
+    subscriptionList.innerHTML = `<div class="empty-state">No hay clientes registrados.</div>`;
+    return;
+  }
+
+  subscriptionList.innerHTML = companies.map((company) => {
+    const plan = plans.find((p) => p.key === company.plan) || plans[0];
+    const featureList = [
+      plan?.features?.aiApi ? "IA completa" : null,
+      plan?.features?.limitedAiApi ? "IA limitada" : null,
+      plan?.features?.advancedAutomations ? "Automatizaciones avanzadas" : null,
+      plan?.features?.businessDashboard ? "Dashboard empresarial" : null,
+      plan?.features?.multiUser ? "Múltiples usuarios" : null,
+    ].filter(Boolean);
+
+    return `
+      <article class="subscription-card" data-company-id="${escapeHTML(company.companyId)}">
+        <div class="subscription-main">
+          <div class="subscription-info">
+            <strong class="subscription-name">${escapeHTML(company.name)}</strong>
+            <span class="subscription-meta">${escapeHTML(company.contact?.email || company.companyId)}</span>
+            <div class="subscription-features">
+              ${featureList.map((f) => `<span class="feature-pill">${escapeHTML(f)}</span>`).join("")}
+              <span class="feature-pill limit">${formatLimit(plan?.monthlyMessageLimit)} mensajes/mes</span>
+            </div>
+          </div>
+          <div class="subscription-status-col">
+            ${planBadge(company.plan || "start")}
+            <span class="status-dot ${company.active ? "active" : "inactive"}">${company.active ? "Activo" : "Inactivo"}</span>
+            ${company.planUpdatedAt ? `<span class="subscription-date">Actualizado ${new Date(company.planUpdatedAt).toLocaleDateString("es-CO")}</span>` : ""}
+          </div>
+          <div class="subscription-actions">
+            <button class="ghost-button change-plan-btn" type="button" data-company-id="${escapeHTML(company.companyId)}">
+              Cambiar plan
+            </button>
+          </div>
+        </div>
+        <div class="plan-changer" id="changer-${escapeHTML(company.companyId)}" hidden>
+          <div class="plan-changer-inner">
+            <label class="plan-changer-label">
+              Nuevo plan
+              <select class="plan-changer-select" data-company-id="${escapeHTML(company.companyId)}">
+                ${plans.map((p) => `<option value="${escapeHTML(p.key)}" ${p.key === company.plan ? "selected" : ""}>${escapeHTML(p.name)} · ${formatLimit(p.monthlyMessageLimit)} mensajes/mes</option>`).join("")}
+              </select>
+            </label>
+            <div class="plan-changer-preview" id="preview-${escapeHTML(company.companyId)}">
+              ${buildPlanPreview(plan)}
+            </div>
+            <div class="plan-changer-actions">
+              <button class="solid-button apply-plan-btn" type="button" data-company-id="${escapeHTML(company.companyId)}">Aplicar cambio</button>
+              <button class="ghost-button cancel-plan-btn" type="button" data-company-id="${escapeHTML(company.companyId)}">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  subscriptionList.querySelectorAll(".change-plan-btn").forEach((btn) => {
+    btn.addEventListener("click", () => togglePlanChanger(btn.dataset.companyId));
+  });
+
+  subscriptionList.querySelectorAll(".cancel-plan-btn").forEach((btn) => {
+    btn.addEventListener("click", () => togglePlanChanger(btn.dataset.companyId, false));
+  });
+
+  subscriptionList.querySelectorAll(".plan-changer-select").forEach((select) => {
+    select.addEventListener("change", () => {
+      const plan = storage.plans.find((p) => p.key === select.value);
+      const preview = document.querySelector(`#preview-${select.dataset.companyId}`);
+      if (preview && plan) preview.innerHTML = buildPlanPreview(plan);
+    });
+  });
+
+  subscriptionList.querySelectorAll(".apply-plan-btn").forEach((btn) => {
+    btn.addEventListener("click", () => applyPlanChange(btn.dataset.companyId));
+  });
+}
+
+function buildPlanPreview(plan) {
+  if (!plan) return "";
+  const features = [
+    { key: "aiApi", label: "IA completa" },
+    { key: "limitedAiApi", label: "IA limitada" },
+    { key: "advancedAutomations", label: "Automatizaciones avanzadas" },
+    { key: "advancedIntegrations", label: "Integraciones avanzadas" },
+    { key: "businessDashboard", label: "Dashboard empresarial" },
+    { key: "multiUser", label: "Múltiples usuarios" },
+  ];
+  return `
+    <div class="plan-preview-grid">
+      <div class="plan-preview-limits">
+        <span>Mensajes/mes: <strong>${formatLimit(plan.monthlyMessageLimit)}</strong></span>
+        <span>Solicitudes IA/mes: <strong>${plan.monthlyAiRequestLimit === null ? "sin límite" : plan.monthlyAiRequestLimit || "No incluido"}</strong></span>
+        <span>Usuarios: <strong>${formatLimit(plan.userLimit)}</strong></span>
+      </div>
+      <div class="plan-preview-features">
+        ${features.map((f) => `
+          <span class="preview-feature ${plan.features?.[f.key] ? "on" : "off"}">
+            ${plan.features?.[f.key] ? "✓" : "✗"} ${escapeHTML(f.label)}
+          </span>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function togglePlanChanger(companyId, forceState) {
+  const changer = document.querySelector(`#changer-${companyId}`);
+  if (!changer) return;
+  const isHidden = changer.hidden;
+  const next = forceState !== undefined ? !forceState : isHidden;
+  changer.hidden = !next;
+}
+
+async function applyPlanChange(companyId) {
+  const select = subscriptionList.querySelector(`.plan-changer-select[data-company-id="${companyId}"]`);
+  if (!select) return;
+  const newPlanKey = select.value;
+
+  try {
+    const updated = await getJSON(`/api/companies/${encodeURIComponent(companyId)}/plan`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: newPlanKey }),
+    });
+
+    const idx = storage.clients.findIndex((c) => c.companyId === companyId);
+    if (idx !== -1) storage.clients[idx] = { ...storage.clients[idx], ...updated };
+
+    renderSubscriptions();
+    renderClients();
+    renderPlanOptions();
+    renderConnections();
+
+    const planName = storage.plans.find((p) => p.key === newPlanKey)?.name || newPlanKey;
+    showToast(`Plan de ${updated.name} cambiado a ${planName}.`);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 const FEATURE_LABELS = {
   aiApi: "IA completa (API)",
   limitedAiApi: "IA limitada",
@@ -488,6 +647,7 @@ function renderMetrics() {
 function renderAll() {
   renderClients();
   renderPlanOptions();
+  renderSubscriptions();
   renderPlanEditor();
   renderConnections();
   renderTraining();
