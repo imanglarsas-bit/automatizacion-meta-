@@ -1,0 +1,104 @@
+[
+  {
+    "companyId": "inversiones-manglar",
+    "conversationId": "conv-src-001",
+    "customerName": "Laura Méndez",
+    "customerId": "573001112233",
+    "channel": "whatsapp",
+    "unit": "SRC Consulting",
+    "status": "human_required",
+    "priority": "alta",
+    "lastMessageAt": "2026-05-21T20:15:00.000Z",
+    "summary": "Quiere instalar cargadores eléctricos en una copropiedad y pide cotización.",
+    "messages": [
+      {
+        "id": "msg-001",
+        "sender": "customer",
+        "text": "Hola, necesito instalar cargadores eléctricos para un conjunto residencial.",
+        "createdAt": "2026-05-21T20:11:00.000Z"
+      },
+      {
+        "id": "msg-002",
+        "sender": "bot",
+        "text": "Podemos ayudarte con diagnóstico, diseño e instalación. ¿Cuántos parqueaderos tendría el proyecto?",
+        "createdAt": "2026-05-21T20:12:00.000Z"
+      },
+      {
+        "id": "msg-003",
+        "sender": "customer",
+        "text": "Son 48 parqueaderos. Necesito que nos digan requisitos legales y técnicos.",
+        "createdAt": "2026-05-21T20:15:00.000Z"
+      },
+      {
+        "id": "msg-004",
+        "sender": "system",
+        "text": "Derivado a humano: requiere análisis técnico y legal.",
+        "createdAt": "2026-05-21T20:15:06.000Z"
+      }
+    ]
+  },
+  {
+    "companyId": "inversiones-manglar",
+    "conversationId": "conv-law-002",
+    "customerName": "Andrés Rojas",
+    "customerId": "ig-user-7821",
+    "channel": "instagram",
+    "unit": "Cárdenas Romero Abogados",
+    "status": "human_required",
+    "priority": "media",
+    "lastMessageAt": "2026-05-21T19:40:00.000Z",
+    "summary": "Consulta legal sensible sobre contrato de arrendamiento comercial.",
+    "messages": [
+      {
+        "id": "msg-101",
+        "sender": "customer",
+        "text": "Tengo un problema con un contrato de arrendamiento comercial.",
+        "createdAt": "2026-05-21T19:37:00.000Z"
+      },
+      {
+        "id": "msg-102",
+        "sender": "bot",
+        "text": "Puedo orientarte de forma general. Para revisar el caso con precisión, un abogado debe conocer el contrato.",
+        "createdAt": "2026-05-21T19:38:00.000Z"
+      },
+      {
+        "id": "msg-103",
+        "sender": "system",
+        "text": "Derivado a humano: posible asesoría legal específica.",
+        "createdAt": "2026-05-21T19:40:00.000Z"
+      }
+    ]
+  },
+  {
+    "companyId": "inversiones-manglar",
+    "conversationId": "conv-hotel-003",
+    "customerName": "Camila Torres",
+    "customerId": "573009998877",
+    "channel": "whatsapp",
+    "unit": "Mucuba Hotel & Glamping",
+    "status": "answered",
+    "priority": "baja",
+    "lastMessageAt": "2026-05-21T18:20:00.000Z",
+    "summary": "Reserva de alojamiento para fin de semana.",
+    "messages": [
+      {
+        "id": "msg-201",
+        "sender": "customer",
+        "text": "¿Tienen disponibilidad para dos personas este fin de semana?",
+        "createdAt": "2026-05-21T18:10:00.000Z"
+      },
+      {
+        "id": "msg-202",
+        "sender": "bot",
+        "text": "Sí, tenemos opciones disponibles. ¿Prefieres glamping o habitación?",
+        "createdAt": "2026-05-21T18:11:00.000Z"
+      },
+      {
+        "id": "msg-203",
+        "sender": "human",
+        "text": "Hola, Camila. Te confirmo disponibilidad para dos personas. Te envío las opciones y valores para reservar.",
+        "createdAt": "2026-05-21T18:20:00.000Z"
+      }
+    ]
+  }
+]

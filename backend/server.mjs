@@ -9,7 +9,7 @@ import { handleTestMessage }      from "./routes/testRoutes.mjs";
 import { handleGetCompanies, handleGetCompany } from "./routes/companies.mjs";
 import { handleGetMetrics }       from "./routes/metrics.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
-import { handleGetMessages }      from "./routes/messages.mjs";
+import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleWebhookVerification as saasWebhookVerify,
          handleWebhookEvent as saasWebhookEvent } from "./routes/metaWebhook.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
@@ -37,7 +37,14 @@ const contentTypes = {
   ".svg": "image/svg+xml",
 };
 
-const privatePaths = new Set(["/plataforma.html", "/platform.css", "/platform.js"]);
+const privatePaths = new Set([
+  "/plataforma.html",
+  "/platform.css",
+  "/platform.js",
+  "/cliente.html",
+  "/client.css",
+  "/client.js",
+]);
 
 function parseCookies(request) {
   return Object.fromEntries(
@@ -362,6 +369,16 @@ async function handleApi(request, response) {
     const result = await handleGetMessages(parts[0], parts[1]);
     sendJson(response, result.status, result.body);
     return true;
+  }
+
+  if (request.method === "POST" && url.pathname.startsWith("/api/messages/")) {
+    const parts = url.pathname.replace("/api/messages/", "").split("/");
+    if (parts[2] === "reply") {
+      const body = await readBody(request);
+      const result = await handleReplyToConversation(parts[0], parts[1], body);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
   }
 
   // ────────────────────────────────────────────────────────────────────────────

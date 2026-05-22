@@ -99,6 +99,7 @@ Producción:
 - `https://app.evcarcol.com`
 - `https://app.evcarcol.com/login.html`
 - `https://app.evcarcol.com/plataforma.html` protegido por contraseña
+- `https://app.evcarcol.com/cliente.html` portal privado para responder conversaciones humanas
 - `https://app.evcarcol.com/webhooks/meta`
 
 ## 7. Importante para producción

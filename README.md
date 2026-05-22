@@ -23,6 +23,9 @@ PLATFORM_PASSWORD=tu_contraseña_privada
 
 La landing (`/`) sigue siendo pública. El panel y las APIs internas quedan protegidas por sesión.
 
+También existe un portal de cliente en `/cliente.html`. Ese portal muestra la bandeja humana:
+conversaciones derivadas por el bot, historial y formulario para responder desde la plataforma.
+
 ---
 
 ## Endpoints disponibles
@@ -46,6 +49,8 @@ La landing (`/`) sigue siendo pública. El panel y las APIs internas quedan prot
 | GET | `/api/conversations/:companyId` | Historial (pendiente DB) |
 | GET | `/webhook/meta` | Verificación Meta (SaaS) |
 | POST | `/webhook/meta` | Eventos Meta (SaaS) |
+| GET | `/api/messages/:companyId/:conversationId` | Historial de una conversación |
+| POST | `/api/messages/:companyId/:conversationId/reply` | Respuesta humana desde la plataforma |
 
 ---
 

@@ -1,14 +1,87 @@
-// Placeholder routes for future message history persistence.
-// GET /api/messages/:companyId/:conversationId  — mensajes de una conversación
+// Message routes. JSON persistence is temporary until a real database is added.
+// GET  /api/messages/:companyId/:conversationId
+// POST /api/messages/:companyId/:conversationId/reply
+
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { sendMessage } from "../services/meta/metaService.mjs";
+
+const dataPath = join(fileURLToPath(new URL("..", import.meta.url)), "data", "conversations.mock.json");
+
+async function readConversations() {
+  return JSON.parse(await readFile(dataPath, "utf8"));
+}
+
+async function saveConversations(conversations) {
+  await writeFile(dataPath, JSON.stringify(conversations, null, 2));
+}
 
 export async function handleGetMessages(companyId, conversationId) {
+  const conversations = await readConversations();
+  const conversation = conversations.find(
+    (item) => item.companyId === companyId && item.conversationId === conversationId,
+  );
+
+  if (!conversation) {
+    return {
+      status: 404,
+      body: { error: "Conversación no encontrada." },
+    };
+  }
+
+  return {
+    status: 200,
+    body: conversation,
+  };
+}
+
+export async function handleReplyToConversation(companyId, conversationId, body) {
+  const reply = String(body.reply || "").trim();
+  if (!reply) {
+    return {
+      status: 400,
+      body: { error: "La respuesta no puede estar vacía." },
+    };
+  }
+
+  const conversations = await readConversations();
+  const conversation = conversations.find(
+    (item) => item.companyId === companyId && item.conversationId === conversationId,
+  );
+
+  if (!conversation) {
+    return {
+      status: 404,
+      body: { error: "Conversación no encontrada." },
+    };
+  }
+
+  const message = {
+    id: `human-${Date.now()}`,
+    sender: "human",
+    text: reply,
+    createdAt: new Date().toISOString(),
+  };
+
+  conversation.messages.push(message);
+  conversation.status = "answered";
+  conversation.lastMessageAt = message.createdAt;
+
+  const metaResult = await sendMessage({
+    channel: conversation.channel,
+    recipientId: conversation.customerId,
+    text: reply,
+  });
+
+  await saveConversations(conversations);
+
   return {
     status: 200,
     body: {
-      companyId,
-      conversationId,
-      messages: [],
-      note: "Historial de mensajes pendiente de base de datos real.",
+      ok: true,
+      conversation,
+      metaResult,
     },
   };
 }

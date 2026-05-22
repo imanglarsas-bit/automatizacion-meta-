@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Respuesta360 | Portal cliente</title>
+    <meta name="description" content="Portal privado para atender conversaciones derivadas por el bot." />
+    <link rel="stylesheet" href="client.css" />
+  </head>
+  <body>
+    <aside class="client-sidebar" aria-label="Navegación cliente">
+      <a class="client-brand" href="index.html">
+        <span>R</span>
+        Respuesta360
+      </a>
+      <nav>
+        <a class="active" href="#bandeja">Bandeja humana</a>
+        <a href="#conversacion">Conversación</a>
+        <a href="plataforma.html">Panel admin</a>
+      </nav>
+      <form method="post" action="/logout">
+        <button type="submit">Salir</button>
+      </form>
+    </aside>
+
+    <main class="client-shell">
+      <header class="client-header">
+        <div>
+          <p class="kicker">Portal del cliente</p>
+          <h1>Conversaciones que necesitan respuesta humana</h1>
+        </div>
+        <label class="company-picker">
+          Empresa
+          <select id="companySelect"></select>
+        </label>
+      </header>
+
+      <section class="summary-grid" aria-label="Resumen de atención">
+        <article>
+          <span>Pendientes</span>
+          <strong id="pendingCount">0</strong>
+        </article>
+        <article>
+          <span>Respondidas</span>
+          <strong id="answeredCount">0</strong>
+        </article>
+        <article>
+          <span>Canales</span>
+          <strong id="channelCount">0</strong>
+        </article>
+      </section>
+
+      <section class="client-workspace">
+        <article class="panel inbox-panel" id="bandeja">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker">Bandeja humana</p>
+              <h2>Casos derivados por el bot</h2>
+            </div>
+            <select id="statusFilter" aria-label="Filtrar conversaciones">
+              <option value="all">Todas</option>
+              <option value="human_required">Pendiente humano</option>
+              <option value="answered">Respondidas</option>
+            </select>
+          </div>
+          <div class="conversation-list" id="conversationList"></div>
+        </article>
+
+        <article class="panel conversation-panel" id="conversacion">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker" id="conversationChannel">Conversación</p>
+              <h2 id="conversationTitle">Selecciona un caso</h2>
+            </div>
+            <span class="status-pill" id="conversationStatus">Sin selección</span>
+          </div>
+          <p class="conversation-summary" id="conversationSummary">
+            Elige una conversación de la bandeja para ver el historial y responder.
+          </p>
+          <div class="message-thread" id="messageThread"></div>
+          <form class="reply-form" id="replyForm">
+            <label>
+              Respuesta humana
+              <textarea
+                name="reply"
+                rows="4"
+                placeholder="Escribe la respuesta que recibirá el cliente por el canal original."
+                required
+              ></textarea>
+            </label>
+            <button type="submit">Enviar respuesta</button>
+          </form>
+        </article>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="client.js"></script>
+  </body>
+</html>
