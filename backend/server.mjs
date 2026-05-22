@@ -108,7 +108,7 @@ async function readRawBody(request) {
 async function handleLogin(request, response) {
   const raw = await readRawBody(request);
   const form = new URLSearchParams(raw);
-  const password = form.get("password");
+  const password = form.get("password")?.trim();
 
   if (password === env.platformPassword) {
     sendLoginCookie(request, response);

@@ -24,9 +24,17 @@
 
       <form class="login-card" method="post" action="/login">
         <h2>Entrar a la plataforma</h2>
+        <p class="login-error" id="loginError">La contraseña no coincide. Inténtalo de nuevo.</p>
         <label>
           Contraseña de acceso
-          <input name="password" type="password" autocomplete="current-password" required />
+          <input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            autocapitalize="off"
+            spellcheck="false"
+            required
+          />
         </label>
         <button type="submit">Entrar</button>
         <p class="login-note">
@@ -34,5 +42,10 @@
         </p>
       </form>
     </main>
+    <script>
+      if (new URLSearchParams(window.location.search).get("error") === "1") {
+        document.querySelector("#loginError").classList.add("visible");
+      }
+    </script>
   </body>
 </html>

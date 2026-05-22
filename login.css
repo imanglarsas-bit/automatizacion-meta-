@@ -158,6 +158,20 @@ a:focus {
   font-size: 0.92rem;
 }
 
+.login-error {
+  display: none;
+  margin: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff5eb;
+  color: #9a3412;
+  font-weight: 800;
+}
+
+.login-error.visible {
+  display: block;
+}
+
 @media (max-width: 820px) {
   body {
     place-items: stretch;
