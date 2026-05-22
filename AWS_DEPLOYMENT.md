@@ -139,6 +139,18 @@ https://app.imanglar.com/webhook/meta
 
 El token de verificación debe ser el mismo valor de `META_VERIFY_TOKEN`.
 
+## Sincronizar datos base sin borrar clientes
+
+Si agregas perfiles base en el repositorio, como EV Car Electricol, y AWS ya tiene datos persistentes en `DATA_DIR`, ejecuta:
+
+```bash
+git pull
+DATA_DIR=/var/lib/idigital-data npm run sync:defaults
+pm2 restart idigital --update-env
+```
+
+Esto agrega empresas, usuarios y conversaciones base que falten, y actualiza las definiciones comerciales de los planes `Start`, `Pro` y `Business` sin borrar clientes creados en producción.
+
 ## Opción con Docker
 
 El proyecto incluye `Dockerfile`, así que también se puede subir a servicios como Elastic Beanstalk, ECS o App Runner.

@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node backend/server.mjs",
-    "dev": "node backend/server.mjs"
+    "dev": "node backend/server.mjs",
+    "sync:defaults": "node backend/scripts/sync-default-data.mjs"
   },
   "engines": {
     "node": ">=18"
