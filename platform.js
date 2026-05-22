@@ -109,6 +109,7 @@ const clientSelect = document.querySelector("#clientSelect");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
 const clientForm = document.querySelector("#clientForm");
+const clientUserList = document.querySelector("#clientUserList");
 const connectionGrid = document.querySelector("#connectionGrid");
 const activeChannels = document.querySelector("#activeChannels");
 const trainedAnswers = document.querySelector("#trainedAnswers");
@@ -173,6 +174,33 @@ function renderClients() {
 
   clientName.textContent = activeClient.name;
   clientDescription.textContent = `${activeClient.plan || "business"} · ${activeClient.channels?.join(", ") || "sin canales"}`;
+}
+
+async function renderClientUsers() {
+  const users = await getJSON("/api/client-users");
+  if (!users?.length) {
+    clientUserList.innerHTML = `<div class="empty-state">Todavía no hay usuarios cliente.</div>`;
+    return;
+  }
+
+  const companyById = new Map(storage.clients.map((company) => [company.companyId, company.name]));
+  clientUserList.innerHTML = users
+    .map(
+      (user) => `
+        <article class="client-user-item">
+          <div>
+            <strong>${escapeHTML(user.username)}</strong>
+            <span>${escapeHTML(companyById.get(user.companyId) || user.name || user.companyId)}</span>
+          </div>
+          <button class="delete-user-button" type="button" data-username="${escapeHTML(user.username)}">Eliminar</button>
+        </article>
+      `,
+    )
+    .join("");
+
+  document.querySelectorAll(".delete-user-button").forEach((button) => {
+    button.addEventListener("click", () => deleteClientUser(button.dataset.username));
+  });
 }
 
 function renderConnections() {
@@ -364,6 +392,24 @@ async function init() {
   }
 
   renderAll();
+  await renderClientUsers();
+}
+
+async function deleteClientUser(username) {
+  const confirmed = window.confirm(`¿Eliminar el usuario cliente "${username}"?`);
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await getJSON(`/api/client-users/${encodeURIComponent(username)}`, {
+      method: "DELETE",
+    });
+    await renderClientUsers();
+    showToast("Usuario cliente eliminado.");
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 init().catch((error) => {

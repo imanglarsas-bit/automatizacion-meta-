@@ -86,6 +86,33 @@ export async function handleCreateCompany(body) {
   };
 }
 
+export async function handleGetClientUsers() {
+  const users = JSON.parse(await readFile(usersPath, "utf8"));
+  return {
+    status: 200,
+    body: users.map(({ password, ...user }) => user),
+  };
+}
+
+export async function handleDeleteClientUser(username) {
+  const normalizedUsername = String(username || "").trim().toLowerCase();
+  const users = JSON.parse(await readFile(usersPath, "utf8"));
+  const nextUsers = users.filter((user) => user.username !== normalizedUsername);
+
+  if (nextUsers.length === users.length) {
+    return {
+      status: 404,
+      body: { error: "Usuario cliente no encontrado." },
+    };
+  }
+
+  await writeFile(usersPath, JSON.stringify(nextUsers, null, 2));
+  return {
+    status: 200,
+    body: { ok: true, username: normalizedUsername },
+  };
+}
+
 function slugify(value) {
   return value
     .toLowerCase()

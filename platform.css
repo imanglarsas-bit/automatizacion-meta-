@@ -257,12 +257,47 @@ h2 {
 }
 
 .client-form {
-  width: min(520px, 100%);
+  width: min(820px, 100%);
   gap: 12px;
 }
 
 .client-form label {
   flex: 1;
+}
+
+.client-user-list {
+  display: grid;
+  gap: 10px;
+}
+
+.client-user-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.client-user-item strong {
+  display: block;
+}
+
+.client-user-item span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.delete-user-button {
+  min-height: 38px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: var(--danger);
+  cursor: pointer;
+  font-weight: 850;
 }
 
 .panel-heading.compact {

@@ -6,7 +6,13 @@ import { fileURLToPath } from "node:url";
 
 // ── SaaS layer (non-destructive additions) ───────────────────────────────────
 import { handleTestMessage }      from "./routes/testRoutes.mjs";
-import { handleCreateCompany, handleGetCompanies, handleGetCompany } from "./routes/companies.mjs";
+import {
+  handleCreateCompany,
+  handleDeleteClientUser,
+  handleGetClientUsers,
+  handleGetCompanies,
+  handleGetCompany,
+} from "./routes/companies.mjs";
 import { handleGetMetrics }       from "./routes/metrics.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
@@ -391,6 +397,29 @@ async function handleApi(request, response) {
     }
 
     const result = await handleGetCompanies();
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/client-users") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const result = await handleGetClientUsers();
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "DELETE" && url.pathname.startsWith("/api/client-users/")) {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const username = decodeURIComponent(url.pathname.replace("/api/client-users/", ""));
+    const result = await handleDeleteClientUser(username);
     sendJson(response, result.status, result.body);
     return true;
   }
