@@ -89,6 +89,15 @@ const defaultTraining = [
   },
 ];
 
+const defaultLeadRules = {
+  requiredData: "Nombre, teléfono, empresa, canal de contacto y necesidad principal.",
+  qualificationQuestions:
+    "¿Qué necesitas automatizar? ¿Cuántos mensajes recibes al día? ¿Cuándo quieres implementar la solución?",
+  hotLead: "Compra inmediata, solicita precio, pide demo, quiere agendar llamada o tiene urgencia.",
+  warmLead: "Compara opciones, pregunta beneficios, está evaluando proveedores o quiere más información.",
+  handoffRules: "Pasar a humano si pide negociación, descuento, soporte sensible, queja o cierre comercial.",
+};
+
 const defaultClients = [
   {
     companyId: "inversiones-manglar",
@@ -131,6 +140,13 @@ const storage = {
   set training(value) {
     localStorage.setItem(this.key("training"), JSON.stringify(value));
   },
+  get leadRules() {
+    const saved = localStorage.getItem(this.key("lead_rules"));
+    return saved ? JSON.parse(saved) : defaultLeadRules;
+  },
+  set leadRules(value) {
+    localStorage.setItem(this.key("lead_rules"), JSON.stringify(value));
+  },
   get confidence() {
     return Number(localStorage.getItem(this.key("confidence")) || 75);
   },
@@ -152,6 +168,9 @@ const confidenceLabel = document.querySelector("#confidenceLabel");
 const trainingForm = document.querySelector("#trainingForm");
 const answerList = document.querySelector("#answerList");
 const clearTraining = document.querySelector("#clearTraining");
+const leadTrainingForm = document.querySelector("#leadTrainingForm");
+const leadRuleList = document.querySelector("#leadRuleList");
+const resetLeadRules = document.querySelector("#resetLeadRules");
 const testForm = document.querySelector("#testForm");
 const botPreview = document.querySelector("#botPreview");
 const publishButton = document.querySelector("#publishButton");
@@ -335,6 +354,39 @@ function renderTraining() {
   });
 }
 
+function renderLeadRules() {
+  const rules = storage.leadRules;
+
+  leadTrainingForm.requiredData.value = rules.requiredData || "";
+  leadTrainingForm.qualificationQuestions.value = rules.qualificationQuestions || "";
+  leadTrainingForm.hotLead.value = rules.hotLead || "";
+  leadTrainingForm.warmLead.value = rules.warmLead || "";
+  leadTrainingForm.handoffRules.value = rules.handoffRules || "";
+
+  leadRuleList.innerHTML = `
+    <article class="lead-rule-item">
+      <span>Datos obligatorios</span>
+      <p>${escapeHTML(rules.requiredData)}</p>
+    </article>
+    <article class="lead-rule-item hot">
+      <span>Lead caliente</span>
+      <p>${escapeHTML(rules.hotLead)}</p>
+    </article>
+    <article class="lead-rule-item warm">
+      <span>Lead medio</span>
+      <p>${escapeHTML(rules.warmLead)}</p>
+    </article>
+    <article class="lead-rule-item">
+      <span>Preguntas de calificación</span>
+      <p>${escapeHTML(rules.qualificationQuestions)}</p>
+    </article>
+    <article class="lead-rule-item">
+      <span>Derivación humana</span>
+      <p>${escapeHTML(rules.handoffRules)}</p>
+    </article>
+  `;
+}
+
 function renderMetrics() {
   const connectedCount = Object.values(storage.channels).filter(Boolean).length;
   activeChannels.textContent = connectedCount;
@@ -348,6 +400,7 @@ function renderAll() {
   renderPlanOptions();
   renderConnections();
   renderTraining();
+  renderLeadRules();
   renderMetrics();
 }
 
@@ -431,18 +484,63 @@ clearTraining.addEventListener("click", () => {
   showToast("Base de conocimiento limpiada.");
 });
 
+leadTrainingForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(leadTrainingForm);
+
+  storage.leadRules = {
+    requiredData: data.get("requiredData").trim(),
+    qualificationQuestions: data.get("qualificationQuestions").trim(),
+    hotLead: data.get("hotLead").trim(),
+    warmLead: data.get("warmLead").trim(),
+    handoffRules: data.get("handoffRules").trim(),
+  };
+
+  renderLeadRules();
+  showToast("Reglas de leads guardadas para este cliente.");
+});
+
+resetLeadRules.addEventListener("click", () => {
+  storage.leadRules = defaultLeadRules;
+  renderLeadRules();
+  showToast("Reglas de leads restauradas.");
+});
+
 testForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const prompt = new FormData(testForm).get("prompt");
   const match = findBestAnswer(prompt);
   const plan = getPlan(storage.activeClient.plan || "business");
+  const leadRules = storage.leadRules;
   const planPrefix = plan.features?.aiApi
     ? ""
     : "Plan Start: esta respuesta sale de automatizaciones preconfiguradas, sin consumir APIs de IA. ";
+  const leadHint = classifyLead(prompt, leadRules);
   botPreview.textContent = match
-    ? `${planPrefix}${match.answer}`
-    : `${planPrefix}No encontré una respuesta entrenada para esa pregunta. Recomendación: derivar a un asesor y guardar esta intención en la base de conocimiento.`;
+    ? `${planPrefix}${match.answer} ${leadHint}`
+    : `${planPrefix}No encontré una respuesta entrenada para esa pregunta. ${leadHint} Recomendación: pedir ${leadRules.requiredData.toLowerCase()} y guardar esta intención en la base de conocimiento.`;
 });
+
+function classifyLead(prompt, rules) {
+  const normalizedPrompt = normalize(prompt);
+  const hotWords = normalize(rules.hotLead).split(/\W+/).filter((word) => word.length > 3);
+  const warmWords = normalize(rules.warmLead).split(/\W+/).filter((word) => word.length > 3);
+  const handoffWords = normalize(rules.handoffRules).split(/\W+/).filter((word) => word.length > 3);
+
+  if (handoffWords.some((word) => normalizedPrompt.includes(word))) {
+    return "Clasificación: derivar a humano por regla comercial.";
+  }
+
+  if (hotWords.some((word) => normalizedPrompt.includes(word))) {
+    return "Clasificación: lead caliente. Priorizar seguimiento comercial.";
+  }
+
+  if (warmWords.some((word) => normalizedPrompt.includes(word))) {
+    return "Clasificación: lead medio. Nutrir con preguntas de calificación.";
+  }
+
+  return "Clasificación: lead frío o sin datos suficientes.";
+}
 
 publishButton.addEventListener("click", () => {
   showToast("Cambios listos para publicar. La integración real requiere backend y app de Meta.");

@@ -386,6 +386,7 @@ h2 {
 }
 
 .training-form,
+.lead-training-form,
 .test-form,
 .rule-list {
   display: grid;
@@ -466,6 +467,42 @@ a:focus {
 }
 
 .answer-item p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.lead-rule-list {
+  display: grid;
+  gap: 12px;
+}
+
+.lead-rule-item {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.lead-rule-item.hot {
+  border-color: rgba(249, 115, 91, 0.35);
+  background: #fff7ed;
+}
+
+.lead-rule-item.warm {
+  border-color: rgba(20, 184, 166, 0.32);
+  background: #f0fdfa;
+}
+
+.lead-rule-item span {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.lead-rule-item p {
   margin-bottom: 0;
   color: var(--muted);
 }

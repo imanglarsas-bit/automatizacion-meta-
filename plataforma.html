@@ -182,6 +182,68 @@
         </article>
       </section>
 
+      <section class="workspace-grid lead-training-grid" aria-label="Entrenamiento de leads">
+        <article class="panel" id="leadTrainingPanel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Entrenamiento de leads</p>
+              <h2>Reglas para calificar prospectos</h2>
+            </div>
+          </div>
+          <form class="lead-training-form" id="leadTrainingForm">
+            <label>
+              Datos obligatorios que debe pedir el bot
+              <textarea
+                name="requiredData"
+                rows="3"
+                placeholder="Ej. nombre, teléfono, empresa, necesidad, presupuesto aproximado"
+                required
+              ></textarea>
+            </label>
+            <label>
+              Preguntas de calificación
+              <textarea
+                name="qualificationQuestions"
+                rows="4"
+                placeholder="Ej. ¿Qué servicio necesitas? ¿Cuándo quieres empezar? ¿Cuál es tu presupuesto?"
+                required
+              ></textarea>
+            </label>
+            <div class="form-row">
+              <label>
+                Lead caliente
+                <input name="hotLead" type="text" placeholder="Ej. quiere comprar, pide precio, agenda llamada" required />
+              </label>
+              <label>
+                Lead medio
+                <input name="warmLead" type="text" placeholder="Ej. pregunta beneficios, compara opciones" required />
+              </label>
+            </div>
+            <label>
+              Cuándo pasar a humano
+              <textarea
+                name="handoffRules"
+                rows="3"
+                placeholder="Ej. si pide descuento, queja, caso sensible, compra inmediata o negociación"
+                required
+              ></textarea>
+            </label>
+            <button class="solid-button full" type="submit">Guardar reglas de leads</button>
+          </form>
+        </article>
+
+        <article class="panel lead-rules-preview">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Mapa comercial</p>
+              <h2>Cómo calificará el bot</h2>
+            </div>
+            <button class="ghost-button danger" type="button" id="resetLeadRules">Restaurar</button>
+          </div>
+          <div class="lead-rule-list" id="leadRuleList"></div>
+        </article>
+      </section>
+
       <section class="workspace-grid">
         <article class="panel" id="pruebas">
           <div class="panel-heading compact">
