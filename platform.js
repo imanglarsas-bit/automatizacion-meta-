@@ -290,33 +290,48 @@ async function renderClientUsers() {
 
 function renderConnections() {
   const connected = storage.channels;
+  const metaConnections = storage.settings.metaConnections || {};
   const plan = getPlan(storage.activeClient.plan || "business");
   const allowedChannels = new Set(plan.channels || []);
 
   connectionGrid.innerHTML = channels
     .map((channel) => {
       const isConnected = Boolean(connected[channel.key]);
+      const metaStatus = metaConnections[channel.key]?.status;
       const isAllowed = allowedChannels.has(channel.key);
+      const statusText = metaStatus === "connected"
+        ? "Autorizado por Meta"
+        : isConnected
+          ? "Marcado como conectado"
+          : channel.requirement;
       return `
         <article class="connection-card ${isAllowed ? "" : "locked"}">
           <div class="connection-top">
             <img class="channel-dot" src="${channel.logo}" alt="${channel.name}" />
             <button class="connect-button ${isConnected ? "connected" : ""}" type="button" data-channel="${channel.key}" ${isAllowed ? "" : "disabled"}>
-              ${isAllowed ? (isConnected ? "Conectado" : "Conectar") : "No incluido"}
+              ${isAllowed ? (isConnected ? "Conectado" : "Conectar con Meta") : "No incluido"}
             </button>
           </div>
           <div>
             <h3>${channel.name}</h3>
             <p>${channel.description}</p>
           </div>
-          <small>${isAllowed ? channel.requirement : `Disponible al mejorar el plan. Plan actual: ${plan.name}`}</small>
+          <small>${isAllowed ? statusText : `Disponible al mejorar el plan. Plan actual: ${plan.name}`}</small>
         </article>
       `;
     })
     .join("");
 
   document.querySelectorAll(".connect-button").forEach((button) => {
-    button.addEventListener("click", () => toggleConnection(button.dataset.channel));
+    button.addEventListener("click", () => {
+      const channel = button.dataset.channel;
+      if (storage.channels[channel]) {
+        toggleConnection(channel);
+        return;
+      }
+
+      startMetaConnection(channel);
+    });
   });
 }
 
@@ -334,6 +349,29 @@ function toggleConnection(key) {
   saveCompanySettings({ channels: connected })
     .then(() => showToast(connected[key] ? "Canal guardado como conectado." : "Canal desactivado y guardado."))
     .catch((error) => showToast(error.message));
+}
+
+async function startMetaConnection(key) {
+  const plan = getPlan(storage.activeClient.plan || "business");
+  if (!plan.channels?.includes(key)) {
+    showToast(`Este canal no está incluido en el plan ${plan.name}.`);
+    return;
+  }
+
+  const query = new URLSearchParams({
+    companyId: storage.activeClient.companyId,
+    channel: key,
+  });
+
+  try {
+    const result = await getJSON(`/api/meta/connect-url?${query.toString()}`);
+    if (!result?.connectUrl) return;
+
+    window.open(result.connectUrl, "meta-connect", "width=760,height=760,noopener,noreferrer");
+    showToast("Abrimos Meta para autorizar la conexión.");
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function renderTraining() {

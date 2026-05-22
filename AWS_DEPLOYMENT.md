@@ -21,6 +21,10 @@ ADMIN_PASSWORD=pon_una_clave_segura
 
 META_VERIFY_TOKEN=pon_un_token_de_verificacion
 GRAPH_API_VERSION=v22.0
+META_APP_ID=
+META_APP_SECRET=
+META_LOGIN_CONFIG_ID=
+META_OAUTH_REDIRECT_URI=https://app.imanglar.com/meta/oauth/callback
 META_LIVE_MODE=false
 META_ACCESS_TOKEN=
 META_PHONE_NUMBER_ID=
@@ -138,6 +142,33 @@ https://app.imanglar.com/webhook/meta
 ```
 
 El token de verificación debe ser el mismo valor de `META_VERIFY_TOKEN`.
+
+## Conectar cuentas de Meta desde el panel
+
+Para que el botón `Conectar con Meta` abra el flujo real de Meta, debes crear una app en Meta for Developers y configurar estas variables en AWS:
+
+```bash
+META_APP_ID=tu_app_id_de_meta
+META_APP_SECRET=tu_app_secret_de_meta
+META_LOGIN_CONFIG_ID=tu_configuracion_de_facebook_login_for_business
+META_OAUTH_REDIRECT_URI=https://app.imanglar.com/meta/oauth/callback
+PUBLIC_BASE_URL=https://app.imanglar.com
+```
+
+En Meta, agrega esta URL como redirect OAuth válido:
+
+```text
+https://app.imanglar.com/meta/oauth/callback
+```
+
+Después reinicia la app:
+
+```bash
+pm2 restart idigital --update-env
+pm2 save
+```
+
+Sin esas variables, el panel no puede abrir Meta porque Meta exige saber qué app está solicitando permisos.
 
 ## Sincronizar datos base sin borrar clientes
 

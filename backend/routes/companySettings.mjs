@@ -22,6 +22,7 @@ const DEFAULT_TRAINING = [
 
 const DEFAULT_SETTINGS = {
   channels: {},
+  metaConnections: {},
   training: DEFAULT_TRAINING,
   confidence: 75,
 };
@@ -82,6 +83,7 @@ export async function handleSaveCompanySettings(companyId, body) {
 function normalizeSettings(value = {}) {
   return {
     channels: normalizeChannels(value.channels),
+    metaConnections: normalizeMetaConnections(value.metaConnections),
     training: normalizeTraining(value.training),
     confidence: normalizeConfidence(value.confidence),
   };
@@ -94,6 +96,25 @@ function normalizeChannels(value) {
 
   return Object.fromEntries(
     Object.entries(value).map(([key, enabled]) => [key, Boolean(enabled)]),
+  );
+}
+
+function normalizeMetaConnections(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([key, connection]) => [
+      key,
+      {
+        status: String(connection?.status || "pending"),
+        code: connection?.code ? String(connection.code) : "",
+        error: connection?.error ? String(connection.error) : "",
+        connectedAt: connection?.connectedAt ? String(connection.connectedAt) : "",
+        updatedAt: connection?.updatedAt ? String(connection.updatedAt) : "",
+      },
+    ]),
   );
 }
 

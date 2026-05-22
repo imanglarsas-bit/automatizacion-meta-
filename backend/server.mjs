@@ -20,6 +20,7 @@ import { handleGetCompanySettings, handleSaveCompanySettings } from "./routes/co
 import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
+import { handleGetMetaConnectUrl, handleMetaOAuthCallback } from "./routes/metaConnect.mjs";
 import { handleWebhookVerification as saasWebhookVerify,
          handleWebhookEvent as saasWebhookEvent } from "./routes/metaWebhook.mjs";
 import { ensureDataFile } from "./utils/dataPaths.mjs";
@@ -419,6 +420,17 @@ async function handleApi(request, response) {
     return true;
   }
 
+  if (request.method === "GET" && url.pathname === "/api/meta/connect-url") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const result = handleGetMetaConnectUrl(url);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
   if (url.pathname.startsWith("/api/company-settings/")) {
     const requestedCompanyId = decodeURIComponent(url.pathname.replace("/api/company-settings/", ""));
     if (role === "client" && requestedCompanyId !== companyId) {
@@ -674,6 +686,13 @@ createServer(async (request, response) => {
 
     if (request.method === "POST" && url.pathname === "/logout") {
       sendLogoutCookie(request, response);
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/meta/oauth/callback") {
+      const result = await handleMetaOAuthCallback(url);
+      response.writeHead(result.status, { "Content-Type": "text/html; charset=utf-8" });
+      response.end(result.body);
       return;
     }
 
