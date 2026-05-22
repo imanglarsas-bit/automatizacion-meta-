@@ -7,6 +7,7 @@ const conversationChannel = document.querySelector("#conversationChannel");
 const conversationStatus = document.querySelector("#conversationStatus");
 const messageThread = document.querySelector("#messageThread");
 const replyForm = document.querySelector("#replyForm");
+const replyButton = document.querySelector("#replyButton");
 const pendingCount = document.querySelector("#pendingCount");
 const answeredCount = document.querySelector("#answeredCount");
 const channelCount = document.querySelector("#channelCount");
@@ -45,6 +46,26 @@ function formatSender(sender) {
     system: "Sistema",
   };
   return labels[sender] || sender;
+}
+
+function channelMeta(channel) {
+  const key = String(channel || "").toLowerCase();
+  const labels = {
+    whatsapp: "WhatsApp",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    messenger: "Messenger",
+  };
+
+  return {
+    key,
+    label: labels[key] || channel || "Canal",
+  };
+}
+
+function channelBadge(channel) {
+  const meta = channelMeta(channel);
+  return `<span class="channel-badge ${escapeHTML(meta.key)}">${escapeHTML(meta.label)}</span>`;
 }
 
 async function getJSON(url, options) {
@@ -115,7 +136,7 @@ function renderConversationList() {
           <strong>${escapeHTML(conversation.customerName)}</strong>
           <p>${escapeHTML(conversation.summary)}</p>
           <div class="meta-row">
-            <span class="tag">${escapeHTML(conversation.channel)}</span>
+            ${channelBadge(conversation.channel)}
             <span class="tag">${escapeHTML(conversation.unit)}</span>
             <span class="tag ${conversation.status === "human_required" ? "warning" : ""}">${formatStatus(conversation.status)}</span>
           </div>
@@ -149,9 +170,11 @@ async function renderActiveConversation() {
 
   conversationTitle.textContent = conversation.customerName;
   conversationSummary.textContent = conversation.summary;
-  conversationChannel.textContent = `${conversation.channel} · ${conversation.unit}`;
+  const meta = channelMeta(conversation.channel);
+  conversationChannel.innerHTML = `${channelBadge(conversation.channel)} <span>${escapeHTML(conversation.unit)}</span>`;
   conversationStatus.textContent = formatStatus(conversation.status);
   conversationStatus.classList.toggle("warning", conversation.status === "human_required");
+  replyButton.textContent = `Enviar por ${meta.label}`;
   replyForm.hidden = false;
 
   messageThread.innerHTML = conversation.messages

@@ -96,6 +96,16 @@ const defaultLeadRules = {
   hotLead: "Compra inmediata, solicita precio, pide demo, quiere agendar llamada o tiene urgencia.",
   warmLead: "Compara opciones, pregunta beneficios, está evaluando proveedores o quiere más información.",
   handoffRules: "Pasar a humano si pide negociación, descuento, soporte sensible, queja o cierre comercial.",
+  funnels: [
+    {
+      id: "default-demo",
+      name: "Solicitud de demo",
+      trigger: "demo, asesoría, llamada, reunión, agendar",
+      action: "human",
+      priority: "alta",
+      response: "Gracias. Te conecto con un asesor para coordinar la demo y avanzar con tu solicitud.",
+    },
+  ],
 };
 
 const defaultClients = [
@@ -386,7 +396,24 @@ function renderLeadRules() {
       <span>Derivación humana</span>
       <p>${escapeHTML(rules.handoffRules)}</p>
     </article>
+    <div class="funnel-list">
+      ${(rules.funnels || []).map((funnel) => `
+        <article class="funnel-item ${escapeHTML(funnel.priority)}">
+          <div>
+            <strong>${escapeHTML(funnel.name)}</strong>
+            <span>${funnel.action === "human" ? "Envía a humano" : "Respuesta automática"} · prioridad ${escapeHTML(funnel.priority)}</span>
+          </div>
+          <p>${escapeHTML(funnel.trigger)}</p>
+          ${funnel.response ? `<small>${escapeHTML(funnel.response)}</small>` : ""}
+          <button class="delete-funnel" type="button" data-id="${escapeHTML(funnel.id)}">Eliminar embudo</button>
+        </article>
+      `).join("") || `<div class="empty-state">Todavía no hay embudos configurados.</div>`}
+    </div>
   `;
+
+  leadRuleList.querySelectorAll(".delete-funnel").forEach((button) => {
+    button.addEventListener("click", () => deleteFunnel(button.dataset.id));
+  });
 }
 
 const PLAN_BADGE = {
@@ -778,6 +805,43 @@ leadTrainingForm.addEventListener("submit", async (event) => {
     hotLead: data.get("hotLead").trim(),
     warmLead: data.get("warmLead").trim(),
     handoffRules: data.get("handoffRules").trim(),
+    funnels: [...(storage.leadRules.funnels || [])],
+  };
+
+  const funnelName = data.get("funnelName").trim();
+  const funnelTrigger = data.get("funnelTrigger").trim();
+  if (funnelName && funnelTrigger) {
+    rules.funnels.unshift({
+      id: createId(),
+      name: funnelName,
+      trigger: funnelTrigger,
+      action: data.get("funnelAction"),
+      priority: data.get("funnelPriority"),
+      response: data.get("funnelResponse").trim(),
+    });
+  }
+
+  try {
+    const result = await getJSON(`/api/lead-rules/${encodeURIComponent(storage.activeClientId)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rules),
+    });
+    storage.leadRules = result.rules;
+    leadTrainingForm.funnelName.value = "";
+    leadTrainingForm.funnelTrigger.value = "";
+    leadTrainingForm.funnelResponse.value = "";
+    renderLeadRules();
+    showToast("Reglas de leads guardadas en el servidor.");
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+async function deleteFunnel(funnelId) {
+  const rules = {
+    ...storage.leadRules,
+    funnels: (storage.leadRules.funnels || []).filter((funnel) => funnel.id !== funnelId),
   };
 
   try {
@@ -788,11 +852,11 @@ leadTrainingForm.addEventListener("submit", async (event) => {
     });
     storage.leadRules = result.rules;
     renderLeadRules();
-    showToast("Reglas de leads guardadas en el servidor.");
+    showToast("Embudo eliminado.");
   } catch (error) {
     showToast(error.message);
   }
-});
+}
 
 resetLeadRules.addEventListener("click", async () => {
   try {
@@ -819,10 +883,30 @@ testForm.addEventListener("submit", (event) => {
     ? ""
     : "Plan Start: esta respuesta sale de automatizaciones preconfiguradas, sin consumir APIs de IA. ";
   const leadHint = classifyLead(prompt, leadRules);
+  const funnelHint = matchFunnel(prompt, leadRules);
   botPreview.textContent = match
-    ? `${planPrefix}${match.answer} ${leadHint}`
-    : `${planPrefix}No encontré una respuesta entrenada para esa pregunta. ${leadHint} Recomendación: pedir ${leadRules.requiredData.toLowerCase()} y guardar esta intención en la base de conocimiento.`;
+    ? `${planPrefix}${match.answer} ${leadHint} ${funnelHint}`
+    : `${planPrefix}No encontré una respuesta entrenada para esa pregunta. ${leadHint} ${funnelHint} Recomendación: pedir ${leadRules.requiredData.toLowerCase()} y guardar esta intención en la base de conocimiento.`;
 });
+
+function matchFunnel(prompt, rules) {
+  const normalizedPrompt = normalize(prompt);
+  const funnel = (rules.funnels || []).find((item) =>
+    item.trigger
+      .split(/[,;\n]+/)
+      .map((keyword) => normalize(keyword).trim())
+      .filter(Boolean)
+      .some((keyword) => normalizedPrompt.includes(keyword)),
+  );
+
+  if (!funnel) {
+    return "Embudo: sin coincidencia.";
+  }
+
+  return funnel.action === "human"
+    ? `Embudo: ${funnel.name}. Acción: enviar directamente a humano.`
+    : `Embudo: ${funnel.name}. Acción: continuar respuesta automática.`;
+}
 
 function classifyLead(prompt, rules) {
   const normalizedPrompt = normalize(prompt);

@@ -258,7 +258,8 @@ textarea {
 }
 
 .tag,
-.status-pill {
+.status-pill,
+.channel-badge {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
@@ -267,6 +268,45 @@ textarea {
   background: #eef6f5;
   color: var(--teal-dark);
   font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.channel-badge {
+  gap: 7px;
+  color: #fff;
+}
+
+.channel-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  filter: brightness(2.5);
+}
+
+.channel-badge.whatsapp {
+  background: #16a34a;
+}
+
+.channel-badge.instagram {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+}
+
+.channel-badge.facebook {
+  background: #1877f2;
+}
+
+.channel-badge.messenger {
+  background: linear-gradient(135deg, #00b2ff, #7f3cff);
+}
+
+.kicker .channel-badge {
+  margin-right: 8px;
+}
+
+.kicker span {
+  color: var(--muted);
   font-weight: 900;
 }
 

@@ -6,6 +6,7 @@ import { buildSystemPrompt }  from "../services/ai/promptBuilder.mjs";
 import { routeAI }            from "../services/ai/aiRouterService.mjs";
 import { sendMessage }        from "../services/meta/metaService.mjs";
 import { recordConversation } from "../services/billing/usageTracker.mjs";
+import { evaluateLeadFunnel } from "./leadRules.mjs";
 import { logger }             from "../utils/logger.mjs";
 
 export function handleWebhookVerification(url) {
@@ -32,9 +33,20 @@ export async function handleWebhookEvent(payload) {
     return { status: 200, body: { ok: true, skipped: true } };
   }
 
-  const unit         = detectUnit(incoming.text, company);
-  const systemPrompt = await buildSystemPrompt({ company, unit });
-  const aiResult     = await routeAI({ company, systemPrompt, userMessage: incoming.text });
+  const unit = detectUnit(incoming.text, company);
+  const funnel = await evaluateLeadFunnel(company.companyId, incoming.text);
+  const aiResult = funnel?.shouldHandoff
+    ? {
+        text: funnel.response || "Recibimos tu solicitud. Un asesor humano continuará la atención.",
+        provider: "handoff",
+        model: `funnel:${funnel.id}`,
+        estimatedCostUSD: 0,
+      }
+    : await routeAI({
+        company,
+        systemPrompt: await buildSystemPrompt({ company, unit }),
+        userMessage: incoming.text,
+      });
 
   await sendMessage({
     channel:     incoming.channel,
@@ -51,8 +63,8 @@ export async function handleWebhookEvent(payload) {
     estimatedCostUSD: aiResult.estimatedCostUSD ?? 0,
   });
 
-  logger.info("Webhook message handled", { companyId: company.companyId, channel: incoming.channel });
-  return { status: 200, body: { ok: true, received: true } };
+  logger.info("Webhook message handled", { companyId: company.companyId, channel: incoming.channel, funnel: funnel?.id });
+  return { status: 200, body: { ok: true, received: true, handoff: Boolean(funnel?.shouldHandoff) } };
 }
 
 function extractMessage(payload) {

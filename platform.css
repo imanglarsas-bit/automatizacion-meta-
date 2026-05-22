@@ -507,6 +507,68 @@ a:focus {
   color: var(--muted);
 }
 
+.funnel-builder {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+}
+
+.funnel-builder legend {
+  padding: 0 6px;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.funnel-list {
+  display: grid;
+  gap: 10px;
+}
+
+.funnel-item {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.funnel-item.alta {
+  border-color: rgba(249, 115, 91, 0.35);
+  background: #fff7ed;
+}
+
+.funnel-item.media {
+  border-color: rgba(20, 184, 166, 0.32);
+  background: #f0fdfa;
+}
+
+.funnel-item strong,
+.funnel-item span,
+.funnel-item small {
+  display: block;
+}
+
+.funnel-item span,
+.funnel-item p,
+.funnel-item small {
+  margin: 0;
+  color: var(--muted);
+}
+
+.delete-funnel {
+  justify-self: start;
+  min-height: 34px;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: var(--danger);
+  cursor: pointer;
+  font-weight: 850;
+}
+
 .tag-row {
   display: flex;
   flex-wrap: wrap;

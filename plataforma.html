@@ -230,6 +230,46 @@
                 required
               ></textarea>
             </label>
+            <fieldset class="funnel-builder">
+              <legend>Crear embudo</legend>
+              <label>
+                Nombre del embudo
+                <input name="funnelName" type="text" placeholder="Ej. Demo comercial urgente" />
+              </label>
+              <label>
+                Señales o palabras clave
+                <textarea
+                  name="funnelTrigger"
+                  rows="3"
+                  placeholder="Ej. demo, quiero comprar, agenda, cotización urgente"
+                ></textarea>
+              </label>
+              <div class="form-row">
+                <label>
+                  Acción
+                  <select name="funnelAction">
+                    <option value="human">Enviar a humano</option>
+                    <option value="auto">Responder automático</option>
+                  </select>
+                </label>
+                <label>
+                  Prioridad
+                  <select name="funnelPriority">
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Respuesta antes de derivar o continuar
+                <textarea
+                  name="funnelResponse"
+                  rows="3"
+                  placeholder="Ej. Te conecto con un asesor para continuar tu solicitud."
+                ></textarea>
+              </label>
+            </fieldset>
             <button class="solid-button full" type="submit">Guardar reglas de leads</button>
           </form>
         </article>

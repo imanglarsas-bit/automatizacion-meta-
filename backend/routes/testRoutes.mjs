@@ -5,6 +5,7 @@ import { buildSystemPrompt } from "../services/ai/promptBuilder.mjs";
 import { routeAI }          from "../services/ai/aiRouterService.mjs";
 import { checkQuota }       from "../services/billing/quotaService.mjs";
 import { recordConversation } from "../services/billing/usageTracker.mjs";
+import { evaluateLeadFunnel } from "./leadRules.mjs";
 import { handleJuridico }   from "../flows/juridico.mjs";
 import { handleConsulting } from "../flows/consulting.mjs";
 import { handleHotel }      from "../flows/hotel.mjs";
@@ -42,9 +43,20 @@ export async function handleTestMessage(body) {
 
   const unit = detectUnit(message, company);
   const flowHandler = unit ? FLOW_MAP[unit.type] : null;
+  const funnel = await evaluateLeadFunnel(company.companyId, message);
 
   let result;
-  if (flowHandler) {
+  if (funnel?.shouldHandoff) {
+    result = {
+      unit: unit?.name || "Embudo comercial",
+      unitType: unit?.type || "lead_funnel",
+      text: funnel.response || "Caso derivado a un asesor humano por regla de embudo.",
+      provider: "handoff",
+      model: `funnel:${funnel.id}`,
+      estimatedCostUSD: 0,
+      funnel,
+    };
+  } else if (flowHandler) {
     result = await flowHandler({ company, unit, message });
   } else {
     // No unit detected — use general company prompt
@@ -74,6 +86,8 @@ export async function handleTestMessage(body) {
       provider: result.provider,
       model:    result.model,
       mock:     result.mock ?? false,
+      funnel:   result.funnel ?? null,
+      handoff:  result.provider === "handoff",
       reply:    result.text,
     },
   };
