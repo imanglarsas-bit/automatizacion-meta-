@@ -62,7 +62,7 @@ function setBillingMode(mode) {
     card.classList.add("price-changing");
     price.textContent = isAnnual ? card.dataset.annualPrice : card.dataset.monthlyPrice;
     note.textContent = isAnnual
-      ? "Precio mensual pagando anual. Ahorras 20%."
+      ? "Precio mensual pagando anual."
       : "Pago mensual flexible. Puedes ajustar el plan según tu crecimiento.";
 
     window.setTimeout(() => {
