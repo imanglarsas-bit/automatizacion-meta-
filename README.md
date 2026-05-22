@@ -14,17 +14,23 @@ cp .env.example .env   # edita con tus credenciales reales
 npm start              # http://localhost:3000
 ```
 
-La plataforma privada se abre en `/plataforma.html`, pero ahora exige contraseña.
-Configúrala con:
+El portal cliente se abre en `/login.html` y entra a `/cliente.html`.
+Configúralo con:
 
 ```env
 PLATFORM_PASSWORD=tu_contraseña_privada
 ```
 
-La landing (`/`) sigue siendo pública. El panel y las APIs internas quedan protegidas por sesión.
+El panel administrador se abre en `/admin-login.html` y entra a `/plataforma.html`.
+Configúralo con:
 
-También existe un portal de cliente en `/cliente.html`. Ese portal muestra la bandeja humana:
-conversaciones derivadas por el bot, historial y formulario para responder desde la plataforma.
+```env
+ADMIN_PASSWORD=tu_contraseña_admin
+```
+
+La landing (`/`) sigue siendo pública. El panel admin, el portal cliente y las APIs internas quedan protegidas por sesión.
+
+El portal cliente muestra la bandeja humana: conversaciones derivadas por el bot, historial y formulario para responder desde la plataforma.
 
 ---
 

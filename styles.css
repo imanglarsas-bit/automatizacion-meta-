@@ -491,10 +491,16 @@ a:focus {
 .footer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 18px;
   padding: 24px clamp(18px, 6vw, 76px);
   color: var(--muted);
   background: var(--white);
+}
+
+.admin-footer-link {
+  color: #8b98a8;
+  font-size: 0.82rem;
 }
 
 @media (max-width: 960px) {

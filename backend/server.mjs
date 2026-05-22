@@ -26,6 +26,7 @@ const env = {
   whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
   pageAccessToken: process.env.PAGE_ACCESS_TOKEN || "",
   platformPassword: process.env.PLATFORM_PASSWORD || "dev_admin",
+  adminPassword: process.env.ADMIN_PASSWORD || process.env.PLATFORM_PASSWORD || "dev_admin",
 };
 
 const contentTypes = {
@@ -55,8 +56,21 @@ function parseCookies(request) {
   );
 }
 
-function isAuthenticated(request) {
-  return parseCookies(request).r360_session === "active";
+function sessionRole(request) {
+  return parseCookies(request).r360_session || "";
+}
+
+function isClientAuthenticated(request) {
+  return sessionRole(request) === "client";
+}
+
+function isAdminAuthenticated(request) {
+  return sessionRole(request) === "admin";
+}
+
+function hasPlatformSession(request) {
+  const role = sessionRole(request);
+  return role === "client" || role === "admin";
 }
 
 function isSecureRequest(request) {
@@ -70,11 +84,11 @@ function redirect(response, location) {
   response.end();
 }
 
-function sendLoginCookie(request, response) {
+function sendLoginCookie(request, response, role, location) {
   const secure = isSecureRequest(request) ? "; Secure" : "";
   response.writeHead(302, {
-    Location: "/plataforma.html",
-    "Set-Cookie": `r360_session=active; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800${secure}`,
+    Location: location,
+    "Set-Cookie": `r360_session=${role}; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800${secure}`,
   });
   response.end();
 }
@@ -118,11 +132,24 @@ async function handleLogin(request, response) {
   const password = form.get("password")?.trim();
 
   if (password === env.platformPassword) {
-    sendLoginCookie(request, response);
+    sendLoginCookie(request, response, "client", "/cliente.html");
     return;
   }
 
   redirect(response, "/login.html?error=1");
+}
+
+async function handleAdminLogin(request, response) {
+  const raw = await readRawBody(request);
+  const form = new URLSearchParams(raw);
+  const password = form.get("password")?.trim();
+
+  if (password === env.adminPassword) {
+    sendLoginCookie(request, response, "admin", "/plataforma.html");
+    return;
+  }
+
+  redirect(response, "/admin-login.html?error=1");
 }
 
 async function readTraining() {
@@ -285,7 +312,7 @@ async function handleApi(request, response) {
     return false;
   }
 
-  if (!isAuthenticated(request)) {
+  if (!hasPlatformSession(request)) {
     sendJson(response, 401, { error: "Authentication required" });
     return true;
   }
@@ -390,7 +417,23 @@ async function serveStatic(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const requestedPath = url.pathname === "/" ? "/index.html" : url.pathname;
 
-  if (privatePaths.has(requestedPath) && !isAuthenticated(request)) {
+  if (requestedPath === "/plataforma.html" && !isAdminAuthenticated(request)) {
+    redirect(response, "/admin-login.html");
+    return;
+  }
+
+  if ((requestedPath === "/cliente.html" || requestedPath === "/client.css" || requestedPath === "/client.js") && !isClientAuthenticated(request)) {
+    redirect(response, "/login.html");
+    return;
+  }
+
+  if ((requestedPath === "/platform.css" || requestedPath === "/platform.js") && !isAdminAuthenticated(request)) {
+    response.writeHead(403);
+    response.end("Forbidden");
+    return;
+  }
+
+  if (privatePaths.has(requestedPath) && !hasPlatformSession(request)) {
     redirect(response, "/login.html");
     return;
   }
@@ -432,6 +475,11 @@ createServer(async (request, response) => {
 
     if (request.method === "POST" && url.pathname === "/login") {
       await handleLogin(request, response);
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/admin-login") {
+      await handleAdminLogin(request, response);
       return;
     }
 

@@ -40,6 +40,7 @@ WHATSAPP_PHONE_NUMBER_ID=id_real
 PAGE_ACCESS_TOKEN=token_real
 PAGE_ID=id_real
 PLATFORM_PASSWORD=una_contraseña_privada_para_el_panel
+ADMIN_PASSWORD=una_contraseña_privada_para_admin
 ```
 
 ## 3. Configurar DNS
@@ -98,8 +99,9 @@ Producción:
 
 - `https://app.evcarcol.com`
 - `https://app.evcarcol.com/login.html`
-- `https://app.evcarcol.com/plataforma.html` protegido por contraseña
 - `https://app.evcarcol.com/cliente.html` portal privado para responder conversaciones humanas
+- `https://app.evcarcol.com/admin-login.html` acceso discreto de administración
+- `https://app.evcarcol.com/plataforma.html` panel admin protegido por contraseña
 - `https://app.evcarcol.com/webhooks/meta`
 
 ## 7. Importante para producción

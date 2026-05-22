@@ -3,30 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Respuesta360 | Acceso privado</title>
-    <meta name="description" content="Acceso privado para clientes de la plataforma Respuesta360." />
+    <title>Respuesta360 | Administración</title>
+    <meta name="description" content="Acceso privado para administración de Respuesta360." />
     <link rel="stylesheet" href="login.css" />
   </head>
   <body>
     <main class="login-shell">
-      <section class="login-copy">
+      <section class="login-copy admin">
         <a class="brand" href="index.html">
           <span>R</span>
           Respuesta360
         </a>
-        <p class="kicker">Portal de clientes</p>
-        <h1>Acceso privado para empresas</h1>
+        <p class="kicker">Administración</p>
+        <h1>Panel interno de operación</h1>
         <p>
-          Ingresa para revisar conversaciones derivadas por el bot, responder casos humanos y
-          dar seguimiento a tus canales conectados.
+          Acceso reservado para configurar clientes, conexiones, entrenamiento del bot y reglas de automatización.
         </p>
       </section>
 
-      <form class="login-card" method="post" action="/login">
-        <h2>Entrar al portal cliente</h2>
+      <form class="login-card" method="post" action="/admin-login">
+        <h2>Entrar como administrador</h2>
         <p class="login-error" id="loginError">La contraseña no coincide. Inténtalo de nuevo.</p>
         <label>
-          Contraseña de acceso
+          Contraseña de administrador
           <input
             name="password"
             type="password"
@@ -36,10 +35,11 @@
             required
           />
         </label>
-        <button type="submit">Entrar</button>
+        <button type="submit">Entrar al admin</button>
         <p class="login-note">
-          En producción, esto debe evolucionar a usuarios por cliente con correo, contraseña y permisos.
+          Este acceso no debe compartirse con clientes. Para empresas usa el portal cliente.
         </p>
+        <a class="admin-access" href="/login.html">Volver al portal cliente</a>
       </form>
     </main>
     <script>
