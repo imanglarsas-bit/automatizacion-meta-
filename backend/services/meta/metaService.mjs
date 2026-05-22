@@ -1,7 +1,7 @@
 import { logger } from "../../utils/logger.mjs";
 
 // Mock Meta service. Real API calls are disabled until Meta Business credentials are configured.
-// To enable real sending, set WHATSAPP_ACCESS_TOKEN / PAGE_ACCESS_TOKEN in environment.
+// To enable real sending, set META_ACCESS_TOKEN and META_PHONE_NUMBER_ID in environment.
 
 const GRAPH_VERSION = process.env.GRAPH_API_VERSION ?? "v22.0";
 
@@ -19,10 +19,10 @@ export async function sendMessage({ channel, recipientId, text, phoneNumberId })
 }
 
 async function sendWhatsApp({ to, text, phoneNumberId }) {
-  const id = phoneNumberId ?? process.env.META_PHONE_NUMBER_ID;
-  const token = process.env.META_ACCESS_TOKEN;
+  const id = phoneNumberId ?? process.env.META_PHONE_NUMBER_ID ?? process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = process.env.META_ACCESS_TOKEN ?? process.env.WHATSAPP_ACCESS_TOKEN;
   if (!id || !token) {
-    logger.warn("WhatsApp: faltan META_PHONE_NUMBER_ID o META_ACCESS_TOKEN");
+    logger.warn("WhatsApp: faltan META_PHONE_NUMBER_ID/META_ACCESS_TOKEN");
     return { skipped: true };
   }
 
