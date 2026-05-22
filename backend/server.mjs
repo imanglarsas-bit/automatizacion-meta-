@@ -23,6 +23,7 @@ import { handleWebhookVerification as saasWebhookVerify,
 import { ensureDataFile } from "./utils/dataPaths.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 
+const root = join(fileURLToPath(new URL("..", import.meta.url)));
 let trainingPath = null;
 let clientUsersPath = null;
 
