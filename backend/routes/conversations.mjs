@@ -2,13 +2,17 @@
 // GET /api/conversations/:companyId
 
 import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { ensureDataFile } from "../utils/dataPaths.mjs";
 
-const dataPath = join(fileURLToPath(new URL("..", import.meta.url)), "data", "conversations.mock.json");
+let conversationsPath = null;
+
+async function getConversationsPath() {
+  conversationsPath = conversationsPath || await ensureDataFile("conversations.mock.json");
+  return conversationsPath;
+}
 
 async function readConversations() {
-  return JSON.parse(await readFile(dataPath, "utf8"));
+  return JSON.parse(await readFile(await getConversationsPath(), "utf8"));
 }
 
 export async function handleGetConversations(companyId) {

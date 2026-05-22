@@ -3,18 +3,22 @@
 // POST /api/messages/:companyId/:conversationId/reply
 
 import { readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { sendMessage } from "../services/meta/metaService.mjs";
+import { ensureDataFile } from "../utils/dataPaths.mjs";
 
-const dataPath = join(fileURLToPath(new URL("..", import.meta.url)), "data", "conversations.mock.json");
+let conversationsPath = null;
+
+async function getConversationsPath() {
+  conversationsPath = conversationsPath || await ensureDataFile("conversations.mock.json");
+  return conversationsPath;
+}
 
 async function readConversations() {
-  return JSON.parse(await readFile(dataPath, "utf8"));
+  return JSON.parse(await readFile(await getConversationsPath(), "utf8"));
 }
 
 async function saveConversations(conversations) {
-  await writeFile(dataPath, JSON.stringify(conversations, null, 2));
+  await writeFile(await getConversationsPath(), JSON.stringify(conversations, null, 2));
 }
 
 export async function handleGetMessages(companyId, conversationId) {
