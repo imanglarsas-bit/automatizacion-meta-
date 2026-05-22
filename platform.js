@@ -930,7 +930,7 @@ function classifyLead(prompt, rules) {
 }
 
 publishButton.addEventListener("click", () => {
-  showToast("Cambios listos para publicar. La integración real requiere backend y app de Meta.");
+  showToast("Las configuraciones del panel se guardan automáticamente en el servidor.");
 });
 
 confidenceRange.addEventListener("input", () => {
