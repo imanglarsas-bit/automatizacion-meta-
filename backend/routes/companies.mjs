@@ -5,6 +5,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createCompany, getAllCompanies, getCompany } from "../services/company/companyConfigService.mjs";
+import { getPlan, isValidPlan, listPlans, normalizePlanKey } from "../services/billing/plans.mjs";
 
 const dataDir = fileURLToPath(new URL("../data/", import.meta.url));
 const usersPath = join(dataDir, "client-users.mock.json");
@@ -20,34 +21,52 @@ export async function handleGetCompany(companyId) {
   return { status: 200, body: company };
 }
 
+export async function handleGetPlans() {
+  return { status: 200, body: listPlans() };
+}
+
 export async function handleCreateCompany(body) {
   const name = String(body.name || "").trim();
   const username = String(body.username || "").trim().toLowerCase();
   const password = String(body.password || "").trim();
+  const planKey = normalizePlanKey(body.plan);
   const website = String(body.website || "").trim();
   const email = String(body.email || "").trim();
   const whatsapp = String(body.whatsapp || "").trim();
 
-  if (!name || !username || !password) {
-    return { status: 400, body: { error: "Nombre, usuario y contraseña son obligatorios." } };
+  if (!name || !username || !password || !planKey) {
+    return { status: 400, body: { error: "Nombre, usuario, contraseña y plan son obligatorios." } };
   }
 
+  if (!isValidPlan(planKey)) {
+    return { status: 400, body: { error: "El plan seleccionado no existe." } };
+  }
+
+  const plan = getPlan(planKey);
   const companyId = slugify(name);
+  const users = JSON.parse(await readFile(usersPath, "utf8"));
+  if (users.some((user) => user.username === username)) {
+    return { status: 409, body: { error: "Ya existe un usuario cliente con ese nombre." } };
+  }
+
   const company = {
     companyId,
     name,
     active: true,
-    plan: "business",
-    monthlyConversationLimit: 500,
+    plan: plan.key,
+    monthlyConversationLimit: plan.monthlyConversationLimit,
+    monthlyMessageLimit: plan.monthlyMessageLimit,
+    monthlyAiRequestLimit: plan.monthlyAiRequestLimit,
+    planFeatures: plan.features,
     currentUsage: 0,
     billingEnabled: false,
-    aiProvider: "anthropic",
+    aiProvider: plan.features.aiApi ? "anthropic" : null,
     model: "claude-3-5-sonnet-20241022",
-    fallbackProvider: "openai",
+    fallbackProvider: plan.features.aiApi ? "openai" : null,
     fallbackModel: "gpt-4o-mini",
     tone: "profesional",
     promptFile: "inversiones-manglar.txt",
-    channels: ["whatsapp"],
+    channels: plan.channels,
     units: [
       {
         id: "general",
@@ -67,11 +86,6 @@ export async function handleCreateCompany(body) {
   const created = await createCompany(company);
   if (!created) {
     return { status: 409, body: { error: "Ya existe una empresa con ese nombre." } };
-  }
-
-  const users = JSON.parse(await readFile(usersPath, "utf8"));
-  if (users.some((user) => user.username === username)) {
-    return { status: 409, body: { error: "Ya existe un usuario cliente con ese nombre." } };
   }
 
   users.push({ username, password, companyId, name });

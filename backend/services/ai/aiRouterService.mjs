@@ -1,6 +1,8 @@
 import { callAnthropic } from "./anthropicService.mjs";
 import { callOpenAI }    from "./openaiService.mjs";
 import { logger }        from "../../utils/logger.mjs";
+import { checkAiAccess } from "../billing/quotaService.mjs";
+import { buildAutomationReply } from "../automation/automationReplyService.mjs";
 
 // Estimate cost in USD based on token counts and provider
 function estimateCost(provider, model, inputTokens, outputTokens) {
@@ -25,6 +27,15 @@ function selectModel(company, messageLength) {
 }
 
 export async function routeAI({ company, systemPrompt, userMessage }) {
+  const access = await checkAiAccess(company);
+  if (!access.allowed) {
+    return {
+      ...buildAutomationReply({ message: userMessage, company }),
+      reason: access.reason,
+      plan: access.plan,
+    };
+  }
+
   const model = selectModel(company, userMessage.length);
 
   // Primary provider

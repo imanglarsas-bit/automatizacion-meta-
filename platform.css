@@ -329,6 +329,11 @@ h2 {
   background: #fbfcfd;
 }
 
+.connection-card.locked {
+  opacity: 0.66;
+  background: #f8fafc;
+}
+
 .connection-top {
   display: flex;
   align-items: center;
@@ -366,6 +371,12 @@ h2 {
   background: var(--teal);
   border-color: var(--teal);
   color: #fff;
+}
+
+.connect-button:disabled {
+  cursor: not-allowed;
+  background: #e5e7eb;
+  color: #64748b;
 }
 
 .workspace-grid {

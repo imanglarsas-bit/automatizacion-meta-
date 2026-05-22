@@ -12,6 +12,7 @@ import {
   handleGetClientUsers,
   handleGetCompanies,
   handleGetCompany,
+  handleGetPlans,
 } from "./routes/companies.mjs";
 import { handleGetMetrics }       from "./routes/metrics.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
@@ -384,6 +385,11 @@ async function handleApi(request, response) {
 
   if (request.method === "POST" && url.pathname === "/api/test-message") {
     const body = await readBody(request);
+    if (role === "client" && body.companyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes probar otra empresa." });
+      return true;
+    }
+
     const result = await handleTestMessage(body);
     sendJson(response, result.status, result.body);
     return true;
@@ -397,6 +403,12 @@ async function handleApi(request, response) {
     }
 
     const result = await handleGetCompanies();
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/plans") {
+    const result = await handleGetPlans();
     sendJson(response, result.status, result.body);
     return true;
   }
@@ -444,8 +456,13 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "GET" && url.pathname.startsWith("/api/metrics/company/")) {
-    const companyId = url.pathname.replace("/api/metrics/company/", "");
-    const result = await handleGetMetrics(companyId);
+    const requestedCompanyId = url.pathname.replace("/api/metrics/company/", "");
+    if (role === "client" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes ver métricas de otra empresa." });
+      return true;
+    }
+
+    const result = await handleGetMetrics(requestedCompanyId);
     sendJson(response, result.status, result.body);
     return true;
   }

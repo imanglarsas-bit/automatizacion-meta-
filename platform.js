@@ -29,6 +29,39 @@ const channels = [
   },
 ];
 
+const fallbackPlans = [
+  {
+    key: "start",
+    name: "Start",
+    monthlyMessageLimit: 1000,
+    monthlyAiRequestLimit: 0,
+    userLimit: 1,
+    channels: ["whatsapp", "instagram", "facebook"],
+    description: "Automatizaciones, respuestas rápidas y formularios sin APIs de IA.",
+    features: { aiApi: false, limitedAiApi: false, advancedAutomations: false },
+  },
+  {
+    key: "pro",
+    name: "Pro",
+    monthlyMessageLimit: 5000,
+    monthlyAiRequestLimit: 150,
+    userLimit: 3,
+    channels: ["whatsapp", "instagram", "facebook", "messenger"],
+    description: "Automatizaciones avanzadas con API limitada y controlada.",
+    features: { aiApi: true, limitedAiApi: true, advancedAutomations: true },
+  },
+  {
+    key: "business",
+    name: "Business",
+    monthlyMessageLimit: 15000,
+    monthlyAiRequestLimit: null,
+    userLimit: null,
+    channels: ["whatsapp", "instagram", "facebook", "messenger"],
+    description: "Acceso completo a APIs, IA e integraciones empresariales.",
+    features: { aiApi: true, limitedAiApi: false, advancedAutomations: true },
+  },
+];
+
 function createId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -66,6 +99,7 @@ const defaultClients = [
 
 const storage = {
   companies: defaultClients,
+  plans: fallbackPlans,
   get clients() {
     return this.companies;
   },
@@ -109,6 +143,7 @@ const clientSelect = document.querySelector("#clientSelect");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
 const clientForm = document.querySelector("#clientForm");
+const planSelect = document.querySelector("#planSelect");
 const clientUserList = document.querySelector("#clientUserList");
 const connectionGrid = document.querySelector("#connectionGrid");
 const activeChannels = document.querySelector("#activeChannels");
@@ -161,9 +196,18 @@ function slugify(value) {
     .slice(0, 42);
 }
 
+function getPlan(planKey) {
+  return storage.plans.find((plan) => plan.key === planKey) || storage.plans[0];
+}
+
+function formatLimit(value) {
+  return value === null || value === undefined ? "sin límite fijo" : Number(value).toLocaleString("es-CO");
+}
+
 function renderClients() {
   const clients = storage.clients;
   const activeClient = storage.activeClient;
+  const activePlan = getPlan(activeClient.plan || "business");
 
   clientSelect.innerHTML = clients
     .map(
@@ -173,7 +217,19 @@ function renderClients() {
     .join("");
 
   clientName.textContent = activeClient.name;
-  clientDescription.textContent = `${activeClient.plan || "business"} · ${activeClient.channels?.join(", ") || "sin canales"}`;
+  clientDescription.textContent = `${activePlan.name} · ${formatLimit(activePlan.monthlyMessageLimit)} mensajes/mes · IA ${
+    activePlan.features?.aiApi ? (activePlan.features?.limitedAiApi ? "limitada" : "completa") : "no incluida"
+  }`;
+}
+
+function renderPlanOptions() {
+  planSelect.innerHTML = [
+    `<option value="">Selecciona un plan</option>`,
+    ...storage.plans.map((plan) => {
+      const aiLabel = plan.features?.aiApi ? (plan.features?.limitedAiApi ? "IA limitada" : "IA completa") : "sin IA";
+      return `<option value="${escapeHTML(plan.key)}">${escapeHTML(plan.name)} · ${formatLimit(plan.monthlyMessageLimit)} mensajes · ${aiLabel}</option>`;
+    }),
+  ].join("");
 }
 
 async function renderClientUsers() {
@@ -205,22 +261,26 @@ async function renderClientUsers() {
 
 function renderConnections() {
   const connected = storage.channels;
+  const plan = getPlan(storage.activeClient.plan || "business");
+  const allowedChannels = new Set(plan.channels || []);
+
   connectionGrid.innerHTML = channels
     .map((channel) => {
       const isConnected = Boolean(connected[channel.key]);
+      const isAllowed = allowedChannels.has(channel.key);
       return `
-        <article class="connection-card">
+        <article class="connection-card ${isAllowed ? "" : "locked"}">
           <div class="connection-top">
             <img class="channel-dot" src="${channel.logo}" alt="${channel.name}" />
-            <button class="connect-button ${isConnected ? "connected" : ""}" type="button" data-channel="${channel.key}">
-              ${isConnected ? "Conectado" : "Conectar"}
+            <button class="connect-button ${isConnected ? "connected" : ""}" type="button" data-channel="${channel.key}" ${isAllowed ? "" : "disabled"}>
+              ${isAllowed ? (isConnected ? "Conectado" : "Conectar") : "No incluido"}
             </button>
           </div>
           <div>
             <h3>${channel.name}</h3>
             <p>${channel.description}</p>
           </div>
-          <small>${channel.requirement}</small>
+          <small>${isAllowed ? channel.requirement : `Disponible al mejorar el plan. Plan actual: ${plan.name}`}</small>
         </article>
       `;
     })
@@ -232,6 +292,12 @@ function renderConnections() {
 }
 
 function toggleConnection(key) {
+  const plan = getPlan(storage.activeClient.plan || "business");
+  if (!plan.channels?.includes(key)) {
+    showToast(`Este canal no está incluido en el plan ${plan.name}.`);
+    return;
+  }
+
   const connected = storage.channels;
   connected[key] = !connected[key];
   storage.channels = connected;
@@ -279,6 +345,7 @@ function renderMetrics() {
 
 function renderAll() {
   renderClients();
+  renderPlanOptions();
   renderConnections();
   renderTraining();
   renderMetrics();
@@ -296,12 +363,13 @@ clientForm.addEventListener("submit", async (event) => {
   const name = data.get("clientName").trim();
   const username = data.get("username").trim();
   const password = data.get("password").trim();
+  const plan = data.get("plan");
 
   try {
     const result = await getJSON("/api/companies", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, username, password }),
+      body: JSON.stringify({ name, username, password, plan }),
     });
 
     storage.clients = [...storage.clients, result.company];
@@ -367,9 +435,13 @@ testForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const prompt = new FormData(testForm).get("prompt");
   const match = findBestAnswer(prompt);
+  const plan = getPlan(storage.activeClient.plan || "business");
+  const planPrefix = plan.features?.aiApi
+    ? ""
+    : "Plan Start: esta respuesta sale de automatizaciones preconfiguradas, sin consumir APIs de IA. ";
   botPreview.textContent = match
-    ? match.answer
-    : "No encontré una respuesta entrenada para esa pregunta. Recomendación: derivar a un asesor y guardar esta intención en la base de conocimiento.";
+    ? `${planPrefix}${match.answer}`
+    : `${planPrefix}No encontré una respuesta entrenada para esa pregunta. Recomendación: derivar a un asesor y guardar esta intención en la base de conocimiento.`;
 });
 
 publishButton.addEventListener("click", () => {
@@ -382,6 +454,11 @@ confidenceRange.addEventListener("input", () => {
 });
 
 async function init() {
+  const plans = await getJSON("/api/plans");
+  if (plans?.length) {
+    storage.plans = plans;
+  }
+
   const companies = await getJSON("/api/companies");
   if (companies?.length) {
     storage.clients = companies;
