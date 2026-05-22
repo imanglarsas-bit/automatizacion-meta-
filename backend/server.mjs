@@ -15,6 +15,7 @@ import {
   handleGetPlans,
 } from "./routes/companies.mjs";
 import { handleGetMetrics }       from "./routes/metrics.mjs";
+import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleWebhookVerification as saasWebhookVerify,
@@ -413,6 +414,32 @@ async function handleApi(request, response) {
     const result = await handleGetPlans();
     sendJson(response, result.status, result.body);
     return true;
+  }
+
+  if (url.pathname.startsWith("/api/lead-rules/")) {
+    const requestedCompanyId = decodeURIComponent(url.pathname.replace("/api/lead-rules/", ""));
+    if (role === "client" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes acceder a reglas de otra empresa." });
+      return true;
+    }
+
+    if (request.method === "GET") {
+      const result = await handleGetLeadRules(requestedCompanyId);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
+
+    if (request.method === "PUT") {
+      if (role !== "admin") {
+        sendJson(response, 403, { error: "Admin required" });
+        return true;
+      }
+
+      const body = await readBody(request);
+      const result = await handleSaveLeadRules(requestedCompanyId, body);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
   }
 
   if (request.method === "GET" && url.pathname === "/api/client-users") {

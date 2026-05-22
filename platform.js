@@ -140,13 +140,7 @@ const storage = {
   set training(value) {
     localStorage.setItem(this.key("training"), JSON.stringify(value));
   },
-  get leadRules() {
-    const saved = localStorage.getItem(this.key("lead_rules"));
-    return saved ? JSON.parse(saved) : defaultLeadRules;
-  },
-  set leadRules(value) {
-    localStorage.setItem(this.key("lead_rules"), JSON.stringify(value));
-  },
+  leadRules: defaultLeadRules,
   get confidence() {
     return Number(localStorage.getItem(this.key("confidence")) || 75);
   },
@@ -404,8 +398,9 @@ function renderAll() {
   renderMetrics();
 }
 
-clientSelect.addEventListener("change", () => {
+clientSelect.addEventListener("change", async () => {
   storage.activeClientId = clientSelect.value;
+  await loadLeadRules();
   renderAll();
   showToast("Perfil de cliente cambiado.");
 });
@@ -484,11 +479,11 @@ clearTraining.addEventListener("click", () => {
   showToast("Base de conocimiento limpiada.");
 });
 
-leadTrainingForm.addEventListener("submit", (event) => {
+leadTrainingForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(leadTrainingForm);
 
-  storage.leadRules = {
+  const rules = {
     requiredData: data.get("requiredData").trim(),
     qualificationQuestions: data.get("qualificationQuestions").trim(),
     hotLead: data.get("hotLead").trim(),
@@ -496,14 +491,33 @@ leadTrainingForm.addEventListener("submit", (event) => {
     handoffRules: data.get("handoffRules").trim(),
   };
 
-  renderLeadRules();
-  showToast("Reglas de leads guardadas para este cliente.");
+  try {
+    const result = await getJSON(`/api/lead-rules/${encodeURIComponent(storage.activeClientId)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(rules),
+    });
+    storage.leadRules = result.rules;
+    renderLeadRules();
+    showToast("Reglas de leads guardadas en el servidor.");
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
-resetLeadRules.addEventListener("click", () => {
-  storage.leadRules = defaultLeadRules;
-  renderLeadRules();
-  showToast("Reglas de leads restauradas.");
+resetLeadRules.addEventListener("click", async () => {
+  try {
+    const result = await getJSON(`/api/lead-rules/${encodeURIComponent(storage.activeClientId)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(defaultLeadRules),
+    });
+    storage.leadRules = result.rules;
+    renderLeadRules();
+    showToast("Reglas de leads restauradas en el servidor.");
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
 testForm.addEventListener("submit", (event) => {
@@ -566,8 +580,14 @@ async function init() {
     storage.activeClientId = storage.clients[0].companyId;
   }
 
+  await loadLeadRules();
   renderAll();
   await renderClientUsers();
+}
+
+async function loadLeadRules() {
+  const result = await getJSON(`/api/lead-rules/${encodeURIComponent(storage.activeClientId)}`);
+  storage.leadRules = result?.rules || defaultLeadRules;
 }
 
 async function deleteClientUser(username) {
