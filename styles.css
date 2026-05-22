@@ -665,6 +665,342 @@ h3 {
   font-weight: 950;
 }
 
+.pricing-section {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(0, 174, 239, 0.16), transparent 34%),
+    radial-gradient(circle at 82% 32%, rgba(125, 186, 46, 0.14), transparent 30%),
+    linear-gradient(180deg, rgba(3, 16, 29, 0.52), rgba(7, 27, 45, 0.9));
+}
+
+.pricing-section::after {
+  content: "";
+  position: absolute;
+  inset: 8% 5%;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(rgba(0, 174, 239, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(125, 186, 46, 0.08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(circle at 50% 20%, #000, transparent 72%);
+}
+
+.pricing-heading {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 26px;
+}
+
+.pricing-orb {
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(38px);
+  opacity: 0.28;
+  animation: floatOrb 10s ease-in-out infinite;
+}
+
+.pricing-orb.cyan {
+  top: 12%;
+  left: 4%;
+  background: var(--cyan);
+}
+
+.pricing-orb.green {
+  right: 5%;
+  bottom: 10%;
+  background: var(--green);
+  animation-delay: -5s;
+}
+
+.billing-control {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 auto 34px;
+}
+
+.billing-toggle {
+  position: relative;
+  width: min(310px, 100%);
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035)),
+    rgba(7, 27, 45, 0.72);
+  box-shadow: inset 0 0 18px rgba(0, 174, 239, 0.08), 0 18px 45px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(18px);
+}
+
+.billing-thumb {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: calc(50% - 5px);
+  height: calc(100% - 10px);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(0, 174, 239, 0.95), rgba(125, 186, 46, 0.88));
+  box-shadow: 0 0 28px rgba(0, 174, 239, 0.34);
+  transition: transform 240ms ease;
+}
+
+.billing-toggle.annual .billing-thumb {
+  transform: translateX(100%);
+}
+
+.billing-toggle button {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 950;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.billing-toggle button:hover {
+  transform: translateY(-1px);
+  color: var(--white);
+}
+
+.billing-toggle button.active {
+  color: #03101d;
+}
+
+.save-badge,
+.popular-badge,
+.plan-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border: 1px solid rgba(125, 186, 46, 0.4);
+  border-radius: 999px;
+  color: var(--green);
+  background: rgba(125, 186, 46, 0.1);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+}
+
+.save-badge {
+  min-height: 34px;
+  padding: 0 12px;
+  box-shadow: 0 0 24px rgba(125, 186, 46, 0.24);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.save-badge.is-hidden {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+.pricing-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.pricing-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 690px;
+  padding: 28px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.035)),
+    rgba(7, 27, 45, 0.78);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(20px);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
+}
+
+.pricing-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(135deg, rgba(0, 174, 239, 0.16), transparent 44%, rgba(125, 186, 46, 0.12));
+  transition: opacity 220ms ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(0, 174, 239, 0.4);
+  box-shadow: 0 30px 86px rgba(0, 174, 239, 0.14);
+}
+
+.pricing-card:hover::before {
+  opacity: 1;
+}
+
+.pricing-card.featured-plan {
+  min-height: 724px;
+  transform: translateY(-14px);
+  border-color: rgba(0, 174, 239, 0.5);
+  background:
+    linear-gradient(145deg, rgba(0, 174, 239, 0.22), rgba(125, 186, 46, 0.1)),
+    rgba(7, 27, 45, 0.9);
+  box-shadow:
+    0 32px 92px rgba(0, 0, 0, 0.32),
+    0 0 46px rgba(0, 174, 239, 0.2),
+    0 0 52px rgba(125, 186, 46, 0.12);
+}
+
+.pricing-card.featured-plan:hover {
+  transform: translateY(-20px);
+  box-shadow:
+    0 36px 98px rgba(0, 0, 0, 0.34),
+    0 0 58px rgba(0, 174, 239, 0.26),
+    0 0 58px rgba(125, 186, 46, 0.16);
+}
+
+.popular-badge {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-color: rgba(0, 174, 239, 0.54);
+  color: var(--white);
+  background: linear-gradient(135deg, rgba(0, 174, 239, 0.72), rgba(125, 186, 46, 0.62));
+  box-shadow: var(--glow-cyan);
+}
+
+.plan-top,
+.price-wrap,
+.billing-note,
+.plan-features,
+.plan-button {
+  position: relative;
+  z-index: 1;
+}
+
+.plan-kicker {
+  min-height: 30px;
+  padding: 0 11px;
+  margin-bottom: 18px;
+}
+
+.plan-top h3 {
+  margin-bottom: 12px;
+  font-size: 1.65rem;
+}
+
+.plan-top p {
+  min-height: 76px;
+  color: var(--muted);
+}
+
+.price-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  min-height: 76px;
+  margin: 8px 0 6px;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.price {
+  color: var(--white);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  line-height: 0.95;
+  font-weight: 950;
+}
+
+.price-period {
+  color: var(--muted);
+  font-weight: 850;
+}
+
+.billing-note {
+  min-height: 48px;
+  color: rgba(234, 246, 255, 0.68);
+  font-size: 0.92rem;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.pricing-card.price-changing .price-wrap,
+.pricing-card.price-changing .billing-note {
+  opacity: 0.18;
+  transform: translateY(5px);
+}
+
+.plan-features {
+  display: grid;
+  gap: 12px;
+  padding: 24px 0 28px;
+  margin: 0;
+  list-style: none;
+  color: rgba(234, 246, 255, 0.78);
+}
+
+.plan-features li {
+  position: relative;
+  padding-left: 30px;
+}
+
+.plan-features li::before {
+  content: "";
+  position: absolute;
+  top: 0.46em;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, #03101d 0 32%, transparent 34%),
+    linear-gradient(135deg, var(--cyan), var(--green));
+  box-shadow: 0 0 18px rgba(0, 174, 239, 0.24);
+}
+
+.plan-button {
+  width: 100%;
+  margin-top: auto;
+  border: 1px solid rgba(0, 174, 239, 0.28);
+  background: rgba(0, 174, 239, 0.1);
+  color: var(--white);
+  box-shadow: none;
+}
+
+.plan-button:hover {
+  border-color: rgba(125, 186, 46, 0.55);
+  background: linear-gradient(135deg, rgba(0, 174, 239, 0.2), rgba(125, 186, 46, 0.14));
+}
+
 .simulator-section {
   align-items: center;
 }
@@ -895,8 +1231,17 @@ a:focus {
 
   .solution-grid,
   .channel-grid,
-  .steps {
+  .steps,
+  .pricing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .pricing-card.featured-plan {
+    transform: none;
+  }
+
+  .pricing-card.featured-plan:hover {
+    transform: translateY(-8px);
   }
 
   .trust-band {
@@ -952,8 +1297,33 @@ a:focus {
   .solution-grid,
   .channel-grid,
   .steps,
+  .pricing-grid,
   .trust-band {
     grid-template-columns: 1fr;
+  }
+
+  .billing-control {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .billing-toggle {
+    width: 100%;
+  }
+
+  .save-badge {
+    align-self: center;
+  }
+
+  .pricing-card,
+  .pricing-card.featured-plan {
+    min-height: auto;
+    padding: 24px;
+  }
+
+  .popular-badge {
+    position: static;
+    margin-bottom: 16px;
   }
 
   .metric-strip {
