@@ -643,6 +643,15 @@ createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
+    if (request.method === "GET" && url.pathname === "/health") {
+      sendJson(response, 200, {
+        ok: true,
+        service: "idigital-platform",
+        uptime: Math.round(process.uptime()),
+      });
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/webhooks/meta") {
       await handleWebhookVerification(request, response);
       return;
