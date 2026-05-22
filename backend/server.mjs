@@ -16,6 +16,7 @@ import {
 } from "./routes/companies.mjs";
 import { handleGetPlans, handleUpdatePlan } from "./routes/plans.mjs";
 import { handleGetMetrics }       from "./routes/metrics.mjs";
+import { handleGetCompanySettings, handleSaveCompanySettings } from "./routes/companySettings.mjs";
 import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
@@ -416,6 +417,32 @@ async function handleApi(request, response) {
     const result = await handleGetPlans();
     sendJson(response, result.status, result.body);
     return true;
+  }
+
+  if (url.pathname.startsWith("/api/company-settings/")) {
+    const requestedCompanyId = decodeURIComponent(url.pathname.replace("/api/company-settings/", ""));
+    if (role === "client" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes acceder a configuraciones de otra empresa." });
+      return true;
+    }
+
+    if (request.method === "GET") {
+      const result = await handleGetCompanySettings(requestedCompanyId);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
+
+    if (request.method === "PUT") {
+      if (role !== "admin") {
+        sendJson(response, 403, { error: "Admin required" });
+        return true;
+      }
+
+      const body = await readBody(request);
+      const result = await handleSaveCompanySettings(requestedCompanyId, body);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
   }
 
   if (request.method === "PUT" && url.pathname.startsWith("/api/plans/")) {

@@ -115,6 +115,11 @@ const storage = {
   set clients(value) {
     this.companies = value;
   },
+  settings: {
+    channels: {},
+    training: defaultTraining,
+    confidence: 75,
+  },
   get activeClientId() {
     return localStorage.getItem("r360_active_client") || this.clients[0].companyId;
   },
@@ -128,24 +133,23 @@ const storage = {
     return `r360_${this.activeClientId}_${name}`;
   },
   get channels() {
-    return JSON.parse(localStorage.getItem(this.key("channels")) || "{}");
+    return this.settings.channels || {};
   },
   set channels(value) {
-    localStorage.setItem(this.key("channels"), JSON.stringify(value));
+    this.settings = { ...this.settings, channels: value || {} };
   },
   get training() {
-    const saved = localStorage.getItem(this.key("training"));
-    return saved ? JSON.parse(saved) : defaultTraining;
+    return this.settings.training || defaultTraining;
   },
   set training(value) {
-    localStorage.setItem(this.key("training"), JSON.stringify(value));
+    this.settings = { ...this.settings, training: value || [] };
   },
   leadRules: defaultLeadRules,
   get confidence() {
-    return Number(localStorage.getItem(this.key("confidence")) || 75);
+    return Number(this.settings.confidence || 75);
   },
   set confidence(value) {
-    localStorage.setItem(this.key("confidence"), String(value));
+    this.settings = { ...this.settings, confidence: Number(value) || 75 };
   },
 };
 
@@ -317,7 +321,9 @@ function toggleConnection(key) {
   connected[key] = !connected[key];
   storage.channels = connected;
   renderAll();
-  showToast(connected[key] ? "Canal marcado como conectado." : "Canal desactivado.");
+  saveCompanySettings({ channels: connected })
+    .then(() => showToast(connected[key] ? "Canal guardado como conectado." : "Canal desactivado y guardado."))
+    .catch((error) => showToast(error.message));
 }
 
 function renderTraining() {
@@ -657,6 +663,7 @@ function renderAll() {
 
 clientSelect.addEventListener("change", async () => {
   storage.activeClientId = clientSelect.value;
+  await loadCompanySettings();
   await loadLeadRules();
   renderAll();
   showToast("Perfil de cliente cambiado.");
@@ -679,6 +686,13 @@ clientForm.addEventListener("submit", async (event) => {
 
     storage.clients = [...storage.clients, result.company];
     storage.activeClientId = result.company.companyId;
+    storage.settings = {
+      channels: {},
+      training: defaultTraining,
+      confidence: 75,
+    };
+    await saveCompanySettings(storage.settings);
+    await loadLeadRules();
     clientForm.reset();
     renderAll();
     showToast(`Cliente creado. Usuario: ${result.user.username}`);
@@ -687,10 +701,16 @@ clientForm.addEventListener("submit", async (event) => {
   }
 });
 
-function deleteTraining(id) {
-  storage.training = storage.training.filter((item) => item.id !== id);
+async function deleteTraining(id) {
+  const training = storage.training.filter((item) => item.id !== id);
+  storage.training = training;
   renderAll();
-  showToast("Entrenamiento eliminado.");
+  try {
+    await saveCompanySettings({ training });
+    showToast("Entrenamiento eliminado y guardado.");
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function normalize(text) {
@@ -713,7 +733,7 @@ function findBestAnswer(prompt) {
   return ranked[0]?.score > 0 ? ranked[0].item : null;
 }
 
-trainingForm.addEventListener("submit", (event) => {
+trainingForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(trainingForm);
   const nextTraining = {
@@ -724,16 +744,28 @@ trainingForm.addEventListener("submit", (event) => {
     channel: data.get("channel"),
   };
 
-  storage.training = [nextTraining, ...storage.training];
-  trainingForm.reset();
-  renderAll();
-  showToast("Respuesta añadida al entrenamiento.");
+  const training = [nextTraining, ...storage.training];
+  storage.training = training;
+
+  try {
+    await saveCompanySettings({ training });
+    trainingForm.reset();
+    renderAll();
+    showToast("Respuesta añadida y guardada en el servidor.");
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
-clearTraining.addEventListener("click", () => {
+clearTraining.addEventListener("click", async () => {
   storage.training = [];
   renderAll();
-  showToast("Base de conocimiento limpiada.");
+  try {
+    await saveCompanySettings({ training: [] });
+    showToast("Base de conocimiento limpiada y guardada.");
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
 leadTrainingForm.addEventListener("submit", async (event) => {
@@ -820,6 +852,7 @@ publishButton.addEventListener("click", () => {
 confidenceRange.addEventListener("input", () => {
   storage.confidence = confidenceRange.value;
   renderMetrics();
+  queueCompanySettingsSave({ confidence: storage.confidence });
 });
 
 async function init() {
@@ -837,9 +870,45 @@ async function init() {
     storage.activeClientId = storage.clients[0].companyId;
   }
 
+  await loadCompanySettings();
   await loadLeadRules();
   renderAll();
   await renderClientUsers();
+}
+
+async function loadCompanySettings() {
+  const result = await getJSON(`/api/company-settings/${encodeURIComponent(storage.activeClientId)}`);
+  storage.settings = result?.settings || {
+    channels: {},
+    training: defaultTraining,
+    confidence: 75,
+  };
+}
+
+async function saveCompanySettings(patch) {
+  const result = await getJSON(`/api/company-settings/${encodeURIComponent(storage.activeClientId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      ...storage.settings,
+      ...patch,
+    }),
+  });
+
+  storage.settings = result?.settings || storage.settings;
+  return storage.settings;
+}
+
+function queueCompanySettingsSave(patch) {
+  window.clearTimeout(queueCompanySettingsSave.timer);
+  queueCompanySettingsSave.timer = window.setTimeout(async () => {
+    try {
+      await saveCompanySettings(patch);
+      showToast("Configuración guardada.");
+    } catch (error) {
+      showToast(error.message);
+    }
+  }, 450);
 }
 
 async function loadLeadRules() {
