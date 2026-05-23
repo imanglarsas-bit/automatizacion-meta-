@@ -934,6 +934,7 @@ liveMetaTestForm.addEventListener("submit", async (event) => {
   const formData = new FormData(liveMetaTestForm);
   const to = String(formData.get("to") || "").trim();
   const text = String(formData.get("text") || "").trim();
+  const mode = String(formData.get("mode") || "template").trim();
 
   liveMetaPreview.textContent = "Enviando mensaje por Meta...";
 
@@ -941,7 +942,7 @@ liveMetaTestForm.addEventListener("submit", async (event) => {
     const result = await getJSON("/api/meta/send-test", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channel: "whatsapp", to, text }),
+      body: JSON.stringify({ channel: "whatsapp", to, text, mode }),
     });
 
     const messageId = result?.meta?.messages?.[0]?.id;

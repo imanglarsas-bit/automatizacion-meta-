@@ -312,6 +312,13 @@
           </div>
           <form class="test-form live-test-form" id="liveMetaTestForm">
             <label>
+              Tipo de prueba
+              <select name="mode">
+                <option value="template">Plantilla Meta hello_world</option>
+                <option value="text">Texto libre</option>
+              </select>
+            </label>
+            <label>
               Número WhatsApp de prueba
               <input name="to" type="tel" placeholder="Ej. 573224591377" required />
             </label>
@@ -320,8 +327,7 @@
               <textarea
                 name="text"
                 rows="3"
-                placeholder="Ej. Hola, esta es una prueba desde iDIGITAL."
-                required
+                placeholder="Ej. Hola, esta es una prueba desde iDIGITAL. Solo aplica para texto libre."
               ></textarea>
             </label>
             <button class="solid-button full" type="submit">Enviar WhatsApp real</button>

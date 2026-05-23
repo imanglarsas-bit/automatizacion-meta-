@@ -98,12 +98,13 @@ export async function handleSendMetaTest(body) {
   const to = String(body.to || "").replace(/[^\d]/g, "");
   const text = String(body.text || "").trim();
   const channel = String(body.channel || "whatsapp").trim().toLowerCase();
+  const mode = String(body.mode || "template").trim().toLowerCase();
 
   if (channel !== "whatsapp") {
     return { status: 400, body: { error: "Por ahora la prueba real está disponible para WhatsApp." } };
   }
 
-  if (!to || !text) {
+  if (!to || (mode === "text" && !text)) {
     return { status: 400, body: { error: "Número destino y mensaje son obligatorios." } };
   }
 
@@ -111,13 +112,15 @@ export async function handleSendMetaTest(body) {
     channel,
     recipientId: to,
     text,
+    templateName: mode === "template" ? "hello_world" : "",
+    languageCode: "en_US",
   });
 
-  if (result?.error) {
+  if (result?.error || result?.skipped || (!result?.mock && !result?.messages?.[0]?.id)) {
     return {
       status: 502,
       body: {
-        error: result.error.message || "Meta rechazó el envío.",
+        error: result?.error?.message || "Meta no confirmó el envío. Revisa token, Phone Number ID y número autorizado.",
         meta: result,
       },
     };
