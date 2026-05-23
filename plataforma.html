@@ -160,13 +160,14 @@
             </dl>
           </article>
           <div class="connection-grid" id="connectionGrid"></div>
+          <div class="routed-meta-list" id="routedMetaList"></div>
           <form class="meta-routing-form" id="metaRoutingForm">
             <div>
               <p class="kicker">Enrutamiento</p>
               <h3 id="metaRoutingTitle">IDs del cliente activo</h3>
               <p>Estos IDs conectan mensajes entrantes con la configuración del cliente correcto.</p>
             </div>
-            <label>
+            <label class="route-field" data-route-field="whatsapp">
               WhatsApp Phone Number ID
               <textarea
                 name="whatsappPhoneNumberIds"
@@ -175,12 +176,12 @@
               ></textarea>
             </label>
             <div class="form-row">
-              <label>
+              <label class="route-field" data-route-field="instagram">
                 Instagram Account ID
                 <input name="instagramAccountIds" type="text" placeholder="Opcional" />
               </label>
-              <label>
-                Facebook Page ID
+              <label class="route-field" data-route-field="facebook">
+                Facebook / Messenger Page ID
                 <input name="facebookPageIds" type="text" placeholder="Opcional" />
               </label>
             </div>

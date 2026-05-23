@@ -176,6 +176,7 @@ const clientForm = document.querySelector("#clientForm");
 const planSelect = document.querySelector("#planSelect");
 const clientUserList = document.querySelector("#clientUserList");
 const connectionGrid = document.querySelector("#connectionGrid");
+const routedMetaList = document.querySelector("#routedMetaList");
 const metaRoutingForm = document.querySelector("#metaRoutingForm");
 const activeMetaClient = document.querySelector("#activeMetaClient");
 const metaRoutingTitle = document.querySelector("#metaRoutingTitle");
@@ -325,7 +326,8 @@ function renderConnections() {
   const activeMeta = activeClient.meta || {};
   const plan = getPlan(activeClient.plan || "business");
   const allowedChannels = new Set(plan.channels || []);
-  const whatsappIds = activeMeta.whatsappPhoneNumberIds || [];
+  const routes = getMetaRoutes(activeMeta);
+  const whatsappIds = routes.whatsapp.ids;
 
   metaRoutingTitle.textContent = `IDs de ${activeClient.name}`;
   activeMetaClient.innerHTML = `
@@ -351,16 +353,21 @@ function renderConnections() {
   `;
 
   metaRoutingForm.whatsappPhoneNumberIds.value = whatsappIds.join(", ");
-  metaRoutingForm.instagramAccountIds.value = (activeMeta.instagramAccountIds || []).join(", ");
-  metaRoutingForm.facebookPageIds.value = (activeMeta.facebookPageIds || []).join(", ");
+  metaRoutingForm.instagramAccountIds.value = routes.instagram.ids.join(", ");
+  metaRoutingForm.facebookPageIds.value = routes.facebook.ids.join(", ");
+  renderRoutedMetaList(routes);
 
   connectionGrid.innerHTML = channels
     .map((channel) => {
-      const isConnected = Boolean(connected[channel.key]);
+      const route = getRouteForChannel(channel.key, routes);
+      const isRouted = Boolean(route?.ids.length);
+      const isConnected = Boolean(connected[channel.key]) || isRouted;
       const metaStatus = metaConnections[channel.key]?.status;
       const isAllowed = allowedChannels.has(channel.key);
-      const buttonText = metaStatus === "connected" || isConnected ? "Actualizar conexión" : "Conectar con Meta";
-      const statusText = metaStatus === "connected"
+      const buttonText = metaStatus === "connected" || isConnected ? "Actualizar autorización" : "Conectar con Meta";
+      const statusText = isRouted
+        ? `Conectado y enrutado: ${route.ids.join(", ")}`
+        : metaStatus === "connected"
         ? "Autorizado por Meta"
         : isConnected
           ? "Marcado como conectado"
@@ -407,6 +414,96 @@ function toggleConnection(key) {
     .catch((error) => showToast(error.message));
 }
 
+function getMetaRoutes(meta = {}) {
+  return {
+    whatsapp: {
+      key: "whatsapp",
+      label: "WhatsApp",
+      field: "whatsappPhoneNumberIds",
+      ids: meta.whatsappPhoneNumberIds || [],
+    },
+    instagram: {
+      key: "instagram",
+      label: "Instagram",
+      field: "instagramAccountIds",
+      ids: meta.instagramAccountIds || [],
+    },
+    facebook: {
+      key: "facebook",
+      label: "Facebook / Messenger",
+      field: "facebookPageIds",
+      ids: meta.facebookPageIds || [],
+    },
+  };
+}
+
+function getRouteForChannel(channelKey, routes) {
+  if (channelKey === "messenger") return routes.facebook;
+  return routes[channelKey] || null;
+}
+
+function renderRoutedMetaList(routes) {
+  const routedRoutes = Object.values(routes).filter((route) => route.ids.length);
+
+  metaRoutingForm.querySelectorAll("[data-route-field]").forEach((field) => {
+    const routeKey = field.dataset.routeField;
+    field.hidden = Boolean(routes[routeKey]?.ids.length);
+  });
+
+  if (!routedRoutes.length) {
+    routedMetaList.innerHTML = `
+      <article class="routing-empty">
+        <strong>Sin redes enrutadas todavía</strong>
+        <span>Pega el ID de Meta del cliente y guarda. Al quedar guardado, la red se marcará como conectada.</span>
+      </article>
+    `;
+    return;
+  }
+
+  routedMetaList.innerHTML = routedRoutes
+    .map((route) => `
+      <article class="routed-meta-card">
+        <div>
+          <span>Conectado</span>
+          <strong>${escapeHTML(route.label)}</strong>
+          <small>${escapeHTML(route.ids.join(", "))}</small>
+        </div>
+        <button class="delete-user-button unrouting-button" type="button" data-route="${escapeHTML(route.key)}">
+          Desenrutar
+        </button>
+      </article>
+    `)
+    .join("");
+
+  routedMetaList.querySelectorAll(".unrouting-button").forEach((button) => {
+    button.addEventListener("click", () => unrouteMetaChannel(button.dataset.route));
+  });
+}
+
+async function unrouteMetaChannel(routeKey) {
+  const activeClient = storage.activeClient;
+  const routes = getMetaRoutes(activeClient.meta || {});
+  const route = routes[routeKey];
+  if (!route) return;
+
+  const confirmed = window.confirm(`¿Desenrutar ${route.label} de ${activeClient.name}? Los mensajes de esos IDs ya no caerán en este cliente.`);
+  if (!confirmed) return;
+
+  const payload = {
+    whatsappPhoneNumberIds: routes.whatsapp.ids,
+    instagramAccountIds: routes.instagram.ids,
+    facebookPageIds: routes.facebook.ids,
+    [route.field]: [],
+  };
+
+  try {
+    await saveCompanyMeta(payload);
+    showToast(`${route.label} desenrutado para ${activeClient.name}.`);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 async function startMetaConnection(key) {
   const plan = getPlan(storage.activeClient.plan || "business");
   if (!plan.channels?.includes(key)) {
@@ -443,22 +540,27 @@ metaRoutingForm.addEventListener("submit", async (event) => {
   if (!confirmed) return;
 
   try {
-    const updated = await getJSON(`/api/companies/${encodeURIComponent(storage.activeClientId)}/meta`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const index = storage.clients.findIndex((client) => client.companyId === updated.companyId);
-    if (index >= 0) {
-      storage.clients[index] = updated;
-    }
-    renderClients();
-    renderConnections();
+    await saveCompanyMeta(payload);
     showToast("IDs de Meta guardados para este cliente.");
   } catch (error) {
     showToast(error.message);
   }
 });
+
+async function saveCompanyMeta(payload) {
+  const updated = await getJSON(`/api/companies/${encodeURIComponent(storage.activeClientId)}/meta`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const index = storage.clients.findIndex((client) => client.companyId === updated.companyId);
+  if (index >= 0) {
+    storage.clients[index] = updated;
+  }
+  renderClients();
+  renderConnections();
+  return updated;
+}
 
 function splitIds(value) {
   return String(value || "")
@@ -858,7 +960,9 @@ async function handlePlanFormSubmit(event) {
 }
 
 function renderMetrics() {
-  const connectedCount = Object.values(storage.channels).filter(Boolean).length;
+  const routedCount = Object.values(getMetaRoutes(storage.activeClient.meta || {})).filter((route) => route.ids.length).length;
+  const manualCount = Object.values(storage.channels).filter(Boolean).length;
+  const connectedCount = Math.max(routedCount, manualCount);
   activeChannels.textContent = connectedCount;
   trainedAnswers.textContent = storage.training.length;
   confidenceRange.value = storage.confidence;
