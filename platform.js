@@ -988,7 +988,7 @@ liveMetaTestForm.addEventListener("submit", async (event) => {
     const result = await getJSON("/api/meta/send-test", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channel: "whatsapp", to, text, mode }),
+      body: JSON.stringify({ companyId: storage.activeClientId, channel: "whatsapp", to, text, mode }),
     });
 
     const messageId = result?.meta?.messages?.[0]?.id;

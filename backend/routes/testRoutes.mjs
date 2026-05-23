@@ -99,6 +99,7 @@ export async function handleSendMetaTest(body) {
   const text = String(body.text || "").trim();
   const channel = String(body.channel || "whatsapp").trim().toLowerCase();
   const mode = String(body.mode || "template").trim().toLowerCase();
+  const companyId = String(body.companyId || "").trim();
 
   if (channel !== "whatsapp") {
     return { status: 400, body: { error: "Por ahora la prueba real está disponible para WhatsApp." } };
@@ -108,19 +109,23 @@ export async function handleSendMetaTest(body) {
     return { status: 400, body: { error: "Número destino y mensaje son obligatorios." } };
   }
 
+  const company = companyId ? await getCompany(companyId) : null;
+  const phoneNumberId = company?.meta?.whatsappPhoneNumberIds?.[0];
   const result = await sendMessage({
     channel,
     recipientId: to,
     text,
+    phoneNumberId,
     templateName: mode === "template" ? "hello_world" : "",
     languageCode: "en_US",
   });
 
   if (result?.error || result?.skipped || (!result?.mock && !result?.messages?.[0]?.id)) {
+    const friendlyError = explainMetaSendError(result, { phoneNumberId });
     return {
       status: 502,
       body: {
-        error: result?.error?.message || "Meta no confirmó el envío. Revisa token, Phone Number ID y número autorizado.",
+        error: friendlyError,
         meta: result,
       },
     };
@@ -135,4 +140,29 @@ export async function handleSendMetaTest(body) {
       meta: result,
     },
   };
+}
+
+function explainMetaSendError(result, context = {}) {
+  if (result?.skipped) {
+    return "Faltan credenciales de Meta en el servidor: revisa META_ACCESS_TOKEN y META_PHONE_NUMBER_ID.";
+  }
+
+  const error = result?.error || {};
+  const message = String(error.message || "").trim();
+  const code = String(error.code || "");
+  const type = String(error.type || "");
+
+  if (code === "190" || /OAuth|access token|Authentication/i.test(`${type} ${message}`)) {
+    return [
+      "Meta rechazó la autenticación.",
+      "Revisa que el token no esté vencido y que pertenezca a la misma cuenta de WhatsApp Business del Phone Number ID.",
+      context.phoneNumberId ? `Phone Number ID usado: ${context.phoneNumberId}.` : "No hay Phone Number ID guardado para este cliente; se usó el valor global del servidor.",
+    ].join(" ");
+  }
+
+  if (/recipient|allowed|test/i.test(message)) {
+    return "Meta rechazó el destinatario. Si la app está en modo prueba, agrega ese número como destinatario de prueba o usa un número que ya haya iniciado conversación.";
+  }
+
+  return message || "Meta no confirmó el envío. Revisa token, Phone Number ID y número autorizado.";
 }
