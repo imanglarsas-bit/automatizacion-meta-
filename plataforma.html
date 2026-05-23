@@ -19,6 +19,7 @@
         <a href="#" data-tab="leads">Leads</a>
         <a href="#" data-tab="pruebas">Pruebas</a>
         <a href="#" data-tab="planes">Planes</a>
+        <a href="#" data-tab="soporte">Soporte</a>
       </nav>
     </aside>
 
@@ -474,6 +475,50 @@
             </div>
           </div>
           <div class="plan-editor-grid" id="planEditorGrid"></div>
+        </section>
+
+      </div>
+      <!-- ── TAB: Soporte ──────────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="soporte" hidden>
+
+        <section class="workspace-grid">
+          <article class="panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Soporte</p>
+                <h2>Mensajes de clientes</h2>
+              </div>
+              <button class="ghost-button" type="button" id="refreshSupport">Actualizar</button>
+            </div>
+            <div class="support-company-list" id="supportCompanyList">
+              <div class="empty-state">No hay mensajes de soporte aún.</div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker" id="supportThreadKicker">Conversación</p>
+                <h2 id="supportThreadTitle">Selecciona un cliente</h2>
+              </div>
+              <span class="status-pill" id="supportThreadStatus" hidden></span>
+            </div>
+            <div class="message-thread" id="adminSupportThread">
+              <div class="empty-state">Selecciona un cliente de la lista para ver su chat de soporte.</div>
+            </div>
+            <form class="reply-form admin-support-form" id="adminSupportForm" hidden>
+              <label>
+                Respuesta al cliente
+                <textarea
+                  name="text"
+                  rows="3"
+                  placeholder="Escribe tu respuesta..."
+                  required
+                ></textarea>
+              </label>
+              <button type="submit">Enviar respuesta</button>
+            </form>
+          </article>
         </section>
 
       </div>

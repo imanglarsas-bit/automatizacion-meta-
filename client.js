@@ -1,4 +1,4 @@
-const companySelect = document.querySelector("#companySelect");
+const welcomeMsg = document.querySelector("#welcomeMsg");
 const statusFilter = document.querySelector("#statusFilter");
 const conversationList = document.querySelector("#conversationList");
 const conversationTitle = document.querySelector("#conversationTitle");
@@ -11,12 +11,44 @@ const replyButton = document.querySelector("#replyButton");
 const pendingCount = document.querySelector("#pendingCount");
 const answeredCount = document.querySelector("#answeredCount");
 const channelCount = document.querySelector("#channelCount");
+const supportThread = document.querySelector("#supportThread");
+const supportEmpty = document.querySelector("#supportEmpty");
+const supportForm = document.querySelector("#supportForm");
+const supportStatusPill = document.querySelector("#supportStatusPill");
 const toast = document.querySelector("#toast");
 
-let companies = [];
+let activeCompanyId = "";
 let conversations = [];
-let activeCompanyId = localStorage.getItem("r360_client_company") || "";
 let activeConversationId = "";
+let supportPollTimer = null;
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+function initTabs() {
+  const tabLinks = document.querySelectorAll("nav a[data-tab]");
+  const tabPanes = document.querySelectorAll(".tab-pane");
+
+  tabLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = link.dataset.tab;
+      tabPanes.forEach((pane) => { pane.hidden = true; });
+      const pane = document.querySelector(`.tab-pane[data-pane="${target}"]`);
+      if (pane) pane.hidden = false;
+      tabLinks.forEach((a) => a.classList.remove("active"));
+      link.classList.add("active");
+
+      if (target === "soporte") {
+        loadSupportThread();
+        startSupportPolling();
+      } else {
+        stopSupportPolling();
+      }
+    });
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function showToast(message) {
   toast.textContent = message;
@@ -39,33 +71,25 @@ function formatStatus(status) {
 }
 
 function formatSender(sender) {
-  const labels = {
-    customer: "Cliente",
-    bot: "Bot",
-    human: "Humano",
-    system: "Sistema",
-  };
+  const labels = { customer: "Cliente", bot: "Bot", human: "Humano", system: "Sistema" };
   return labels[sender] || sender;
 }
 
 function channelMeta(channel) {
   const key = String(channel || "").toLowerCase();
-  const labels = {
-    whatsapp: "WhatsApp",
-    instagram: "Instagram",
-    facebook: "Facebook",
-    messenger: "Messenger",
-  };
-
-  return {
-    key,
-    label: labels[key] || channel || "Canal",
-  };
+  const labels = { whatsapp: "WhatsApp", instagram: "Instagram", facebook: "Facebook", messenger: "Messenger" };
+  return { key, label: labels[key] || channel || "Canal" };
 }
 
 function channelBadge(channel) {
   const meta = channelMeta(channel);
   return `<span class="channel-badge ${escapeHTML(meta.key)}">${escapeHTML(meta.label)}</span>`;
+}
+
+function formatTime(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
 }
 
 async function getJSON(url, options) {
@@ -82,24 +106,18 @@ async function getJSON(url, options) {
   return response.json();
 }
 
-async function loadCompanies() {
-  companies = await getJSON("/api/companies");
-  if (!companies?.length) {
-    return;
-  }
+// ── Company / welcome ─────────────────────────────────────────────────────────
 
-  if (!activeCompanyId) {
-    activeCompanyId = companies[0].companyId;
-  }
+async function loadCompany() {
+  const companies = await getJSON("/api/companies");
+  if (!companies?.length) return;
 
-  companySelect.innerHTML = companies
-    .map(
-      (company) =>
-        `<option value="${escapeHTML(company.companyId)}" ${company.companyId === activeCompanyId ? "selected" : ""}>${escapeHTML(company.name)}</option>`,
-    )
-    .join("");
-  companySelect.disabled = companies.length === 1;
+  const company = companies[0];
+  activeCompanyId = company.companyId;
+  welcomeMsg.textContent = `Bienvenido, ${company.name}`;
 }
+
+// ── Conversaciones ────────────────────────────────────────────────────────────
 
 async function loadConversations() {
   const payload = await getJSON(`/api/conversations/${activeCompanyId}`);
@@ -164,9 +182,7 @@ async function renderActiveConversation() {
   }
 
   const conversation = await getJSON(`/api/messages/${activeCompanyId}/${activeConversationId}`);
-  if (!conversation) {
-    return;
-  }
+  if (!conversation) return;
 
   conversationTitle.textContent = conversation.customerName;
   conversationSummary.textContent = conversation.summary;
@@ -189,13 +205,6 @@ async function renderActiveConversation() {
     .join("");
 }
 
-companySelect.addEventListener("change", async () => {
-  activeCompanyId = companySelect.value;
-  localStorage.setItem("r360_client_company", activeCompanyId);
-  activeConversationId = "";
-  await loadConversations();
-});
-
 statusFilter.addEventListener("change", () => {
   renderConversationList();
 });
@@ -204,9 +213,7 @@ replyForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(replyForm);
   const reply = data.get("reply").trim();
-  if (!reply || !activeConversationId) {
-    return;
-  }
+  if (!reply || !activeConversationId) return;
 
   await getJSON(`/api/messages/${activeCompanyId}/${activeConversationId}/reply`, {
     method: "POST",
@@ -219,8 +226,71 @@ replyForm.addEventListener("submit", async (event) => {
   await loadConversations();
 });
 
+// ── Soporte interno ───────────────────────────────────────────────────────────
+
+async function loadSupportThread() {
+  const ticket = await getJSON("/api/support/client");
+
+  if (!ticket || !ticket.messages?.length) {
+    supportEmpty.hidden = false;
+    supportStatusPill.textContent = "Sin mensajes";
+    supportThread.innerHTML = "";
+    supportThread.appendChild(supportEmpty);
+    return;
+  }
+
+  supportEmpty.hidden = true;
+  supportStatusPill.textContent = ticket.status === "answered" ? "Respondido" : "Pendiente";
+  supportStatusPill.className = `support-status-pill ${ticket.status === "answered" ? "answered" : "open"}`;
+
+  supportThread.innerHTML = ticket.messages
+    .map(
+      (msg) => `
+        <article class="message ${msg.sender === "admin" ? "human" : "customer"}">
+          <small>${msg.sender === "admin" ? "iDIGITAL" : "Tú"} · ${formatTime(msg.at)}</small>
+          <p>${escapeHTML(msg.text)}</p>
+        </article>
+      `,
+    )
+    .join("");
+
+  supportThread.scrollTop = supportThread.scrollHeight;
+}
+
+supportForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(supportForm);
+  const text = data.get("text").trim();
+  if (!text) return;
+
+  try {
+    await getJSON("/api/support/message", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    supportForm.reset();
+    await loadSupportThread();
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+function startSupportPolling() {
+  stopSupportPolling();
+  supportPollTimer = setInterval(loadSupportThread, 10000);
+}
+
+function stopSupportPolling() {
+  clearInterval(supportPollTimer);
+  supportPollTimer = null;
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
 async function init() {
-  await loadCompanies();
+  initTabs();
+  await loadCompany();
   await loadConversations();
 }
 

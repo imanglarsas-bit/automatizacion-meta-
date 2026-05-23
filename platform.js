@@ -1251,8 +1251,130 @@ function initTabs() {
       if (pane) pane.hidden = false;
       tabLinks.forEach((a) => a.classList.remove("active"));
       link.classList.add("active");
+
+      if (target === "soporte") loadSupportTickets();
     });
   });
+}
+
+// ── Soporte admin ─────────────────────────────────────────────────────────────
+
+const supportCompanyList = document.querySelector("#supportCompanyList");
+const adminSupportThread = document.querySelector("#adminSupportThread");
+const adminSupportForm = document.querySelector("#adminSupportForm");
+const supportThreadTitle = document.querySelector("#supportThreadTitle");
+const supportThreadKicker = document.querySelector("#supportThreadKicker");
+const supportThreadStatus = document.querySelector("#supportThreadStatus");
+const refreshSupport = document.querySelector("#refreshSupport");
+
+let activeSupportCompanyId = null;
+let supportTickets = [];
+
+function formatSupportTime(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("es-CO", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+async function loadSupportTickets() {
+  try {
+    supportTickets = await getJSON("/api/support") || [];
+  } catch {
+    supportTickets = [];
+  }
+  renderSupportList();
+  if (activeSupportCompanyId) renderSupportThread(activeSupportCompanyId);
+}
+
+function renderSupportList() {
+  if (!supportCompanyList) return;
+
+  if (!supportTickets.length) {
+    supportCompanyList.innerHTML = `<div class="empty-state">No hay mensajes de soporte aún.</div>`;
+    return;
+  }
+
+  supportCompanyList.innerHTML = supportTickets
+    .map((ticket) => {
+      const last = ticket.messages?.[ticket.messages.length - 1];
+      const isActive = ticket.companyId === activeSupportCompanyId;
+      return `
+        <button class="conversation-card ${isActive ? "active" : ""}" type="button" data-company-id="${escapeHTML(ticket.companyId)}">
+          <strong>${escapeHTML(ticket.companyName)}</strong>
+          ${last ? `<p>${escapeHTML(last.text.slice(0, 80))}${last.text.length > 80 ? "…" : ""}</p>` : ""}
+          <div class="meta-row">
+            <span class="tag ${ticket.status === "open" ? "warning" : ""}">${ticket.status === "open" ? "Pendiente" : "Respondido"}</span>
+            ${last ? `<span class="tag">${formatSupportTime(last.at)}</span>` : ""}
+          </div>
+        </button>
+      `;
+    })
+    .join("");
+
+  supportCompanyList.querySelectorAll(".conversation-card").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeSupportCompanyId = btn.dataset.companyId;
+      renderSupportList();
+      renderSupportThread(activeSupportCompanyId);
+    });
+  });
+}
+
+function renderSupportThread(companyId) {
+  if (!adminSupportThread) return;
+  const ticket = supportTickets.find((t) => t.companyId === companyId);
+
+  if (!ticket) {
+    adminSupportThread.innerHTML = `<div class="empty-state">No hay mensajes de este cliente.</div>`;
+    adminSupportForm.hidden = true;
+    return;
+  }
+
+  supportThreadTitle.textContent = ticket.companyName;
+  supportThreadKicker.textContent = "Chat de soporte";
+  supportThreadStatus.hidden = false;
+  supportThreadStatus.textContent = ticket.status === "open" ? "Pendiente" : "Respondido";
+  supportThreadStatus.className = `status-pill ${ticket.status === "open" ? "warning" : ""}`;
+
+  adminSupportThread.innerHTML = ticket.messages
+    .map(
+      (msg) => `
+        <article class="message ${msg.sender === "admin" ? "human" : "customer"}">
+          <small>${msg.sender === "admin" ? "iDIGITAL (tú)" : escapeHTML(ticket.companyName)} · ${formatSupportTime(msg.at)}</small>
+          <p>${escapeHTML(msg.text)}</p>
+        </article>
+      `,
+    )
+    .join("");
+
+  adminSupportThread.scrollTop = adminSupportThread.scrollHeight;
+  adminSupportForm.hidden = false;
+}
+
+if (adminSupportForm) {
+  adminSupportForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!activeSupportCompanyId) return;
+    const data = new FormData(adminSupportForm);
+    const text = data.get("text").trim();
+    if (!text) return;
+
+    try {
+      await getJSON(`/api/support/${encodeURIComponent(activeSupportCompanyId)}/reply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      adminSupportForm.reset();
+      await loadSupportTickets();
+      showToast("Respuesta enviada al cliente.");
+    } catch (error) {
+      showToast(error.message);
+    }
+  });
+}
+
+if (refreshSupport) {
+  refreshSupport.addEventListener("click", () => loadSupportTickets());
 }
 
 initTabs();

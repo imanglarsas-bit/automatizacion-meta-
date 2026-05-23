@@ -113,9 +113,14 @@ textarea {
 }
 
 .client-header {
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   margin-bottom: 18px;
+}
+
+.client-header .summary-grid {
+  grid-template-columns: repeat(3, minmax(80px, 1fr));
+  margin-bottom: 0;
 }
 
 .kicker {
@@ -411,6 +416,51 @@ a:focus {
 .toast.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ── Soporte interno ─────────────────────────────────────────────────────── */
+
+.support-panel {
+  max-width: 860px;
+}
+
+.support-panel .panel-heading p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.support-status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  background: #eef6f5;
+  color: var(--teal-dark);
+}
+
+.support-status-pill.open {
+  background: #fff5eb;
+  color: #9a3412;
+}
+
+.support-status-pill.answered {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.support-thread {
+  min-height: 320px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+@media (max-width: 980px) {
+  .client-header .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 980px) {

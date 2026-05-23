@@ -23,6 +23,12 @@ import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs"
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleGetMetaConnectUrl, handleMetaOAuthCallback } from "./routes/metaConnect.mjs";
+import {
+  handleGetAllTickets,
+  handleGetClientTicket,
+  handleClientMessage,
+  handleAdminReply,
+} from "./routes/support.mjs";
 import { handleWebhookVerification as saasWebhookVerify,
          handleWebhookEvent as saasWebhookEvent } from "./routes/metaWebhook.mjs";
 import { ensureDataFile } from "./utils/dataPaths.mjs";
@@ -637,6 +643,53 @@ async function handleApi(request, response) {
       sendJson(response, result.status, result.body);
       return true;
     }
+  }
+
+  // ── Support chat (client ↔ admin) ────────────────────────────────────────────
+
+  if (request.method === "GET" && url.pathname === "/api/support") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+    const result = await handleGetAllTickets();
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/support/client") {
+    if (role !== "client") {
+      sendJson(response, 403, { error: "Client session required" });
+      return true;
+    }
+    const result = await handleGetClientTicket(companyId);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/support/message") {
+    if (role !== "client") {
+      sendJson(response, 403, { error: "Client session required" });
+      return true;
+    }
+    const body = await readBody(request);
+    const companies = (await import("./routes/companies.mjs").then((m) => m.handleGetCompany(companyId))).body;
+    const companyName = companies?.name || companyId;
+    const result = await handleClientMessage(companyId, companyName, body);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname.startsWith("/api/support/") && url.pathname.endsWith("/reply")) {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+    const targetCompanyId = decodeURIComponent(url.pathname.replace("/api/support/", "").replace("/reply", ""));
+    const body = await readBody(request);
+    const result = await handleAdminReply(targetCompanyId, body);
+    sendJson(response, result.status, result.body);
+    return true;
   }
 
   // ────────────────────────────────────────────────────────────────────────────
