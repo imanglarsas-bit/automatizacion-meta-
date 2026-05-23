@@ -67,12 +67,17 @@
         </section>
 
         <section class="panel client-summary" id="clientes">
-          <div>
-            <p class="kicker">Perfil del cliente</p>
+          <div class="active-client-block">
+            <p class="kicker">Cliente que estás administrando</p>
             <h2 id="clientName">Cliente activo</h2>
             <p id="clientDescription">Configuración activa del cliente seleccionado.</p>
+            <small id="clientScopeLabel">Los cambios de canales, bot, leads y embudos se guardan solo para este cliente.</small>
           </div>
           <form class="client-form" id="clientForm">
+            <div class="client-form-title">
+              <p class="kicker">Nuevo cliente</p>
+              <strong>Crear perfil y acceso</strong>
+            </div>
             <label>
               Nombre del negocio
               <input name="clientName" type="text" placeholder="Ej. Clínica Norte" required />

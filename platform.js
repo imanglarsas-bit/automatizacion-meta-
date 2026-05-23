@@ -168,6 +168,7 @@ const subscriptionList = document.querySelector("#subscriptionList");
 const clientSelect = document.querySelector("#clientSelect");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
+const clientScopeLabel = document.querySelector("#clientScopeLabel");
 const clientForm = document.querySelector("#clientForm");
 const planSelect = document.querySelector("#planSelect");
 const clientUserList = document.querySelector("#clientUserList");
@@ -254,6 +255,7 @@ function renderClients() {
   clientDescription.textContent = `${activePlan.name} · ${formatLimit(activePlan.monthlyMessageLimit)} mensajes/mes · IA ${
     activePlan.features?.aiApi ? (activePlan.features?.limitedAiApi ? "limitada" : "completa") : "no incluida"
   }`;
+  clientScopeLabel.textContent = `ID interno: ${activeClient.companyId}. Los cambios de canales, bot, leads y embudos se guardan solo para ${activeClient.name}.`;
 }
 
 function renderPlanOptions() {

@@ -286,14 +286,42 @@ h2 {
   gap: 22px;
 }
 
+.active-client-block {
+  min-width: 250px;
+}
+
 .client-summary p:last-child {
   margin-bottom: 0;
   color: var(--muted);
 }
 
+.active-client-block small,
+.client-form-title strong {
+  display: block;
+}
+
+.active-client-block small {
+  max-width: 430px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
 .client-form {
   width: min(820px, 100%);
   gap: 12px;
+}
+
+.client-form-title {
+  min-width: 150px;
+}
+
+.client-form-title .kicker {
+  margin-bottom: 4px;
+}
+
+.client-form-title strong {
+  color: var(--ink);
+  font-size: 0.94rem;
 }
 
 .client-form label {
