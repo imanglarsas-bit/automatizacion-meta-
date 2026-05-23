@@ -6,7 +6,7 @@ import { buildSystemPrompt }  from "../services/ai/promptBuilder.mjs";
 import { routeAI }            from "../services/ai/aiRouterService.mjs";
 import { sendMessage }        from "../services/meta/metaService.mjs";
 import { recordConversation } from "../services/billing/usageTracker.mjs";
-import { evaluateLeadFunnel, getLeadRules } from "./leadRules.mjs";
+import { evaluateLeadFunnel, evaluateLeadMenu, getLeadRules } from "./leadRules.mjs";
 import { buildAutomationReply } from "../services/automation/automationReplyService.mjs";
 import { logger }             from "../utils/logger.mjs";
 
@@ -35,10 +35,18 @@ export async function handleWebhookEvent(payload) {
   }
 
   const unit = detectUnit(incoming.text, company);
+  const menu = await evaluateLeadMenu(company.companyId, incoming.senderId, incoming.text);
   const funnel = await evaluateLeadFunnel(company.companyId, incoming.text);
   const leadRules = await getLeadRules(company.companyId);
   const aiAllowed = Boolean(company.planFeatures?.aiApi);
-  const aiResult = funnel?.shouldHandoff
+  const aiResult = menu
+    ? {
+        text: menu.text,
+        provider: menu.provider,
+        model: menu.model,
+        estimatedCostUSD: 0,
+      }
+    : funnel?.shouldHandoff
     ? {
         text: funnel.response || "Recibimos tu solicitud. Un asesor humano continuará la atención.",
         provider: "handoff",
@@ -72,8 +80,8 @@ export async function handleWebhookEvent(payload) {
     estimatedCostUSD: aiResult.estimatedCostUSD ?? 0,
   });
 
-  logger.info("Webhook message handled", { companyId: company.companyId, channel: incoming.channel, funnel: funnel?.id });
-  return { status: 200, body: { ok: true, received: true, handoff: Boolean(funnel?.shouldHandoff) } };
+  logger.info("Webhook message handled", { companyId: company.companyId, channel: incoming.channel, funnel: funnel?.id, menu: menu?.id });
+  return { status: 200, body: { ok: true, received: true, handoff: Boolean(funnel?.shouldHandoff || menu?.shouldHandoff) } };
 }
 
 function extractMessage(payload) {

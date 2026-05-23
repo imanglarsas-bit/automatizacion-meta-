@@ -445,6 +445,16 @@ function renderLeadRules() {
           </div>
           <p>${escapeHTML(funnel.trigger)}</p>
           ${funnel.response ? `<small>${escapeHTML(funnel.response)}</small>` : ""}
+          ${funnel.options?.length ? `
+            <ol class="funnel-options">
+              ${funnel.options.map((option) => `
+                <li>
+                  <strong>${escapeHTML(option.number)}. ${escapeHTML(option.label)}</strong>
+                  <span>${option.nextFunnelId ? "Abre otro menú" : option.action === "human" ? "Pasa a humano" : "Respuesta automática"}</span>
+                </li>
+              `).join("")}
+            </ol>
+          ` : ""}
           <button class="delete-funnel" type="button" data-id="${escapeHTML(funnel.id)}">Eliminar embudo</button>
         </article>
       `).join("") || `<div class="empty-state">Todavía no hay embudos configurados.</div>`}

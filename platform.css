@@ -609,6 +609,25 @@ a:focus {
   color: var(--muted);
 }
 
+.funnel-options {
+  display: grid;
+  gap: 6px;
+  margin: 2px 0 0;
+  padding-left: 18px;
+}
+
+.funnel-options li {
+  color: var(--muted);
+}
+
+.funnel-options strong {
+  color: var(--ink);
+}
+
+.funnel-options span {
+  font-size: 0.78rem;
+}
+
 .delete-funnel {
   justify-self: start;
   min-height: 34px;

@@ -14,6 +14,7 @@ const files = {
   conversations: "conversations.mock.json",
   usage: "usage.mock.json",
   leadRules: "lead-rules.mock.json",
+  leadSessions: "lead-sessions.mock.json",
   companySettings: "company-settings.mock.json",
   training: "training.json",
 };
@@ -42,6 +43,69 @@ function mergeObjectKeys(current, seed) {
     ...seed,
     ...current,
   };
+}
+
+function mergeLeadRules(current, seed) {
+  const next = { ...seed, ...current };
+
+  for (const [companyId, seedRules] of Object.entries(seed)) {
+    const currentRules = current[companyId];
+    if (!currentRules) continue;
+
+    const currentFunnels = Array.isArray(currentRules.funnels) ? currentRules.funnels : [];
+    const seedFunnels = Array.isArray(seedRules.funnels) ? seedRules.funnels : [];
+    next[companyId] = {
+      ...seedRules,
+      ...currentRules,
+      funnels: mergeFunnels(currentFunnels, seedFunnels),
+    };
+  }
+
+  return next;
+}
+
+function mergeFunnels(currentFunnels, seedFunnels) {
+  const currentById = new Map(currentFunnels.map((item) => [item.id, item]));
+  const seedById = new Map(seedFunnels.map((item) => [item.id, item]));
+  const merged = [];
+
+  for (const current of currentFunnels) {
+    const seed = seedById.get(current.id) || {};
+    merged.push({
+      ...seed,
+      ...current,
+      options: mergeOptions(current.options || [], seed.options || []),
+    });
+  }
+
+  for (const seed of seedFunnels) {
+    if (!currentById.has(seed.id)) {
+      merged.push(seed);
+    }
+  }
+
+  return merged;
+}
+
+function mergeOptions(currentOptions, seedOptions) {
+  const currentById = new Map(currentOptions.map((item) => [item.id, item]));
+  const seedById = new Map(seedOptions.map((item) => [item.id, item]));
+  const merged = [];
+
+  for (const current of currentOptions) {
+    merged.push({
+      ...(seedById.get(current.id) || {}),
+      ...current,
+    });
+  }
+
+  for (const seed of seedOptions) {
+    if (!currentById.has(seed.id)) {
+      merged.push(seed);
+    }
+  }
+
+  return merged;
 }
 
 async function syncFile(filename, merge) {
@@ -86,7 +150,12 @@ results.push(await syncFile(files.conversations, {
   apply: (current, seed) => mergeArrayByKey(current, seed, "conversationId"),
 }));
 
-for (const filename of [files.usage, files.leadRules, files.companySettings]) {
+results.push(await syncFile(files.leadRules, {
+  empty: {},
+  apply: mergeLeadRules,
+}));
+
+for (const filename of [files.usage, files.leadSessions, files.companySettings]) {
   results.push(await syncFile(filename, {
     empty: {},
     apply: mergeObjectKeys,

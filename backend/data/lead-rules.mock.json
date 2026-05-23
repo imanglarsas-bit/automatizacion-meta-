@@ -1,1 +1,119 @@
-{}
+{
+  "inversiones-manglar": {
+    "requiredData": "Nombre, teléfono, empresa, ciudad y tema de interés.",
+    "qualificationQuestions": "¿Qué tipo de asesoría necesitas? ¿Ya iniciaste el trámite o estás evaluando opciones? ¿Quieres que un asesor te contacte?",
+    "hotLead": "Pide asesoría, cotización, trámite UPME, devolución de IVA, movilidad eléctrica, pago UPME, plan jurídico o quiere hablar con un asesor.",
+    "warmLead": "Pide información general, pregunta por requisitos, compara planes o quiere conocer servicios.",
+    "handoffRules": "Pasar a humano si el usuario elige una opción numerada, solicita asesoría específica, menciona pago, trámite UPME, devolución de IVA, plan jurídico o caso legal.",
+    "funnels": [
+      {
+        "id": "src-consulting-menu",
+        "name": "SRC Consulting",
+        "trigger": "src consulting, asesoría de src, asesoria de src, busco asesoría de src, busco asesoria de src",
+        "action": "auto",
+        "priority": "alta",
+        "response": "Claro, para dirigir tu solicitud de SRC Consulting elige una opción:",
+        "options": [
+          {
+            "id": "src-upme-iva",
+            "number": "1",
+            "label": "Trámite UPME (devolución de IVA)",
+            "action": "human",
+            "response": "Perfecto. Te conecto con un asesor de SRC Consulting para revisar tu trámite UPME y devolución de IVA. Por favor compártenos nombre, empresa, ciudad y teléfono."
+          },
+          {
+            "id": "src-upme-pago",
+            "number": "2",
+            "label": "Finalización de pago (Proceso UPME)",
+            "action": "human",
+            "response": "Entendido. Te conecto con un asesor para la finalización de pago del proceso UPME. Compártenos nombre, empresa, teléfono y el estado actual del trámite."
+          },
+          {
+            "id": "src-movilidad-electrica",
+            "number": "3",
+            "label": "Consulta sobre movilidad eléctrica",
+            "action": "human",
+            "response": "Gracias. Te conecto con un asesor en movilidad eléctrica. Cuéntanos si tu consulta es residencial, empresarial, flota, cargadores o incentivos tributarios."
+          },
+          {
+            "id": "src-otros-tramites",
+            "number": "4",
+            "label": "Otros trámites",
+            "action": "human",
+            "response": "Claro. Te conecto con el equipo de SRC Consulting. Por favor indícanos tu nombre, teléfono y una breve descripción del trámite."
+          }
+        ]
+      },
+      {
+        "id": "cardenas-juridica-menu",
+        "name": "Cárdenas Romero Abogados",
+        "trigger": "asesoría jurídica, asesoria juridica, cardenas romero abogados, cárdenas romero abogados, quiero recibir asesoria juridica, quiero recibir asesoría jurídica",
+        "action": "auto",
+        "priority": "alta",
+        "response": "Claro, para Cárdenas Romero Abogados elige una opción:",
+        "options": [
+          {
+            "id": "cardenas-consulta-general",
+            "number": "1",
+            "label": "Asesoría jurídica general",
+            "action": "human",
+            "response": "Perfecto. Te conecto con Cárdenas Romero Abogados para una asesoría jurídica. Por favor compártenos nombre, teléfono, ciudad y un resumen breve del caso."
+          },
+          {
+            "id": "cardenas-documentos",
+            "number": "2",
+            "label": "Revisión de documentos o contratos",
+            "action": "human",
+            "response": "Entendido. Te conecto con el equipo jurídico para revisar documentos o contratos. Indícanos qué documento necesitas revisar y un número de contacto."
+          },
+          {
+            "id": "cardenas-proceso",
+            "number": "3",
+            "label": "Proceso jurídico en curso",
+            "action": "human",
+            "response": "Gracias. Te conecto con un abogado para revisar tu proceso jurídico. Comparte nombre, teléfono, tipo de proceso y etapa actual."
+          },
+          {
+            "id": "cardenas-planes",
+            "number": "4",
+            "label": "Información de planes jurídicos",
+            "action": "auto",
+            "nextFunnelId": "cardenas-planes-menu",
+            "response": "Tenemos varios planes jurídicos. Si buscas el Plan Esencial o quieres comparar opciones, responde con el número de la opción que más se ajuste en el siguiente menú."
+          }
+        ]
+      },
+      {
+        "id": "cardenas-planes-menu",
+        "name": "Planes Cárdenas Romero",
+        "trigger": "plan esencial, plan juridico, plan jurídico, planes juridicos, planes jurídicos, información sobre el plan, informacion sobre el plan, recibir informacion sobre el plan",
+        "action": "auto",
+        "priority": "media",
+        "response": "Claro, sobre los planes de Cárdenas Romero Abogados elige una opción:",
+        "options": [
+          {
+            "id": "plan-esencial",
+            "number": "1",
+            "label": "Plan Esencial",
+            "action": "human",
+            "response": "Perfecto. Te conecto con Cárdenas Romero Abogados para recibir información del Plan Esencial. Compártenos nombre, teléfono y el tipo de asesoría que necesitas."
+          },
+          {
+            "id": "plan-profesional",
+            "number": "2",
+            "label": "Plan Profesional",
+            "action": "human",
+            "response": "Entendido. Te conecto con un asesor para explicarte el Plan Profesional. Por favor comparte nombre, teléfono y si eres persona natural o empresa."
+          },
+          {
+            "id": "plan-empresarial",
+            "number": "3",
+            "label": "Plan Empresarial",
+            "action": "human",
+            "response": "Gracias. Te conecto con el equipo para revisar el Plan Empresarial. Indícanos nombre, empresa, ciudad y teléfono."
+          }
+        ]
+      }
+    ]
+  }
+}
