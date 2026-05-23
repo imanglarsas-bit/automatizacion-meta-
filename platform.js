@@ -173,6 +173,8 @@ const planSelect = document.querySelector("#planSelect");
 const clientUserList = document.querySelector("#clientUserList");
 const connectionGrid = document.querySelector("#connectionGrid");
 const metaRoutingForm = document.querySelector("#metaRoutingForm");
+const activeMetaClient = document.querySelector("#activeMetaClient");
+const metaRoutingTitle = document.querySelector("#metaRoutingTitle");
 const activeChannels = document.querySelector("#activeChannels");
 const trainedAnswers = document.querySelector("#trainedAnswers");
 const confidenceLabel = document.querySelector("#confidenceLabel");
@@ -294,11 +296,36 @@ async function renderClientUsers() {
 function renderConnections() {
   const connected = storage.channels;
   const metaConnections = storage.settings.metaConnections || {};
-  const activeMeta = storage.activeClient.meta || {};
-  const plan = getPlan(storage.activeClient.plan || "business");
+  const activeClient = storage.activeClient;
+  const activeMeta = activeClient.meta || {};
+  const plan = getPlan(activeClient.plan || "business");
   const allowedChannels = new Set(plan.channels || []);
+  const whatsappIds = activeMeta.whatsappPhoneNumberIds || [];
 
-  metaRoutingForm.whatsappPhoneNumberIds.value = (activeMeta.whatsappPhoneNumberIds || []).join(", ");
+  metaRoutingTitle.textContent = `IDs de ${activeClient.name}`;
+  activeMetaClient.innerHTML = `
+    <div>
+      <span>Configurando Meta para</span>
+      <strong>${escapeHTML(activeClient.name)}</strong>
+      <small>Todo lo que guardes aquí se aplica solo a este cliente.</small>
+    </div>
+    <dl>
+      <div>
+        <dt>Plan</dt>
+        <dd>${escapeHTML(plan.name)}</dd>
+      </div>
+      <div>
+        <dt>ID cliente</dt>
+        <dd>${escapeHTML(activeClient.companyId)}</dd>
+      </div>
+      <div>
+        <dt>WhatsApp ID</dt>
+        <dd>${whatsappIds.length ? escapeHTML(whatsappIds.join(", ")) : "Sin asignar"}</dd>
+      </div>
+    </dl>
+  `;
+
+  metaRoutingForm.whatsappPhoneNumberIds.value = whatsappIds.join(", ");
   metaRoutingForm.instagramAccountIds.value = (activeMeta.instagramAccountIds || []).join(", ");
   metaRoutingForm.facebookPageIds.value = (activeMeta.facebookPageIds || []).join(", ");
 
@@ -386,6 +413,9 @@ metaRoutingForm.addEventListener("submit", async (event) => {
     instagramAccountIds: splitIds(data.get("instagramAccountIds")),
     facebookPageIds: splitIds(data.get("facebookPageIds")),
   };
+  const activeClient = storage.activeClient;
+  const confirmed = window.confirm(`Vas a guardar estos IDs de Meta para ${activeClient.name}. ¿Confirmas que pertenecen a este cliente?`);
+  if (!confirmed) return;
 
   try {
     const updated = await getJSON(`/api/companies/${encodeURIComponent(storage.activeClientId)}/meta`, {

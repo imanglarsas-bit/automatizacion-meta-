@@ -354,6 +354,59 @@ h2 {
   gap: 14px;
 }
 
+.active-meta-client {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.active-meta-client span,
+.active-meta-client small,
+.active-meta-client dt {
+  color: var(--muted);
+}
+
+.active-meta-client strong {
+  display: block;
+  margin: 3px 0;
+  color: var(--ink);
+  font-size: 1.15rem;
+}
+
+.active-meta-client dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.active-meta-client dl div {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.active-meta-client dt {
+  margin-bottom: 4px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.active-meta-client dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 850;
+  word-break: break-word;
+}
+
 .meta-routing-form {
   display: grid;
   gap: 12px;
@@ -1358,6 +1411,15 @@ textarea {
   .connection-grid,
   .plan-editor-grid,
   .task-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .active-meta-client {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .active-meta-client dl {
     grid-template-columns: 1fr;
   }
 

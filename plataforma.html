@@ -119,11 +119,32 @@
             </div>
             <span class="status-pill">Permisos oficiales requeridos</span>
           </div>
+          <article class="active-meta-client" id="activeMetaClient">
+            <div>
+              <span>Configurando Meta para</span>
+              <strong>Cliente activo</strong>
+              <small>Selecciona el cliente arriba antes de conectar o guardar IDs.</small>
+            </div>
+            <dl>
+              <div>
+                <dt>Plan</dt>
+                <dd>--</dd>
+              </div>
+              <div>
+                <dt>ID cliente</dt>
+                <dd>--</dd>
+              </div>
+              <div>
+                <dt>WhatsApp ID</dt>
+                <dd>Sin asignar</dd>
+              </div>
+            </dl>
+          </article>
           <div class="connection-grid" id="connectionGrid"></div>
           <form class="meta-routing-form" id="metaRoutingForm">
             <div>
               <p class="kicker">Enrutamiento</p>
-              <h3>IDs del cliente activo</h3>
+              <h3 id="metaRoutingTitle">IDs del cliente activo</h3>
               <p>Estos IDs conectan mensajes entrantes con la configuración del cliente correcto.</p>
             </div>
             <label>
