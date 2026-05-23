@@ -183,6 +183,8 @@ const leadRuleList = document.querySelector("#leadRuleList");
 const resetLeadRules = document.querySelector("#resetLeadRules");
 const testForm = document.querySelector("#testForm");
 const botPreview = document.querySelector("#botPreview");
+const liveMetaTestForm = document.querySelector("#liveMetaTestForm");
+const liveMetaPreview = document.querySelector("#liveMetaPreview");
 const publishButton = document.querySelector("#publishButton");
 const confidenceRange = document.querySelector("#confidenceRange");
 const toast = document.querySelector("#toast");
@@ -925,6 +927,32 @@ testForm.addEventListener("submit", (event) => {
   botPreview.textContent = match
     ? `${planPrefix}${match.answer} ${leadHint} ${funnelHint}`
     : `${planPrefix}No encontré una respuesta entrenada para esa pregunta. ${leadHint} ${funnelHint} Recomendación: pedir ${leadRules.requiredData.toLowerCase()} y guardar esta intención en la base de conocimiento.`;
+});
+
+liveMetaTestForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(liveMetaTestForm);
+  const to = String(formData.get("to") || "").trim();
+  const text = String(formData.get("text") || "").trim();
+
+  liveMetaPreview.textContent = "Enviando mensaje por Meta...";
+
+  try {
+    const result = await getJSON("/api/meta/send-test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel: "whatsapp", to, text }),
+    });
+
+    const messageId = result?.meta?.messages?.[0]?.id;
+    liveMetaPreview.textContent = messageId
+      ? `Mensaje enviado correctamente. ID Meta: ${messageId}`
+      : "Mensaje procesado. Revisa WhatsApp y los logs si no llega.";
+    showToast("Prueba enviada por WhatsApp.");
+  } catch (error) {
+    liveMetaPreview.textContent = error.message;
+    showToast(error.message);
+  }
 });
 
 function matchFunnel(prompt, rules) {

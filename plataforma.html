@@ -310,6 +310,26 @@
             <span>Respuesta sugerida</span>
             <p id="botPreview">Entrena una respuesta o escribe una pregunta para probar el bot.</p>
           </div>
+          <form class="test-form live-test-form" id="liveMetaTestForm">
+            <label>
+              Número WhatsApp de prueba
+              <input name="to" type="tel" placeholder="Ej. 573224591377" required />
+            </label>
+            <label>
+              Mensaje real a enviar
+              <textarea
+                name="text"
+                rows="3"
+                placeholder="Ej. Hola, esta es una prueba desde iDIGITAL."
+                required
+              ></textarea>
+            </label>
+            <button class="solid-button full" type="submit">Enviar WhatsApp real</button>
+          </form>
+          <div class="bot-preview live-test-preview" aria-live="polite">
+            <span>Estado del envío</span>
+            <p id="liveMetaPreview">Usa solo números autorizados en la prueba de Meta.</p>
+          </div>
         </article>
 
         <article class="panel" id="reglas">

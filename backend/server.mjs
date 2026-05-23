@@ -5,7 +5,7 @@ import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // ── SaaS layer (non-destructive additions) ───────────────────────────────────
-import { handleTestMessage }      from "./routes/testRoutes.mjs";
+import { handleSendMetaTest, handleTestMessage }      from "./routes/testRoutes.mjs";
 import {
   handleCreateCompany,
   handleDeleteClientUser,
@@ -398,6 +398,18 @@ async function handleApi(request, response) {
     }
 
     const result = await handleTestMessage(body);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "POST" && url.pathname === "/api/meta/send-test") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const body = await readBody(request);
+    const result = await handleSendMetaTest(body);
     sendJson(response, result.status, result.body);
     return true;
   }

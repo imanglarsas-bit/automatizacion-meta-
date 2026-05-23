@@ -10,6 +10,7 @@ import { handleJuridico }   from "../flows/juridico.mjs";
 import { handleConsulting } from "../flows/consulting.mjs";
 import { handleHotel }      from "../flows/hotel.mjs";
 import { logger }           from "../utils/logger.mjs";
+import { sendMessage }      from "../services/meta/metaService.mjs";
 
 const FLOW_MAP = {
   juridico:   handleJuridico,
@@ -89,6 +90,46 @@ export async function handleTestMessage(body) {
       funnel:   result.funnel ?? null,
       handoff:  result.provider === "handoff",
       reply:    result.text,
+    },
+  };
+}
+
+export async function handleSendMetaTest(body) {
+  const to = String(body.to || "").replace(/[^\d]/g, "");
+  const text = String(body.text || "").trim();
+  const channel = String(body.channel || "whatsapp").trim().toLowerCase();
+
+  if (channel !== "whatsapp") {
+    return { status: 400, body: { error: "Por ahora la prueba real está disponible para WhatsApp." } };
+  }
+
+  if (!to || !text) {
+    return { status: 400, body: { error: "Número destino y mensaje son obligatorios." } };
+  }
+
+  const result = await sendMessage({
+    channel,
+    recipientId: to,
+    text,
+  });
+
+  if (result?.error) {
+    return {
+      status: 502,
+      body: {
+        error: result.error.message || "Meta rechazó el envío.",
+        meta: result,
+      },
+    };
+  }
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      channel,
+      to,
+      meta: result,
     },
   };
 }
