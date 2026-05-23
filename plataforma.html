@@ -3,11 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Respuesta360 | Plataforma</title>
-    <meta
-      name="description"
-      content="Panel para conectar canales de Meta, entrenar respuestas y probar automatizaciones del bot."
-    />
+    <title>iDIGITAL | Panel admin</title>
     <link rel="stylesheet" href="platform.css" />
   </head>
   <body>
@@ -16,370 +12,212 @@
         <span>R</span>
         iDIGITAL Admin
       </a>
-      <nav class="side-nav">
-        <a href="#clientes">Cliente activo</a>
-        <a href="#conexiones">Canales</a>
-        <a href="#entrenamiento">Entrenar bot</a>
-        <a href="#leadTrainingPanel">Leads y embudos</a>
-        <a href="#pruebas">Probar</a>
-        <a href="#suscripciones">Planes cliente</a>
+      <nav class="side-nav" aria-label="Secciones">
+        <a class="active" href="#" data-tab="clientes">Clientes</a>
+        <a href="#" data-tab="canales">Canales</a>
+        <a href="#" data-tab="bot">Bot</a>
+        <a href="#" data-tab="leads">Leads</a>
+        <a href="#" data-tab="pruebas">Pruebas</a>
+        <a href="#" data-tab="planes">Planes</a>
       </nav>
-      <div class="sidebar-note">
-        <strong>Flujo simple</strong>
-        <span>Cliente, canales, bot, leads, prueba.</span>
-      </div>
     </aside>
 
     <main class="platform-shell">
-      <header class="platform-header" id="resumen">
+      <header class="platform-header">
         <div>
           <p class="kicker">Panel administrador</p>
-          <h1>Operación de clientes</h1>
+          <h1>iDIGITAL</h1>
         </div>
         <div class="header-tools">
           <label class="client-picker">
-            Perfil activo
+            Cliente activo
             <select id="clientSelect"></select>
           </label>
           <a class="ghost-button" href="index.html">Ver landing</a>
           <form method="post" action="/logout">
             <button class="ghost-button" type="submit">Salir</button>
           </form>
-          <button class="solid-button" type="button" id="publishButton">Estado</button>
         </div>
       </header>
 
-      <section class="task-strip" aria-label="Flujo de configuración">
-        <a href="#clientes"><strong>1</strong><span>Cliente</span></a>
-        <a href="#conexiones"><strong>2</strong><span>Canales</span></a>
-        <a href="#entrenamiento"><strong>3</strong><span>Bot</span></a>
-        <a href="#leadTrainingPanel"><strong>4</strong><span>Leads</span></a>
-        <a href="#pruebas"><strong>5</strong><span>Prueba</span></a>
-      </section>
+      <!-- ── TAB: Clientes ─────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="clientes">
 
-      <section class="panel client-summary" id="clientes">
-        <div>
-          <p class="kicker">Perfil del cliente</p>
-          <h2 id="clientName">Cliente activo</h2>
-          <p id="clientDescription">Configuración activa del cliente seleccionado.</p>
-        </div>
-        <form class="client-form" id="clientForm">
-          <label>
-            Nuevo cliente
-            <input name="clientName" type="text" placeholder="Ej. Clínica Norte" required />
-          </label>
-          <label>
-            Usuario cliente
-            <input name="username" type="text" placeholder="Ej. clinica-norte" required />
-          </label>
-          <label>
-            Clave temporal
-            <input name="password" type="text" placeholder="Ej. cliente2026" required />
-          </label>
-          <label>
-            Plan contratado
-            <select name="plan" id="planSelect" required>
-              <option value="">Selecciona un plan</option>
-            </select>
-          </label>
-          <button class="solid-button" type="submit">Crear perfil</button>
-        </form>
-      </section>
+        <section class="metric-grid" aria-label="Resumen del cliente activo">
+          <article class="metric-card">
+            <span>Canales activos</span>
+            <strong id="activeChannels">0</strong>
+            <small>conectados a Meta</small>
+          </article>
+          <article class="metric-card">
+            <span>Respuestas entrenadas</span>
+            <strong id="trainedAnswers">0</strong>
+            <small>en la base del bot</small>
+          </article>
+          <article class="metric-card">
+            <span>Confianza mínima</span>
+            <strong id="confidenceLabel">75%</strong>
+            <small>umbral antes de escalar</small>
+          </article>
+          <article class="metric-card">
+            <span>Derivación humana</span>
+            <strong>Activa</strong>
+            <small>cuando el bot no sabe</small>
+          </article>
+        </section>
 
-      <section class="metric-grid" aria-label="Resumen operativo">
-        <article class="metric-card">
-          <span>Canales activos</span>
-          <strong id="activeChannels">0</strong>
-          <small>conectados a Meta</small>
-        </article>
-        <article class="metric-card">
-          <span>Respuestas entrenadas</span>
-          <strong id="trainedAnswers">0</strong>
-          <small>en la base del bot</small>
-        </article>
-        <article class="metric-card">
-          <span>Confianza mínima</span>
-          <strong id="confidenceLabel">75%</strong>
-          <small>antes de responder solo</small>
-        </article>
-        <article class="metric-card">
-          <span>Derivación humana</span>
-          <strong>Activa</strong>
-          <small>cuando el bot no sabe</small>
-        </article>
-      </section>
-
-      <section class="panel client-users-panel">
-        <div class="panel-heading compact">
+        <section class="panel client-summary" id="clientes">
           <div>
-            <p class="kicker">Usuarios cliente</p>
-            <h2>Accesos al portal cliente</h2>
+            <p class="kicker">Perfil del cliente</p>
+            <h2 id="clientName">Cliente activo</h2>
+            <p id="clientDescription">Configuración activa del cliente seleccionado.</p>
           </div>
-        </div>
-        <div class="client-user-list" id="clientUserList"></div>
-      </section>
-
-      <section class="panel" id="conexiones">
-        <div class="panel-heading">
-          <div>
-            <p class="kicker">Canales</p>
-            <h2>Conexiones activas</h2>
-            <p>La autorización se hace en Meta. El cliente escribe sus credenciales allá; iDIGITAL no guarda contraseñas.</p>
-          </div>
-          <span class="status-pill">Permisos oficiales requeridos</span>
-        </div>
-        <div class="connection-grid" id="connectionGrid"></div>
-        <form class="meta-routing-form" id="metaRoutingForm">
-          <div>
-            <p class="kicker">Enrutamiento Meta</p>
-            <h3>Números y cuentas del cliente activo</h3>
-            <p>Estos IDs permiten que cada mensaje entrante use los leads y embudos del cliente correcto.</p>
-          </div>
-          <label>
-            WhatsApp Phone Number ID
-            <textarea
-              name="whatsappPhoneNumberIds"
-              rows="2"
-              placeholder="Ej. 1185645557954638. Puedes separar varios con coma."
-            ></textarea>
-          </label>
-          <div class="form-row">
+          <form class="client-form" id="clientForm">
             <label>
-              Instagram Account ID
-              <input name="instagramAccountIds" type="text" placeholder="Opcional" />
+              Nombre del negocio
+              <input name="clientName" type="text" placeholder="Ej. Clínica Norte" required />
             </label>
             <label>
-              Facebook Page ID
-              <input name="facebookPageIds" type="text" placeholder="Opcional" />
+              Usuario
+              <input name="username" type="text" placeholder="Ej. clinica-norte" required />
             </label>
-          </div>
-          <button class="solid-button" type="submit">Guardar IDs del cliente</button>
-        </form>
-      </section>
+            <label>
+              Clave temporal
+              <input name="password" type="text" placeholder="Ej. cliente2026" required />
+            </label>
+            <label>
+              Plan
+              <select name="plan" id="planSelect" required>
+                <option value="">Selecciona un plan</option>
+              </select>
+            </label>
+            <button class="solid-button" type="submit">Crear cliente</button>
+          </form>
+        </section>
 
-      <section class="workspace-grid">
-        <article class="panel" id="entrenamiento">
+        <section class="panel client-users-panel">
           <div class="panel-heading compact">
             <div>
-              <p class="kicker">Bot</p>
-              <h2>Respuestas entrenadas</h2>
+              <p class="kicker">Accesos</p>
+              <h2>Usuarios del portal cliente</h2>
             </div>
           </div>
-          <form class="training-form" id="trainingForm">
+          <div class="client-user-list" id="clientUserList"></div>
+        </section>
+
+      </div>
+
+      <!-- ── TAB: Canales ──────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="canales" hidden>
+
+        <section class="panel" id="conexiones">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker">Canales Meta</p>
+              <h2>Conexiones activas</h2>
+              <p>La autorización ocurre en Meta. iDIGITAL no guarda contraseñas del cliente.</p>
+            </div>
+            <span class="status-pill">Permisos oficiales requeridos</span>
+          </div>
+          <div class="connection-grid" id="connectionGrid"></div>
+          <form class="meta-routing-form" id="metaRoutingForm">
+            <div>
+              <p class="kicker">Enrutamiento</p>
+              <h3>IDs del cliente activo</h3>
+              <p>Estos IDs conectan mensajes entrantes con la configuración del cliente correcto.</p>
+            </div>
             <label>
-              Pregunta o intención del cliente
-              <input name="question" type="text" placeholder="Ej. ¿Cuánto cuesta el plan mensual?" required />
-            </label>
-            <label>
-              Respuesta aprobada del bot
+              WhatsApp Phone Number ID
               <textarea
-                name="answer"
-                rows="5"
-                placeholder="Escribe la respuesta que el bot debe usar."
-                required
+                name="whatsappPhoneNumberIds"
+                rows="2"
+                placeholder="Ej. 1185645557954638. Separa varios con coma."
               ></textarea>
             </label>
             <div class="form-row">
               <label>
-                Categoría
-                <select name="category">
-                  <option>Ventas</option>
-                  <option>Reservas</option>
-                  <option>Soporte</option>
-                  <option>Envíos</option>
-                  <option>Pagos</option>
-                </select>
+                Instagram Account ID
+                <input name="instagramAccountIds" type="text" placeholder="Opcional" />
               </label>
               <label>
-                Canal
-                <select name="channel">
-                  <option>Todos</option>
-                  <option>Instagram</option>
-                  <option>Facebook</option>
-                  <option>Messenger</option>
-                  <option>WhatsApp Business</option>
-                </select>
+                Facebook Page ID
+                <input name="facebookPageIds" type="text" placeholder="Opcional" />
               </label>
             </div>
-            <button class="solid-button full" type="submit">Guardar entrenamiento</button>
+            <button class="solid-button" type="submit">Guardar IDs</button>
           </form>
-        </article>
+        </section>
 
-        <article class="panel answer-bank">
-          <div class="panel-heading compact">
-            <div>
-              <p class="kicker">Respuestas</p>
-              <h2>Entrenamientos guardados</h2>
-            </div>
-            <button class="ghost-button danger" type="button" id="clearTraining">Limpiar</button>
-          </div>
-          <div class="answer-list" id="answerList"></div>
-        </article>
-      </section>
+      </div>
 
-      <section class="workspace-grid lead-training-grid" aria-label="Entrenamiento de leads">
-        <article class="panel" id="leadTrainingPanel">
-          <div class="panel-heading compact">
-            <div>
-              <p class="kicker">Leads</p>
-              <h2>Reglas y embudos</h2>
+      <!-- ── TAB: Bot ──────────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="bot" hidden>
+
+        <section class="workspace-grid" id="entrenamiento">
+          <article class="panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Entrenamiento</p>
+                <h2>Añadir respuesta</h2>
+              </div>
             </div>
-          </div>
-          <form class="lead-training-form" id="leadTrainingForm">
-            <fieldset class="lead-block">
-              <legend>Datos del lead</legend>
+            <form class="training-form" id="trainingForm">
               <label>
-                Datos obligatorios
+                Pregunta o intención del cliente
+                <input name="question" type="text" placeholder="Ej. ¿Cuánto cuesta el plan mensual?" required />
+              </label>
+              <label>
+                Respuesta aprobada
                 <textarea
-                  name="requiredData"
-                  rows="3"
-                  placeholder="Ej. nombre, teléfono, empresa, necesidad, presupuesto aproximado"
+                  name="answer"
+                  rows="5"
+                  placeholder="Escribe la respuesta que el bot debe dar."
                   required
-                ></textarea>
-              </label>
-              <label>
-                Preguntas de calificación
-                <textarea
-                  name="qualificationQuestions"
-                  rows="4"
-                  placeholder="Ej. ¿Qué servicio necesitas? ¿Cuándo quieres empezar? ¿Cuál es tu presupuesto?"
-                  required
-                ></textarea>
-              </label>
-            </fieldset>
-            <fieldset class="lead-block">
-              <legend>Clasificación</legend>
-              <label>
-                Lead caliente
-                <input name="hotLead" type="text" placeholder="Ej. quiere comprar, pide precio, agenda llamada" required />
-              </label>
-              <label>
-                Lead medio
-                <input name="warmLead" type="text" placeholder="Ej. pregunta beneficios, compara opciones" required />
-              </label>
-              <label>
-                Pasar a humano cuando
-                <textarea
-                  name="handoffRules"
-                  rows="3"
-                  placeholder="Ej. si pide descuento, queja, caso sensible, compra inmediata o negociación"
-                  required
-                ></textarea>
-              </label>
-            </fieldset>
-            <fieldset class="funnel-builder">
-              <legend>Embudo nuevo</legend>
-              <label>
-                Nombre del embudo
-                <input name="funnelName" type="text" placeholder="Ej. Demo comercial urgente" />
-              </label>
-              <label>
-                Señales o palabras clave
-                <textarea
-                  name="funnelTrigger"
-                  rows="3"
-                  placeholder="Ej. demo, quiero comprar, agenda, cotización urgente"
                 ></textarea>
               </label>
               <div class="form-row">
                 <label>
-                  Acción
-                  <select name="funnelAction">
-                    <option value="human">Enviar a humano</option>
-                    <option value="auto">Responder automático</option>
+                  Categoría
+                  <select name="category">
+                    <option>Ventas</option>
+                    <option>Reservas</option>
+                    <option>Soporte</option>
+                    <option>Envíos</option>
+                    <option>Pagos</option>
                   </select>
                 </label>
                 <label>
-                  Prioridad
-                  <select name="funnelPriority">
-                    <option value="alta">Alta</option>
-                    <option value="media">Media</option>
-                    <option value="baja">Baja</option>
+                  Canal
+                  <select name="channel">
+                    <option>Todos</option>
+                    <option>Instagram</option>
+                    <option>Facebook</option>
+                    <option>Messenger</option>
+                    <option>WhatsApp Business</option>
                   </select>
                 </label>
               </div>
-              <label>
-                Respuesta antes de derivar o continuar
-                <textarea
-                  name="funnelResponse"
-                  rows="3"
-                  placeholder="Ej. Te conecto con un asesor para continuar tu solicitud."
-                ></textarea>
-              </label>
-            </fieldset>
-            <button class="solid-button full" type="submit">Guardar reglas de leads</button>
-          </form>
-        </article>
+              <button class="solid-button full" type="submit">Guardar respuesta</button>
+            </form>
+          </article>
 
-        <article class="panel lead-rules-preview">
-          <div class="panel-heading compact">
-            <div>
-              <p class="kicker">Activo</p>
-              <h2>Lo que hará el bot</h2>
+          <article class="panel answer-bank">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Base de conocimiento</p>
+                <h2>Respuestas guardadas</h2>
+              </div>
+              <button class="ghost-button danger" type="button" id="clearTraining">Limpiar todo</button>
             </div>
-            <button class="ghost-button danger" type="button" id="resetLeadRules">Restaurar</button>
-          </div>
-          <div class="lead-rule-list" id="leadRuleList"></div>
-        </article>
-      </section>
+            <div class="answer-list" id="answerList"></div>
+          </article>
+        </section>
 
-      <section class="workspace-grid">
-        <article class="panel" id="pruebas">
+        <section class="panel" id="reglas">
           <div class="panel-heading compact">
             <div>
-              <p class="kicker">Prueba</p>
-              <h2>Simula una conversación</h2>
-            </div>
-          </div>
-          <form class="test-form" id="testForm">
-            <label>
-              Mensaje del cliente
-              <textarea
-                name="prompt"
-                rows="4"
-                placeholder="Ej. Hola, quiero saber el precio y si hacen envíos."
-                required
-              ></textarea>
-            </label>
-            <button class="solid-button full" type="submit">Generar respuesta</button>
-          </form>
-          <div class="bot-preview" aria-live="polite">
-            <span>Respuesta sugerida</span>
-            <p id="botPreview">Entrena una respuesta o escribe una pregunta para probar el bot.</p>
-          </div>
-          <form class="test-form live-test-form" id="liveMetaTestForm">
-            <label>
-              Tipo de prueba
-              <select name="mode">
-                <option value="template">Plantilla Meta hello_world</option>
-                <option value="text">Texto libre</option>
-              </select>
-            </label>
-            <label>
-              Número WhatsApp de prueba
-              <input name="to" type="tel" placeholder="Ej. 573224591377" required />
-            </label>
-            <label>
-              Mensaje real a enviar
-              <textarea
-                name="text"
-                rows="3"
-                placeholder="Ej. Hola, esta es una prueba desde iDIGITAL. Solo aplica para texto libre."
-              ></textarea>
-            </label>
-            <button class="solid-button full" type="submit">Enviar WhatsApp real</button>
-          </form>
-          <div class="bot-preview live-test-preview" aria-live="polite">
-            <span>Estado del envío</span>
-            <p id="liveMetaPreview">Usa solo números autorizados en la prueba de Meta.</p>
-          </div>
-        </article>
-
-        <article class="panel" id="reglas">
-          <div class="panel-heading compact">
-            <div>
-              <p class="kicker">Reglas de seguridad</p>
-              <h2>Control de respuestas</h2>
+              <p class="kicker">Seguridad</p>
+              <h2>Reglas de respuesta</h2>
             </div>
           </div>
           <div class="rule-list">
@@ -399,35 +237,218 @@
             </label>
             <label class="range-row">
               <span>
-                Confianza mínima para responder
-                <small>Si baja de este valor, se envía a un asesor.</small>
+                Confianza mínima para responder solo
+                <small>Si baja de este umbral, escala a un asesor.</small>
               </span>
               <input type="range" id="confidenceRange" min="50" max="95" value="75" />
             </label>
           </div>
-        </article>
-      </section>
+        </section>
 
-      <section class="panel" id="suscripciones">
-        <div class="panel-heading compact">
-          <div>
-            <p class="kicker">Suscripciones</p>
-            <h2>Plan por cliente</h2>
+      </div>
+
+      <!-- ── TAB: Leads ────────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="leads" hidden>
+
+        <section class="workspace-grid lead-training-grid" aria-label="Entrenamiento de leads">
+          <article class="panel" id="leadTrainingPanel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Leads y embudos</p>
+                <h2>Reglas de calificación</h2>
+              </div>
+            </div>
+            <form class="lead-training-form" id="leadTrainingForm">
+              <fieldset class="lead-block">
+                <legend>Datos del lead</legend>
+                <label>
+                  Datos obligatorios
+                  <textarea
+                    name="requiredData"
+                    rows="3"
+                    placeholder="Ej. nombre, teléfono, empresa, necesidad, presupuesto"
+                    required
+                  ></textarea>
+                </label>
+                <label>
+                  Preguntas de calificación
+                  <textarea
+                    name="qualificationQuestions"
+                    rows="4"
+                    placeholder="Ej. ¿Qué servicio necesitas? ¿Cuándo quieres empezar? ¿Cuál es tu presupuesto?"
+                    required
+                  ></textarea>
+                </label>
+              </fieldset>
+              <fieldset class="lead-block">
+                <legend>Clasificación</legend>
+                <label>
+                  Lead caliente
+                  <input name="hotLead" type="text" placeholder="Ej. quiere comprar, pide precio, agenda llamada" required />
+                </label>
+                <label>
+                  Lead medio
+                  <input name="warmLead" type="text" placeholder="Ej. pregunta beneficios, compara opciones" required />
+                </label>
+                <label>
+                  Pasar a humano cuando
+                  <textarea
+                    name="handoffRules"
+                    rows="3"
+                    placeholder="Ej. pide descuento, queja, caso sensible, negociación"
+                    required
+                  ></textarea>
+                </label>
+              </fieldset>
+              <fieldset class="funnel-builder">
+                <legend>Nuevo embudo</legend>
+                <label>
+                  Nombre del embudo
+                  <input name="funnelName" type="text" placeholder="Ej. Demo comercial urgente" />
+                </label>
+                <label>
+                  Palabras clave que lo activan
+                  <textarea
+                    name="funnelTrigger"
+                    rows="3"
+                    placeholder="Ej. demo, quiero comprar, cotización urgente"
+                  ></textarea>
+                </label>
+                <div class="form-row">
+                  <label>
+                    Acción
+                    <select name="funnelAction">
+                      <option value="human">Enviar a humano</option>
+                      <option value="auto">Responder automático</option>
+                    </select>
+                  </label>
+                  <label>
+                    Prioridad
+                    <select name="funnelPriority">
+                      <option value="alta">Alta</option>
+                      <option value="media">Media</option>
+                      <option value="baja">Baja</option>
+                    </select>
+                  </label>
+                </div>
+                <label>
+                  Respuesta antes de derivar o continuar
+                  <textarea
+                    name="funnelResponse"
+                    rows="3"
+                    placeholder="Ej. Te conecto con un asesor para continuar tu solicitud."
+                  ></textarea>
+                </label>
+              </fieldset>
+              <button class="solid-button full" type="submit">Guardar reglas</button>
+            </form>
+          </article>
+
+          <article class="panel lead-rules-preview">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Vista previa</p>
+                <h2>Lo que hará el bot</h2>
+              </div>
+              <button class="ghost-button danger" type="button" id="resetLeadRules">Restaurar</button>
+            </div>
+            <div class="lead-rule-list" id="leadRuleList"></div>
+          </article>
+        </section>
+
+      </div>
+
+      <!-- ── TAB: Pruebas ──────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="pruebas" hidden>
+
+        <section class="workspace-grid">
+          <article class="panel" id="pruebas">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Simulador</p>
+                <h2>Probar respuesta del bot</h2>
+              </div>
+            </div>
+            <form class="test-form" id="testForm">
+              <label>
+                Mensaje del cliente
+                <textarea
+                  name="prompt"
+                  rows="4"
+                  placeholder="Ej. Hola, quiero saber el precio y si hacen envíos."
+                  required
+                ></textarea>
+              </label>
+              <button class="solid-button full" type="submit">Generar respuesta</button>
+            </form>
+            <div class="bot-preview" aria-live="polite">
+              <span>Respuesta sugerida</span>
+              <p id="botPreview">Entrena una respuesta o escribe una pregunta para probar el bot.</p>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">WhatsApp real</p>
+                <h2>Enviar mensaje de prueba</h2>
+              </div>
+            </div>
+            <form class="test-form" id="liveMetaTestForm">
+              <label>
+                Tipo de prueba
+                <select name="mode">
+                  <option value="template">Plantilla Meta hello_world</option>
+                  <option value="text">Texto libre</option>
+                </select>
+              </label>
+              <label>
+                Número de destino
+                <input name="to" type="tel" placeholder="Ej. 573224591377" required />
+              </label>
+              <label>
+                Mensaje (solo para texto libre)
+                <textarea
+                  name="text"
+                  rows="3"
+                  placeholder="Ej. Hola, esta es una prueba desde iDIGITAL."
+                ></textarea>
+              </label>
+              <button class="solid-button full" type="submit">Enviar WhatsApp</button>
+            </form>
+            <div class="bot-preview" aria-live="polite">
+              <span>Estado del envío</span>
+              <p id="liveMetaPreview">Usa solo números autorizados en Meta para las pruebas.</p>
+            </div>
+          </article>
+        </section>
+
+      </div>
+
+      <!-- ── TAB: Planes ───────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="planes" hidden>
+
+        <section class="panel" id="suscripciones">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Suscripciones</p>
+              <h2>Plan por cliente</h2>
+            </div>
           </div>
-        </div>
-        <div class="subscription-list" id="subscriptionList"></div>
-      </section>
+          <div class="subscription-list" id="subscriptionList"></div>
+        </section>
 
-      <section class="panel" id="planes">
-        <div class="panel-heading compact">
-          <div>
-            <p class="kicker">Planes</p>
-            <h2>Límites y funciones</h2>
+        <section class="panel" id="planes">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Editor de planes</p>
+              <h2>Límites y funciones</h2>
+            </div>
           </div>
-        </div>
-        <div class="plan-editor-grid" id="planEditorGrid"></div>
-      </section>
+          <div class="plan-editor-grid" id="planEditorGrid"></div>
+        </section>
 
+      </div>
     </main>
 
     <div class="toast" id="toast" role="status"></div>

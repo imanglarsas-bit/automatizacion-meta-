@@ -1042,9 +1042,11 @@ function classifyLead(prompt, rules) {
   return "Clasificación: lead frío o sin datos suficientes.";
 }
 
-publishButton.addEventListener("click", () => {
-  showToast("Las configuraciones del panel se guardan automáticamente en el servidor.");
-});
+if (publishButton) {
+  publishButton.addEventListener("click", () => {
+    showToast("Las configuraciones del panel se guardan automáticamente en el servidor.");
+  });
+}
 
 confidenceRange.addEventListener("input", () => {
   storage.confidence = confidenceRange.value;
@@ -1129,6 +1131,25 @@ async function deleteClientUser(username) {
     showToast(error.message);
   }
 }
+
+function initTabs() {
+  const tabLinks = document.querySelectorAll(".side-nav a[data-tab]");
+  const tabPanes = document.querySelectorAll(".tab-pane");
+
+  tabLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const target = link.dataset.tab;
+      tabPanes.forEach((pane) => { pane.hidden = true; });
+      const pane = document.querySelector(`.tab-pane[data-pane="${target}"]`);
+      if (pane) pane.hidden = false;
+      tabLinks.forEach((a) => a.classList.remove("active"));
+      link.classList.add("active");
+    });
+  });
+}
+
+initTabs();
 
 init().catch((error) => {
   showToast(error.message || "No se pudo cargar la plataforma.");
