@@ -6,7 +6,8 @@ import { buildSystemPrompt }  from "../services/ai/promptBuilder.mjs";
 import { routeAI }            from "../services/ai/aiRouterService.mjs";
 import { sendMessage }        from "../services/meta/metaService.mjs";
 import { recordConversation } from "../services/billing/usageTracker.mjs";
-import { evaluateLeadFunnel } from "./leadRules.mjs";
+import { evaluateLeadFunnel, getLeadRules } from "./leadRules.mjs";
+import { buildAutomationReply } from "../services/automation/automationReplyService.mjs";
 import { logger }             from "../utils/logger.mjs";
 
 export function handleWebhookVerification(url) {
@@ -35,6 +36,8 @@ export async function handleWebhookEvent(payload) {
 
   const unit = detectUnit(incoming.text, company);
   const funnel = await evaluateLeadFunnel(company.companyId, incoming.text);
+  const leadRules = await getLeadRules(company.companyId);
+  const aiAllowed = Boolean(company.planFeatures?.aiApi);
   const aiResult = funnel?.shouldHandoff
     ? {
         text: funnel.response || "Recibimos tu solicitud. Un asesor humano continuará la atención.",
@@ -42,6 +45,12 @@ export async function handleWebhookEvent(payload) {
         model: `funnel:${funnel.id}`,
         estimatedCostUSD: 0,
       }
+    : !aiAllowed
+      ? buildAutomationReply({
+          message: incoming.text,
+          company,
+          leadRules,
+        })
     : await routeAI({
         company,
         systemPrompt: await buildSystemPrompt({ company, unit }),

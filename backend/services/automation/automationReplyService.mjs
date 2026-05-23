@@ -24,13 +24,16 @@ const QUICK_REPLIES = [
   },
 ];
 
-export function buildAutomationReply({ message, company }) {
+export function buildAutomationReply({ message, company, leadRules }) {
   const normalized = normalize(message);
   const match = QUICK_REPLIES.find((reply) => reply.keywords.some((keyword) => normalized.includes(keyword)));
   const contactHint = company?.contact?.whatsapp ? ` También puedes escribir al WhatsApp ${company.contact.whatsapp}.` : "";
+  const leadHint = leadRules
+    ? ` Para avanzar, compártenos: ${leadRules.requiredData}. ${leadRules.qualificationQuestions}`
+    : "";
 
   return {
-    text: `${match?.text || DEFAULT_REPLY}${contactHint}`,
+    text: `${match?.text || DEFAULT_REPLY}${leadHint}${contactHint}`,
     provider: "automation",
     model: "preconfigured-flow",
     estimatedCostUSD: 0,
