@@ -56,13 +56,10 @@ textarea {
   font-weight: 900;
 }
 
-.client-brand span {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--teal);
+.client-brand img {
+  width: 112px;
+  height: auto;
+  display: block;
 }
 
 .client-sidebar nav {

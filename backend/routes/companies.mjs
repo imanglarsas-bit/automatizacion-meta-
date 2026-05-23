@@ -179,6 +179,41 @@ export async function handleDeleteClientUser(username) {
   };
 }
 
+export async function handleResetClientUserPassword(username, body) {
+  const normalizedUsername = String(username || "").trim().toLowerCase();
+  const password = String(body.password || "").trim();
+
+  if (!password) {
+    return {
+      status: 400,
+      body: { error: "La nueva contraseña es obligatoria." },
+    };
+  }
+
+  const users = await readUsers();
+  const idx = users.findIndex((user) => user.username === normalizedUsername);
+
+  if (idx === -1) {
+    return {
+      status: 404,
+      body: { error: "Usuario cliente no encontrado." },
+    };
+  }
+
+  users[idx] = {
+    ...users[idx],
+    password,
+    passwordUpdatedAt: new Date().toISOString(),
+  };
+
+  await writeUsers(users);
+  const { password: _password, ...safeUser } = users[idx];
+  return {
+    status: 200,
+    body: safeUser,
+  };
+}
+
 function slugify(value) {
   return value
     .toLowerCase()

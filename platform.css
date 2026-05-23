@@ -63,13 +63,10 @@ textarea {
   font-weight: 900;
 }
 
-.platform-brand span {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: var(--teal);
+.platform-brand img {
+  width: 112px;
+  height: auto;
+  display: block;
 }
 
 .side-nav {
@@ -333,9 +330,33 @@ h2 {
   gap: 10px;
 }
 
+.access-plan-card {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 320px) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 16px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.access-plan-card span,
+.access-plan-card small {
+  color: var(--muted);
+}
+
+.access-plan-card strong {
+  display: block;
+  margin: 2px 0;
+  color: var(--ink);
+  font-size: 1.1rem;
+}
+
 .client-user-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px) auto;
   gap: 14px;
   align-items: center;
   padding: 14px;
@@ -349,8 +370,27 @@ h2 {
 }
 
 .client-user-item span {
+  display: block;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.client-user-item small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.reset-password-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.reset-password-form input {
+  min-height: 42px;
 }
 
 .delete-user-button {
@@ -1438,6 +1478,7 @@ textarea {
   .metric-grid,
   .connection-grid,
   .plan-editor-grid,
+  .access-plan-card,
   .task-strip {
     grid-template-columns: 1fr;
   }
@@ -1454,6 +1495,11 @@ textarea {
   .subscription-main {
     grid-template-columns: 1fr;
     align-items: start;
+  }
+
+  .client-user-item,
+  .reset-password-form {
+    grid-template-columns: 1fr;
   }
 
   .subscription-status-col {

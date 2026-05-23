@@ -9,7 +9,7 @@
   <body>
     <aside class="sidebar" aria-label="Navegación de plataforma">
       <a class="platform-brand" href="index.html" aria-label="Volver al sitio">
-        <span>R</span>
+        <img src="assets/idigital-logo-wide.png" alt="iDIGITAL" />
         iDIGITAL Admin
       </a>
       <nav class="side-nav" aria-label="Secciones">
@@ -104,9 +104,22 @@
           <div class="panel-heading compact">
             <div>
               <p class="kicker">Accesos</p>
-              <h2>Usuarios del portal cliente</h2>
+              <h2>Accesos del cliente activo</h2>
+              <p>Usuarios, contraseña y plan contratado del cliente seleccionado.</p>
             </div>
           </div>
+          <article class="access-plan-card" id="accessPlanCard">
+            <div>
+              <span>Suscripción actual</span>
+              <strong>Plan</strong>
+              <small>Cambia el plan aquí mismo para evitar buscarlo en otra sección.</small>
+            </div>
+            <label>
+              Plan contratado
+              <select id="activeClientPlanSelect"></select>
+            </label>
+            <button class="solid-button" type="button" id="activeClientPlanButton">Guardar plan</button>
+          </article>
           <div class="client-user-list" id="clientUserList"></div>
         </section>
 
@@ -453,17 +466,6 @@
 
       <!-- ── TAB: Planes ───────────────────────────────────────────────── -->
       <div class="tab-pane" data-pane="planes" hidden>
-
-        <section class="panel" id="suscripciones">
-          <div class="panel-heading compact">
-            <div>
-              <p class="kicker">Suscripciones</p>
-              <h2>Plan por cliente</h2>
-            </div>
-          </div>
-          <div class="subscription-list" id="subscriptionList"></div>
-        </section>
-
         <section class="panel" id="planes">
           <div class="panel-heading compact">
             <div>

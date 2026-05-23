@@ -12,6 +12,7 @@ import {
   handleGetClientUsers,
   handleGetCompanies,
   handleGetCompany,
+  handleResetClientUserPassword,
   handleUpdateCompanyMeta,
   handleUpdateCompanyPlan,
 } from "./routes/companies.mjs";
@@ -527,6 +528,19 @@ async function handleApi(request, response) {
 
     const username = decodeURIComponent(url.pathname.replace("/api/client-users/", ""));
     const result = await handleDeleteClientUser(username);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "PUT" && url.pathname.startsWith("/api/client-users/") && url.pathname.endsWith("/password")) {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const username = decodeURIComponent(url.pathname.replace("/api/client-users/", "").replace("/password", ""));
+    const body = await readBody(request);
+    const result = await handleResetClientUserPassword(username, body);
     sendJson(response, result.status, result.body);
     return true;
   }

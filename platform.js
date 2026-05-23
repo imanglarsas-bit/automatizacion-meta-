@@ -165,6 +165,9 @@ const storage = {
 
 const planEditorGrid = document.querySelector("#planEditorGrid");
 const subscriptionList = document.querySelector("#subscriptionList");
+const activeClientPlanSelect = document.querySelector("#activeClientPlanSelect");
+const activeClientPlanButton = document.querySelector("#activeClientPlanButton");
+const accessPlanCard = document.querySelector("#accessPlanCard");
 const clientSelect = document.querySelector("#clientSelect");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
@@ -270,27 +273,47 @@ function renderPlanOptions() {
 
 async function renderClientUsers() {
   const users = await getJSON("/api/client-users");
-  if (!users?.length) {
-    clientUserList.innerHTML = `<div class="empty-state">Todavía no hay usuarios cliente.</div>`;
+  const activeClient = storage.activeClient;
+  const activePlan = getPlan(activeClient.plan || "start");
+  const activeUsers = (users || []).filter((user) => user.companyId === activeClient.companyId);
+
+  activeClientPlanSelect.innerHTML = storage.plans
+    .map((plan) => `<option value="${escapeHTML(plan.key)}" ${plan.key === activeClient.plan ? "selected" : ""}>${escapeHTML(plan.name)} · ${formatLimit(plan.monthlyMessageLimit)} mensajes/mes</option>`)
+    .join("");
+
+  accessPlanCard.querySelector("strong").textContent = activePlan.name;
+  accessPlanCard.querySelector("small").textContent = `${formatLimit(activePlan.monthlyMessageLimit)} mensajes/mes · ${activePlan.features?.aiApi ? "IA incluida" : "Sin consumo de IA"}`;
+
+  if (!activeUsers.length) {
+    clientUserList.innerHTML = `<div class="empty-state">Este cliente todavía no tiene usuarios de acceso.</div>`;
     return;
   }
 
-  const companyById = new Map(storage.clients.map((company) => [company.companyId, company.name]));
-  clientUserList.innerHTML = users
+  clientUserList.innerHTML = activeUsers
     .map(
       (user) => `
         <article class="client-user-item">
           <div>
             <strong>${escapeHTML(user.username)}</strong>
-            <span>${escapeHTML(companyById.get(user.companyId) || user.name || user.companyId)}</span>
+            <span>${escapeHTML(activeClient.name)}</span>
+            ${planBadge(activeClient.plan || "start")}
+            ${user.passwordUpdatedAt ? `<small>Clave actualizada ${new Date(user.passwordUpdatedAt).toLocaleDateString("es-CO")}</small>` : ""}
           </div>
+          <form class="reset-password-form" data-username="${escapeHTML(user.username)}">
+            <input name="password" type="text" placeholder="Nueva clave" required />
+            <button class="ghost-button" type="submit">Restablecer</button>
+          </form>
           <button class="delete-user-button" type="button" data-username="${escapeHTML(user.username)}">Eliminar</button>
         </article>
       `,
     )
     .join("");
 
-  document.querySelectorAll(".delete-user-button").forEach((button) => {
+  clientUserList.querySelectorAll(".reset-password-form").forEach((form) => {
+    form.addEventListener("submit", (event) => resetClientUserPassword(event, form.dataset.username));
+  });
+
+  clientUserList.querySelectorAll(".delete-user-button").forEach((button) => {
     button.addEventListener("click", () => deleteClientUser(button.dataset.username));
   });
 }
@@ -692,6 +715,53 @@ async function applyPlanChange(companyId) {
   }
 }
 
+async function applyActiveClientPlanChange() {
+  const companyId = storage.activeClientId;
+  const newPlanKey = activeClientPlanSelect.value;
+  const activeClient = storage.activeClient;
+  const planName = storage.plans.find((plan) => plan.key === newPlanKey)?.name || newPlanKey;
+  const confirmed = window.confirm(`¿Cambiar el plan de ${activeClient.name} a ${planName}?`);
+  if (!confirmed) return;
+
+  try {
+    const updated = await getJSON(`/api/companies/${encodeURIComponent(companyId)}/plan`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: newPlanKey }),
+    });
+
+    const idx = storage.clients.findIndex((client) => client.companyId === companyId);
+    if (idx !== -1) storage.clients[idx] = { ...storage.clients[idx], ...updated };
+
+    renderAll();
+    await renderClientUsers();
+    showToast(`Plan de ${updated.name} cambiado a ${planName}.`);
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
+async function resetClientUserPassword(event, username) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const password = new FormData(form).get("password").trim();
+  const confirmed = window.confirm(`¿Restablecer la contraseña del usuario "${username}"?`);
+  if (!confirmed) return;
+
+  try {
+    await getJSON(`/api/client-users/${encodeURIComponent(username)}/password`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    form.reset();
+    await renderClientUsers();
+    showToast("Contraseña restablecida.");
+  } catch (error) {
+    showToast(error.message);
+  }
+}
+
 const FEATURE_LABELS = {
   aiApi: "IA completa (API)",
   limitedAiApi: "IA limitada",
@@ -811,8 +881,11 @@ clientSelect.addEventListener("change", async () => {
   await loadCompanySettings();
   await loadLeadRules();
   renderAll();
+  await renderClientUsers();
   showToast("Perfil de cliente cambiado.");
 });
+
+activeClientPlanButton.addEventListener("click", applyActiveClientPlanChange);
 
 clientForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -840,6 +913,7 @@ clientForm.addEventListener("submit", async (event) => {
     await loadLeadRules();
     clientForm.reset();
     renderAll();
+    await renderClientUsers();
     showToast(`Cliente creado. Usuario: ${result.user.username}`);
   } catch (error) {
     showToast(error.message);
