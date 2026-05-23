@@ -27,6 +27,9 @@
     "fallbackModel": "gpt-4o-mini",
     "tone": "profesional",
     "promptFile": "inversiones-manglar.txt",
+    "meta": {
+      "whatsappPhoneNumberIds": ["1185645557954638"]
+    },
     "channels": ["whatsapp", "instagram", "facebook"],
     "units": [
       {
@@ -95,6 +98,9 @@
     "fallbackModel": "gpt-4o-mini",
     "tone": "profesional",
     "promptFile": "ev-car-electricol.txt",
+    "meta": {
+      "whatsappPhoneNumberIds": []
+    },
     "channels": ["whatsapp", "instagram", "facebook"],
     "units": [
       {

@@ -108,6 +108,32 @@ function mergeOptions(currentOptions, seedOptions) {
   return merged;
 }
 
+function mergeCompanies(currentCompanies, seedCompanies) {
+  const currentById = new Map(currentCompanies.map((item) => [item.companyId, item]));
+  const seedById = new Map(seedCompanies.map((item) => [item.companyId, item]));
+  const merged = [];
+
+  for (const current of currentCompanies) {
+    const seed = seedById.get(current.companyId) || {};
+    merged.push({
+      ...seed,
+      ...current,
+      meta: {
+        ...(seed.meta || {}),
+        ...(current.meta || {}),
+      },
+    });
+  }
+
+  for (const seed of seedCompanies) {
+    if (!currentById.has(seed.companyId)) {
+      merged.push(seed);
+    }
+  }
+
+  return merged;
+}
+
 async function syncFile(filename, merge) {
   const seedPath = join(seedDir, filename);
   const targetPath = join(targetDir, filename);
@@ -137,7 +163,7 @@ results.push(await syncFile(files.plans, {
 
 results.push(await syncFile(files.companies, {
   empty: [],
-  apply: (current, seed) => mergeArrayByKey(current, seed, "companyId"),
+  apply: mergeCompanies,
 }));
 
 results.push(await syncFile(files.users, {

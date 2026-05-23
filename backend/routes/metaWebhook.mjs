@@ -1,6 +1,6 @@
 // GET  /webhook/meta — verificación Meta (compatible con /webhooks/meta existente)
 // POST /webhook/meta — eventos entrantes (mock hasta tener Meta Business)
-import { getCompany }         from "../services/company/companyConfigService.mjs";
+import { getAllCompanies, getCompany } from "../services/company/companyConfigService.mjs";
 import { detectUnit }         from "../services/router/routerService.mjs";
 import { buildSystemPrompt }  from "../services/ai/promptBuilder.mjs";
 import { routeAI }            from "../services/ai/aiRouterService.mjs";
@@ -29,7 +29,7 @@ export async function handleWebhookEvent(payload) {
     return { status: 200, body: { ok: true, received: false } };
   }
 
-  const company = await getCompany(incoming.companyId ?? "inversiones-manglar");
+  const company = await resolveIncomingCompany(incoming);
   if (!company || !company.active) {
     return { status: 200, body: { ok: true, skipped: true } };
   }
@@ -120,4 +120,28 @@ function extractMessage(payload) {
   }
 
   return null;
+}
+
+async function resolveIncomingCompany(incoming) {
+  if (incoming.companyId) {
+    return getCompany(incoming.companyId);
+  }
+
+  const companies = await getAllCompanies();
+  if (incoming.phoneNumberId) {
+    const matched = companies.find((company) =>
+      (company.meta?.whatsappPhoneNumberIds || []).map(String).includes(String(incoming.phoneNumberId)),
+    );
+
+    if (matched) {
+      return matched;
+    }
+  }
+
+  const fallbackCompanyId = process.env.META_DEFAULT_COMPANY_ID || "inversiones-manglar";
+  logger.warn("Meta company fallback used", {
+    phoneNumberId: incoming.phoneNumberId,
+    fallbackCompanyId,
+  });
+  return getCompany(fallbackCompanyId);
 }
