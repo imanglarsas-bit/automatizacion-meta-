@@ -124,10 +124,37 @@
           <div>
             <p class="kicker">Canales</p>
             <h2>Conexiones activas</h2>
+            <p>La autorización se hace en Meta. El cliente escribe sus credenciales allá; iDIGITAL no guarda contraseñas.</p>
           </div>
           <span class="status-pill">Permisos oficiales requeridos</span>
         </div>
         <div class="connection-grid" id="connectionGrid"></div>
+        <form class="meta-routing-form" id="metaRoutingForm">
+          <div>
+            <p class="kicker">Enrutamiento Meta</p>
+            <h3>Números y cuentas del cliente activo</h3>
+            <p>Estos IDs permiten que cada mensaje entrante use los leads y embudos del cliente correcto.</p>
+          </div>
+          <label>
+            WhatsApp Phone Number ID
+            <textarea
+              name="whatsappPhoneNumberIds"
+              rows="2"
+              placeholder="Ej. 1185645557954638. Puedes separar varios con coma."
+            ></textarea>
+          </label>
+          <div class="form-row">
+            <label>
+              Instagram Account ID
+              <input name="instagramAccountIds" type="text" placeholder="Opcional" />
+            </label>
+            <label>
+              Facebook Page ID
+              <input name="facebookPageIds" type="text" placeholder="Opcional" />
+            </label>
+          </div>
+          <button class="solid-button" type="submit">Guardar IDs del cliente</button>
+        </form>
       </section>
 
       <section class="workspace-grid">

@@ -12,6 +12,7 @@ import {
   handleGetClientUsers,
   handleGetCompanies,
   handleGetCompany,
+  handleUpdateCompanyMeta,
   handleUpdateCompanyPlan,
 } from "./routes/companies.mjs";
 import { handleGetPlans, handleUpdatePlan } from "./routes/plans.mjs";
@@ -550,6 +551,18 @@ async function handleApi(request, response) {
     const companyId = url.pathname.replace("/api/companies/", "").replace("/plan", "");
     const body = await readBody(request);
     const result = await handleUpdateCompanyPlan(companyId, body);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "PUT" && url.pathname.startsWith("/api/companies/") && url.pathname.endsWith("/meta")) {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+    const targetCompanyId = url.pathname.replace("/api/companies/", "").replace("/meta", "");
+    const body = await readBody(request);
+    const result = await handleUpdateCompanyMeta(targetCompanyId, body);
     sendJson(response, result.status, result.body);
     return true;
   }

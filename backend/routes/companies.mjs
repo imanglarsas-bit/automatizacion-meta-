@@ -2,7 +2,7 @@
 // POST /api/companies          — crea empresa y usuario cliente
 // GET  /api/companies/:id      — empresa por companyId
 import { readFile, writeFile } from "node:fs/promises";
-import { createCompany, getAllCompanies, getCompany, updateCompanyPlan } from "../services/company/companyConfigService.mjs";
+import { createCompany, getAllCompanies, getCompany, updateCompanyMeta, updateCompanyPlan } from "../services/company/companyConfigService.mjs";
 import { getPlan, isValidPlan, listPlans, normalizePlanKey } from "../services/billing/plans.mjs";
 import { ensureDataFile } from "../utils/dataPaths.mjs";
 
@@ -77,6 +77,11 @@ export async function handleCreateCompany(body) {
     fallbackModel: "gpt-4o-mini",
     tone: "profesional",
     promptFile: "inversiones-manglar.txt",
+    meta: {
+      whatsappPhoneNumberIds: [],
+      instagramAccountIds: [],
+      facebookPageIds: [],
+    },
     channels: plan.channels,
     units: [
       {
@@ -126,6 +131,20 @@ export async function handleUpdateCompanyPlan(companyId, body) {
   }
 
   const updated = await updateCompanyPlan(companyId, planData);
+  if (!updated) {
+    return { status: 404, body: { error: "Empresa no encontrada." } };
+  }
+
+  return { status: 200, body: updated };
+}
+
+export async function handleUpdateCompanyMeta(companyId, body) {
+  const updated = await updateCompanyMeta(companyId, {
+    whatsappPhoneNumberIds: body.whatsappPhoneNumberIds,
+    instagramAccountIds: body.instagramAccountIds,
+    facebookPageIds: body.facebookPageIds,
+  });
+
   if (!updated) {
     return { status: 404, body: { error: "Empresa no encontrada." } };
   }

@@ -28,7 +28,9 @@
     "tone": "profesional",
     "promptFile": "inversiones-manglar.txt",
     "meta": {
-      "whatsappPhoneNumberIds": ["1185645557954638"]
+      "whatsappPhoneNumberIds": ["1185645557954638"],
+      "instagramAccountIds": [],
+      "facebookPageIds": []
     },
     "channels": ["whatsapp", "instagram", "facebook"],
     "units": [
@@ -99,7 +101,9 @@
     "tone": "profesional",
     "promptFile": "ev-car-electricol.txt",
     "meta": {
-      "whatsappPhoneNumberIds": []
+      "whatsappPhoneNumberIds": [],
+      "instagramAccountIds": [],
+      "facebookPageIds": []
     },
     "channels": ["whatsapp", "instagram", "facebook"],
     "units": [

@@ -73,3 +73,35 @@ export async function updateCompanyPlan(companyId, planData) {
   cache = companies;
   return companies[idx];
 }
+
+export async function updateCompanyMeta(companyId, metaData) {
+  const companies = await loadCompanies();
+  const idx = companies.findIndex((c) => c.companyId === companyId);
+  if (idx === -1) return null;
+
+  const current = companies[idx];
+  companies[idx] = {
+    ...current,
+    meta: {
+      ...(current.meta || {}),
+      whatsappPhoneNumberIds: normalizeIdList(metaData.whatsappPhoneNumberIds),
+      instagramAccountIds: normalizeIdList(metaData.instagramAccountIds),
+      facebookPageIds: normalizeIdList(metaData.facebookPageIds),
+    },
+    metaUpdatedAt: new Date().toISOString(),
+  };
+
+  companiesPath = companiesPath || await ensureDataFile("companies.mock.json");
+  await writeFile(companiesPath, JSON.stringify(companies, null, 2));
+  cache = companies;
+  return companies[idx];
+}
+
+function normalizeIdList(value) {
+  const items = Array.isArray(value)
+    ? value
+    : String(value || "")
+        .split(/[,;\n]+/);
+
+  return [...new Set(items.map((item) => String(item).trim()).filter(Boolean))];
+}

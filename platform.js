@@ -172,6 +172,7 @@ const clientForm = document.querySelector("#clientForm");
 const planSelect = document.querySelector("#planSelect");
 const clientUserList = document.querySelector("#clientUserList");
 const connectionGrid = document.querySelector("#connectionGrid");
+const metaRoutingForm = document.querySelector("#metaRoutingForm");
 const activeChannels = document.querySelector("#activeChannels");
 const trainedAnswers = document.querySelector("#trainedAnswers");
 const confidenceLabel = document.querySelector("#confidenceLabel");
@@ -293,14 +294,20 @@ async function renderClientUsers() {
 function renderConnections() {
   const connected = storage.channels;
   const metaConnections = storage.settings.metaConnections || {};
+  const activeMeta = storage.activeClient.meta || {};
   const plan = getPlan(storage.activeClient.plan || "business");
   const allowedChannels = new Set(plan.channels || []);
+
+  metaRoutingForm.whatsappPhoneNumberIds.value = (activeMeta.whatsappPhoneNumberIds || []).join(", ");
+  metaRoutingForm.instagramAccountIds.value = (activeMeta.instagramAccountIds || []).join(", ");
+  metaRoutingForm.facebookPageIds.value = (activeMeta.facebookPageIds || []).join(", ");
 
   connectionGrid.innerHTML = channels
     .map((channel) => {
       const isConnected = Boolean(connected[channel.key]);
       const metaStatus = metaConnections[channel.key]?.status;
       const isAllowed = allowedChannels.has(channel.key);
+      const buttonText = metaStatus === "connected" || isConnected ? "Actualizar conexión" : "Conectar con Meta";
       const statusText = metaStatus === "connected"
         ? "Autorizado por Meta"
         : isConnected
@@ -311,7 +318,7 @@ function renderConnections() {
           <div class="connection-top">
             <img class="channel-dot" src="${channel.logo}" alt="${channel.name}" />
             <button class="connect-button ${isConnected ? "connected" : ""}" type="button" data-channel="${channel.key}" ${isAllowed ? "" : "disabled"}>
-              ${isAllowed ? (isConnected ? "Conectado" : "Conectar con Meta") : "No incluido"}
+              ${isAllowed ? buttonText : "No incluido"}
             </button>
           </div>
           <div>
@@ -327,11 +334,6 @@ function renderConnections() {
   document.querySelectorAll(".connect-button").forEach((button) => {
     button.addEventListener("click", () => {
       const channel = button.dataset.channel;
-      if (storage.channels[channel]) {
-        toggleConnection(channel);
-        return;
-      }
-
       startMetaConnection(channel);
     });
   });
@@ -374,6 +376,40 @@ async function startMetaConnection(key) {
   } catch (error) {
     showToast(error.message);
   }
+}
+
+metaRoutingForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(metaRoutingForm);
+  const payload = {
+    whatsappPhoneNumberIds: splitIds(data.get("whatsappPhoneNumberIds")),
+    instagramAccountIds: splitIds(data.get("instagramAccountIds")),
+    facebookPageIds: splitIds(data.get("facebookPageIds")),
+  };
+
+  try {
+    const updated = await getJSON(`/api/companies/${encodeURIComponent(storage.activeClientId)}/meta`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const index = storage.clients.findIndex((client) => client.companyId === updated.companyId);
+    if (index >= 0) {
+      storage.clients[index] = updated;
+    }
+    renderClients();
+    renderConnections();
+    showToast("IDs de Meta guardados para este cliente.");
+  } catch (error) {
+    showToast(error.message);
+  }
+});
+
+function splitIds(value) {
+  return String(value || "")
+    .split(/[,;\n]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 function renderTraining() {
