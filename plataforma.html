@@ -17,18 +17,16 @@
         iDIGITAL Admin
       </a>
       <nav class="side-nav">
-        <a href="#clientes">Clientes</a>
-        <a href="#suscripciones">Suscripciones</a>
+        <a href="#clientes">Cliente activo</a>
         <a href="#conexiones">Canales</a>
-        <a href="#entrenamiento">Bot</a>
-        <a href="#leadTrainingPanel">Leads</a>
-        <a href="#pruebas">Pruebas</a>
-        <a href="#reglas">Reglas</a>
-        <a href="#planes">Planes</a>
+        <a href="#entrenamiento">Entrenar bot</a>
+        <a href="#leadTrainingPanel">Leads y embudos</a>
+        <a href="#pruebas">Probar</a>
+        <a href="#suscripciones">Planes cliente</a>
       </nav>
       <div class="sidebar-note">
-        <strong>Operación</strong>
-        <span>Selecciona un cliente y configura solo lo necesario.</span>
+        <strong>Flujo simple</strong>
+        <span>Cliente, canales, bot, leads, prueba.</span>
       </div>
     </aside>
 
@@ -36,7 +34,7 @@
       <header class="platform-header" id="resumen">
         <div>
           <p class="kicker">Panel administrador</p>
-          <h1>Clientes, planes y automatización</h1>
+          <h1>Operación de clientes</h1>
         </div>
         <div class="header-tools">
           <label class="client-picker">
@@ -50,6 +48,14 @@
           <button class="solid-button" type="button" id="publishButton">Estado</button>
         </div>
       </header>
+
+      <section class="task-strip" aria-label="Flujo de configuración">
+        <a href="#clientes"><strong>1</strong><span>Cliente</span></a>
+        <a href="#conexiones"><strong>2</strong><span>Canales</span></a>
+        <a href="#entrenamiento"><strong>3</strong><span>Bot</span></a>
+        <a href="#leadTrainingPanel"><strong>4</strong><span>Leads</span></a>
+        <a href="#pruebas"><strong>5</strong><span>Prueba</span></a>
+      </section>
 
       <section class="panel client-summary" id="clientes">
         <div>
@@ -80,16 +86,6 @@
         </form>
       </section>
 
-      <section class="panel client-users-panel">
-        <div class="panel-heading compact">
-          <div>
-            <p class="kicker">Usuarios cliente</p>
-            <h2>Accesos al portal cliente</h2>
-          </div>
-        </div>
-        <div class="client-user-list" id="clientUserList"></div>
-      </section>
-
       <section class="metric-grid" aria-label="Resumen operativo">
         <article class="metric-card">
           <span>Canales activos</span>
@@ -111,6 +107,16 @@
           <strong>Activa</strong>
           <small>cuando el bot no sabe</small>
         </article>
+      </section>
+
+      <section class="panel client-users-panel">
+        <div class="panel-heading compact">
+          <div>
+            <p class="kicker">Usuarios cliente</p>
+            <h2>Accesos al portal cliente</h2>
+          </div>
+        </div>
+        <div class="client-user-list" id="clientUserList"></div>
       </section>
 
       <section class="panel" id="conexiones">
@@ -189,29 +195,33 @@
           <div class="panel-heading compact">
             <div>
               <p class="kicker">Leads</p>
-              <h2>Calificación y embudos</h2>
+              <h2>Reglas y embudos</h2>
             </div>
           </div>
           <form class="lead-training-form" id="leadTrainingForm">
-            <label>
-              Datos obligatorios que debe pedir el bot
-              <textarea
-                name="requiredData"
-                rows="3"
-                placeholder="Ej. nombre, teléfono, empresa, necesidad, presupuesto aproximado"
-                required
-              ></textarea>
-            </label>
-            <label>
-              Preguntas de calificación
-              <textarea
-                name="qualificationQuestions"
-                rows="4"
-                placeholder="Ej. ¿Qué servicio necesitas? ¿Cuándo quieres empezar? ¿Cuál es tu presupuesto?"
-                required
-              ></textarea>
-            </label>
-            <div class="form-row">
+            <fieldset class="lead-block">
+              <legend>Datos del lead</legend>
+              <label>
+                Datos obligatorios
+                <textarea
+                  name="requiredData"
+                  rows="3"
+                  placeholder="Ej. nombre, teléfono, empresa, necesidad, presupuesto aproximado"
+                  required
+                ></textarea>
+              </label>
+              <label>
+                Preguntas de calificación
+                <textarea
+                  name="qualificationQuestions"
+                  rows="4"
+                  placeholder="Ej. ¿Qué servicio necesitas? ¿Cuándo quieres empezar? ¿Cuál es tu presupuesto?"
+                  required
+                ></textarea>
+              </label>
+            </fieldset>
+            <fieldset class="lead-block">
+              <legend>Clasificación</legend>
               <label>
                 Lead caliente
                 <input name="hotLead" type="text" placeholder="Ej. quiere comprar, pide precio, agenda llamada" required />
@@ -220,18 +230,18 @@
                 Lead medio
                 <input name="warmLead" type="text" placeholder="Ej. pregunta beneficios, compara opciones" required />
               </label>
-            </div>
-            <label>
-              Cuándo pasar a humano
-              <textarea
-                name="handoffRules"
-                rows="3"
-                placeholder="Ej. si pide descuento, queja, caso sensible, compra inmediata o negociación"
-                required
-              ></textarea>
-            </label>
+              <label>
+                Pasar a humano cuando
+                <textarea
+                  name="handoffRules"
+                  rows="3"
+                  placeholder="Ej. si pide descuento, queja, caso sensible, compra inmediata o negociación"
+                  required
+                ></textarea>
+              </label>
+            </fieldset>
             <fieldset class="funnel-builder">
-              <legend>Crear embudo</legend>
+              <legend>Embudo nuevo</legend>
               <label>
                 Nombre del embudo
                 <input name="funnelName" type="text" placeholder="Ej. Demo comercial urgente" />
@@ -277,8 +287,8 @@
         <article class="panel lead-rules-preview">
           <div class="panel-heading compact">
             <div>
-              <p class="kicker">Mapa</p>
-              <h2>Reglas activas</h2>
+              <p class="kicker">Activo</p>
+              <h2>Lo que hará el bot</h2>
             </div>
             <button class="ghost-button danger" type="button" id="resetLeadRules">Restaurar</button>
           </div>
