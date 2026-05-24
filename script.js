@@ -97,7 +97,7 @@ websiteForm.addEventListener("submit", (event) => {
   const websiteType = data.get("websiteType");
   const message = data.get("message");
   const whatsappText = encodeURIComponent(
-    `Hola, soy ${name}. Quiero una página web para ${business}. Tipo: ${websiteType}. Necesito promocionar: ${message}. Vi la oferta desde $599.000 COP.`,
+    `Hola, soy ${name}. Quiero una página web para ${business}. Tipo: ${websiteType}. Necesito promocionar: ${message}. Vi la oferta desde $599.000 COP*.`,
   );
 
   websiteFormNote.textContent = `${name}, listo. Te abrimos WhatsApp para continuar la cotización de tu página web.`;

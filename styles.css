@@ -662,10 +662,20 @@ h3 {
   line-height: 1;
 }
 
-.website-price-card small {
+.website-price-card small,
+.website-price-card em {
   max-width: 420px;
   color: var(--muted);
   font-weight: 750;
+}
+
+.website-price-card em {
+  max-width: 480px;
+  margin-top: 8px;
+  color: rgba(234, 246, 255, 0.62);
+  font-size: 0.82rem;
+  font-style: normal;
+  line-height: 1.45;
 }
 
 .website-form {
