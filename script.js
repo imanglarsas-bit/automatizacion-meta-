@@ -21,6 +21,8 @@ const botMessage = document.querySelector("#botMessage");
 const scenarioButtons = document.querySelectorAll(".scenario");
 const leadForm = document.querySelector("#leadForm");
 const formNote = document.querySelector("#formNote");
+const websiteForm = document.querySelector("#websiteForm");
+const websiteFormNote = document.querySelector("#websiteFormNote");
 const billingToggle = document.querySelector("[data-billing-toggle]");
 const billingButtons = document.querySelectorAll("[data-billing]");
 const pricingCards = document.querySelectorAll(".pricing-card");
@@ -85,6 +87,22 @@ leadForm.addEventListener("submit", (event) => {
 
   formNote.textContent = `${name}, listo. Para ${channel}, conviene ${responseTime}.`;
   leadForm.reset();
+});
+
+websiteForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const data = new FormData(websiteForm);
+  const name = data.get("name");
+  const business = data.get("business");
+  const websiteType = data.get("websiteType");
+  const message = data.get("message");
+  const whatsappText = encodeURIComponent(
+    `Hola, soy ${name}. Quiero una página web para ${business}. Tipo: ${websiteType}. Necesito promocionar: ${message}. Vi la oferta desde $599.000 COP.`,
+  );
+
+  websiteFormNote.textContent = `${name}, listo. Te abrimos WhatsApp para continuar la cotización de tu página web.`;
+  window.open(`https://wa.me/573224591377?text=${whatsappText}`, "_blank", "noopener,noreferrer");
+  websiteForm.reset();
 });
 
 setScenario("precio");
