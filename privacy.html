@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Política de Privacidad | iDIGITAL – Inversiones Manglar S.A.S</title>
+    <meta name="description" content="Política de privacidad y tratamiento de datos personales de Inversiones Manglar S.A.S, conforme a la Ley 1581 de 2012." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://app.imanglar.com/privacy-policy" />
+
+    <!-- Open Graph / Meta Developers -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Política de Privacidad | iDIGITAL" />
+    <meta property="og:description" content="Conoce cómo Inversiones Manglar S.A.S recolecta, usa y protege tus datos personales." />
+    <meta property="og:url" content="https://app.imanglar.com/privacy-policy" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      :root {
+        --navy:   #03101d;
+        --navy2:  #071b2d;
+        --surface: #0d2238;
+        --line:   rgba(255,255,255,0.09);
+        --white:  #eaf6ff;
+        --muted:  #8ba4bc;
+        --cyan:   #00aeef;
+        --green:  #7dba2e;
+        --radius: 14px;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        background: var(--navy);
+        color: var(--white);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        min-height: 100vh;
+      }
+
+      a { color: var(--cyan); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      /* ── Nav bar ─────────────────────────────────────────────────────── */
+      .privacy-nav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 14px clamp(20px, 6vw, 80px);
+        background: rgba(3, 16, 29, 0.9);
+        border-bottom: 1px solid var(--line);
+        backdrop-filter: blur(14px);
+      }
+
+      .privacy-nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 900;
+        font-size: 1rem;
+        color: var(--white);
+      }
+
+      .privacy-nav-brand img {
+        width: 120px;
+        height: auto;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 700;
+        transition: color 180ms, border-color 180ms;
+      }
+
+      .back-link:hover {
+        color: var(--white);
+        border-color: rgba(255,255,255,0.22);
+        text-decoration: none;
+      }
+
+      .back-link svg { flex-shrink: 0; }
+
+      /* ── Hero ───────────────────────────────────────────────────────── */
+      .privacy-hero {
+        padding: clamp(52px, 8vw, 96px) clamp(20px, 6vw, 80px) 0;
+        max-width: 820px;
+        margin: 0 auto;
+      }
+
+      .privacy-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 20px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(0,174,239,0.28);
+        background: rgba(0,174,239,0.08);
+        color: var(--cyan);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .privacy-hero h1 {
+        margin: 0 0 12px;
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 950;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+      }
+
+      .privacy-hero h1 span {
+        background: linear-gradient(90deg, var(--cyan), var(--green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .privacy-hero p {
+        margin: 0 0 32px;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .privacy-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 48px;
+      }
+
+      .privacy-chip {
+        padding: 6px 12px;
+        border-radius: 8px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+
+      .privacy-chip strong { color: var(--white); }
+
+      /* ── Content ────────────────────────────────────────────────────── */
+      .privacy-content {
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 0 clamp(20px, 6vw, 80px) clamp(60px, 8vw, 100px);
+      }
+
+      .policy-card {
+        padding: clamp(24px, 4vw, 40px);
+        margin-bottom: 20px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--navy2);
+      }
+
+      .policy-card + .policy-card { margin-top: 0; }
+
+      .policy-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 16px;
+      }
+
+      .policy-icon {
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        background: rgba(0,174,239,0.1);
+        border: 1px solid rgba(0,174,239,0.2);
+        font-size: 1.1rem;
+      }
+
+      .policy-card h2 {
+        margin: 0 0 4px;
+        font-size: 1.05rem;
+        font-weight: 850;
+        color: var(--white);
+      }
+
+      .policy-card p {
+        margin: 0 0 14px;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .policy-card p:last-child { margin-bottom: 0; }
+
+      .policy-card a { color: var(--cyan); }
+
+      .highlight-box {
+        margin-top: 14px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: rgba(125,186,46,0.07);
+        border: 1px solid rgba(125,186,46,0.2);
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .highlight-box strong { color: var(--green); display: block; margin-bottom: 4px; }
+
+      /* ── Footer ─────────────────────────────────────────────────────── */
+      .privacy-footer {
+        padding: 28px clamp(20px, 6vw, 80px);
+        border-top: 1px solid var(--line);
+        background: var(--navy);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .privacy-footer span { color: var(--muted); font-size: 0.84rem; }
+      .privacy-footer a { color: var(--muted); font-size: 0.84rem; }
+      .privacy-footer a:hover { color: var(--white); }
+
+      @media (max-width: 640px) {
+        .privacy-footer { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <nav class="privacy-nav" aria-label="Navegación">
+      <a class="privacy-nav-brand" href="/">
+        <img src="/assets/idigital-logo-wide.png" alt="iDIGITAL" />
+      </a>
+      <a class="back-link" href="/">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Volver al inicio
+      </a>
+    </nav>
+
+    <header class="privacy-hero">
+      <p class="privacy-badge">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+          <path d="M6 1L7.545 4.13l3.455.502-2.5 2.436.59 3.437L6 9.5 2.91 10.505l.59-3.437L1 4.632l3.455-.502L6 1z" fill="currentColor"/>
+        </svg>
+        Documento legal
+      </p>
+      <h1>Política de <span>Privacidad</span></h1>
+      <p>Información sobre el tratamiento de datos personales por parte de Inversiones Manglar S.A.S, conforme a la legislación colombiana vigente.</p>
+      <div class="privacy-meta">
+        <span class="privacy-chip"><strong>Empresa:</strong> Inversiones Manglar S.A.S</span>
+        <span class="privacy-chip"><strong>País:</strong> Colombia</span>
+        <span class="privacy-chip"><strong>Ley:</strong> 1581 de 2012</span>
+      </div>
+    </header>
+
+    <main class="privacy-content">
+
+      <article class="policy-card">
+        <div class="policy-card-header">
+          <span class="policy-icon" aria-hidden="true">📋</span>
+          <div>
+            <h2>Recolección y uso de datos</h2>
+          </div>
+        </div>
+        <p>
+          INVERSIONES MANGLAR S.A.S informa que los datos personales suministrados por los usuarios a través de esta plataforma serán recolectados, almacenados y tratados conforme a la Ley 1581 de 2012 y demás normas aplicables en Colombia.
+        </p>
+        <p>
+          Los datos podrán incluir nombre, teléfono, correo electrónico, mensajes, información comercial y cualquier otro dato entregado voluntariamente por el usuario. Esta información será utilizada para atender solicitudes, gestionar comunicaciones, prestar servicios, automatizar respuestas, realizar seguimiento comercial y mejorar la experiencia del usuario.
+        </p>
+      </article>
+
+      <article class="policy-card">
+        <div class="policy-card-header">
+          <span class="policy-icon" aria-hidden="true">🔒</span>
+          <div>
+            <h2>Protección y compartición de datos</h2>
+          </div>
+        </div>
+        <p>
+          INVERSIONES MANGLAR S.A.S no venderá ni comercializará los datos personales de los usuarios. La información podrá ser compartida únicamente con proveedores tecnológicos necesarios para el funcionamiento de la plataforma, tales como servicios de mensajería, almacenamiento, automatización, inteligencia artificial o procesamiento de datos.
+        </p>
+        <div class="highlight-box">
+          <strong>Compromiso de confidencialidad</strong>
+          Sus datos nunca serán vendidos, alquilados ni cedidos a terceros con fines comerciales ajenos a los descritos en esta política.
+        </div>
+      </article>
+
+      <article class="policy-card">
+        <div class="policy-card-header">
+          <span class="policy-icon" aria-hidden="true">✅</span>
+          <div>
+            <h2>Derechos del titular</h2>
+          </div>
+        </div>
+        <p>
+          El titular de los datos podrá solicitar en cualquier momento la consulta, actualización, corrección o eliminación de su información personal escribiendo al siguiente correo:
+        </p>
+        <p>
+          <a href="mailto:imanglarsas@gmail.com">imanglarsas@gmail.com</a>
+        </p>
+      </article>
+
+      <article class="policy-card">
+        <div class="policy-card-header">
+          <span class="policy-icon" aria-hidden="true">🏢</span>
+          <div>
+            <h2>Responsable del tratamiento</h2>
+          </div>
+        </div>
+        <p><strong style="color:#eaf6ff">Empresa:</strong> INVERSIONES MANGLAR S.A.S</p>
+        <p><strong style="color:#eaf6ff">Correo:</strong> <a href="mailto:imanglarsas@gmail.com">imanglarsas@gmail.com</a></p>
+        <p style="margin:0"><strong style="color:#eaf6ff">País:</strong> Colombia</p>
+      </article>
+
+    </main>
+
+    <footer class="privacy-footer">
+      <span>© 2025 Inversiones Manglar S.A.S · Todos los derechos reservados</span>
+      <a href="/">Volver a iDIGITAL</a>
+    </footer>
+
+  </body>
+</html>

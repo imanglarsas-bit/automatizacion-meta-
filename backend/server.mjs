@@ -756,6 +756,13 @@ createServer(async (request, response) => {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/privacy-policy") {
+      const file = await readFile(join(root, "privacy.html"));
+      response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+      response.end(file);
+      return;
+    }
+
     if (request.method === "GET" && url.pathname === "/webhooks/meta") {
       await handleWebhookVerification(request, response);
       return;

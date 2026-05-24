@@ -1178,9 +1178,20 @@ a:focus {
   font-weight: 950;
 }
 
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
 .admin-footer-link {
   color: rgba(168, 190, 208, 0.58);
   font-size: 0.82rem;
+  transition: color 180ms ease;
+}
+
+.admin-footer-link:hover {
+  color: rgba(168, 190, 208, 0.9);
 }
 
 @keyframes floatCard {
