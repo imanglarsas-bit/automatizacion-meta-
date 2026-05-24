@@ -169,6 +169,8 @@ El sistema detecta automáticamente a qué unidad enviar según palabras clave:
 4. Activar `META_LIVE_MODE=true` y configurar `META_ACCESS_TOKEN`.
 5. Los mensajes entrantes se procesarán automáticamente con IA y responderán en el canal correspondiente.
 
+Estado actual de la configuracion Meta y pasos pendientes: ver `META_STATUS.md`.
+
 ---
 
 ## Planes SaaS

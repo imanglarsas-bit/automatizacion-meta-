@@ -143,6 +143,8 @@ https://app.imanglar.com/webhook/meta
 
 El token de verificación debe ser el mismo valor de `META_VERIFY_TOKEN`.
 
+Para retomar la verificacion de empresa y el numero de prueba de Inversiones Manglar, revisa `META_STATUS.md`.
+
 ## Conectar cuentas de Meta desde el panel
 
 Para que el botón `Conectar con Meta` abra el flujo real de Meta, debes crear una app en Meta for Developers y configurar estas variables en AWS:
