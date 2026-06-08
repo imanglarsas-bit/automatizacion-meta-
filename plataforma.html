@@ -10,13 +10,13 @@
     <aside class="sidebar" aria-label="Navegación de plataforma">
       <a class="platform-brand" href="index.html" aria-label="Volver al sitio">
         <img src="assets/idigital-logo-wide.png" alt="iDIGITAL" />
-        iDIGITAL Admin
+        CRM Admin
       </a>
       <nav class="side-nav" aria-label="Secciones">
-        <a class="active" href="#" data-tab="clientes">Clientes</a>
+        <a class="active" href="#" data-tab="clientes">CRM</a>
         <a href="#" data-tab="canales">Canales</a>
+        <a href="#" data-tab="leads">Leads y embudos</a>
         <a href="#" data-tab="bot">Bot</a>
-        <a href="#" data-tab="leads">Leads</a>
         <a href="#" data-tab="pruebas">Pruebas</a>
         <a href="#" data-tab="planes">Planes</a>
         <a href="#" data-tab="soporte">Soporte</a>
@@ -26,8 +26,8 @@
     <main class="platform-shell">
       <header class="platform-header">
         <div>
-          <p class="kicker">Panel administrador</p>
-          <h1>iDIGITAL</h1>
+          <p class="kicker">CRM administrativo</p>
+          <h1>Gestión de clientes y automatización</h1>
         </div>
         <div class="header-tools">
           <label class="client-picker">
@@ -64,6 +64,29 @@
             <span>Derivación humana</span>
             <strong>Activa</strong>
             <small>cuando el bot no sabe</small>
+          </article>
+        </section>
+
+        <section class="crm-dashboard" aria-label="CRM administrativo">
+          <article class="panel crm-pipeline-panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Pipeline CRM</p>
+                <h2>Estado operativo de cuentas</h2>
+              </div>
+            </div>
+            <div class="crm-pipeline" id="crmPipeline"></div>
+          </article>
+
+          <article class="panel crm-accounts-panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="kicker">Cuentas</p>
+                <h2>Clientes en administración</h2>
+              </div>
+              <span class="status-pill" id="crmAccountCount">0 clientes</span>
+            </div>
+            <div class="crm-table" id="crmAccountsTable"></div>
           </article>
         </section>
 

@@ -11,10 +11,10 @@
     <aside class="client-sidebar" aria-label="Navegación cliente">
       <a class="client-brand" href="index.html">
         <img src="assets/idigital-logo-wide.png" alt="iDIGITAL" />
-        Portal cliente
+        CRM cliente
       </a>
       <nav>
-        <a class="active" href="#" data-tab="conversacion">Conversación</a>
+        <a class="active" href="#" data-tab="conversacion">CRM</a>
         <a href="#" data-tab="soporte">Soporte</a>
       </nav>
       <form method="post" action="/logout">
@@ -25,7 +25,7 @@
     <main class="client-shell">
       <header class="client-header">
         <div>
-          <p class="kicker">Portal del cliente</p>
+          <p class="kicker">CRM del cliente</p>
           <h1 id="welcomeMsg">Bienvenido</h1>
         </div>
         <div class="summary-grid" aria-label="Resumen de atención">
@@ -46,6 +46,24 @@
 
       <!-- ── TAB: Conversación ─────────────────────────────────────────── -->
       <div class="tab-pane" data-pane="conversacion">
+        <section class="crm-client-board" aria-label="Resumen CRM">
+          <article class="panel crm-client-card">
+            <div>
+              <p class="kicker">Pipeline</p>
+              <h2>Oportunidades por atender</h2>
+            </div>
+            <div class="client-pipeline" id="clientPipeline"></div>
+          </article>
+
+          <article class="panel crm-client-card">
+            <div>
+              <p class="kicker">Tareas rápidas</p>
+              <h2>Prioridad de hoy</h2>
+            </div>
+            <div class="crm-task-list" id="crmTaskList"></div>
+          </article>
+        </section>
+
         <section class="client-workspace">
           <article class="panel inbox-panel" id="bandeja">
             <div class="panel-heading">

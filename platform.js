@@ -165,6 +165,9 @@ const storage = {
 
 const planEditorGrid = document.querySelector("#planEditorGrid");
 const subscriptionList = document.querySelector("#subscriptionList");
+const crmPipeline = document.querySelector("#crmPipeline");
+const crmAccountsTable = document.querySelector("#crmAccountsTable");
+const crmAccountCount = document.querySelector("#crmAccountCount");
 const activeClientPlanSelect = document.querySelector("#activeClientPlanSelect");
 const activeClientPlanButton = document.querySelector("#activeClientPlanButton");
 const accessPlanCard = document.querySelector("#accessPlanCard");
@@ -270,6 +273,69 @@ function renderPlanOptions() {
       return `<option value="${escapeHTML(plan.key)}">${escapeHTML(plan.name)} · ${formatLimit(plan.monthlyMessageLimit)} mensajes · ${aiLabel}</option>`;
     }),
   ].join("");
+}
+
+function countRoutedChannels(company) {
+  const meta = company.meta || {};
+  return [
+    meta.whatsappPhoneNumberIds,
+    meta.instagramAccountIds,
+    meta.facebookPageIds,
+  ].filter((items) => Array.isArray(items) && items.length).length;
+}
+
+function renderCrmDashboard() {
+  const clients = storage.clients || [];
+  const active = clients.filter((client) => client.active !== false).length;
+  const connected = clients.filter((client) => countRoutedChannels(client) > 0).length;
+  const startPlan = clients.filter((client) => (client.plan || "start") === "start").length;
+  const premium = clients.filter((client) => ["pro", "business"].includes(client.plan)).length;
+
+  crmPipeline.innerHTML = [
+    { label: "Cuentas activas", value: active, note: "clientes operativos" },
+    { label: "Meta conectado", value: connected, note: "con al menos una red" },
+    { label: "Plan Start", value: startPlan, note: "automatización básica" },
+    { label: "Pro / Business", value: premium, note: "cuentas premium" },
+  ].map((item) => `
+    <article class="crm-stage">
+      <span>${escapeHTML(item.label)}</span>
+      <strong>${item.value}</strong>
+      <small>${escapeHTML(item.note)}</small>
+    </article>
+  `).join("");
+
+  crmAccountCount.textContent = `${clients.length} clientes`;
+  crmAccountsTable.innerHTML = `
+    <div class="crm-table-row head">
+      <span>Cliente</span>
+      <span>Plan</span>
+      <span>Meta</span>
+      <span>Estado</span>
+    </div>
+    ${clients.map((client) => {
+      const routed = countRoutedChannels(client);
+      return `
+        <button class="crm-table-row ${client.companyId === storage.activeClientId ? "active" : ""}" type="button" data-company-id="${escapeHTML(client.companyId)}">
+          <span><strong>${escapeHTML(client.name)}</strong><small>${escapeHTML(client.companyId)}</small></span>
+          <span>${planBadge(client.plan || "start")}</span>
+          <span>${routed ? `${routed} red${routed === 1 ? "" : "es"}` : "Pendiente"}</span>
+          <span class="status-dot ${client.active === false ? "inactive" : "active"}">${client.active === false ? "Inactivo" : "Activo"}</span>
+        </button>
+      `;
+    }).join("")}
+  `;
+
+  crmAccountsTable.querySelectorAll(".crm-table-row[data-company-id]").forEach((row) => {
+    row.addEventListener("click", async () => {
+      storage.activeClientId = row.dataset.companyId;
+      clientSelect.value = storage.activeClientId;
+      await loadCompanySettings();
+      await loadLeadRules();
+      renderAll();
+      await renderClientUsers();
+      showToast("Cuenta CRM seleccionada.");
+    });
+  });
 }
 
 async function renderClientUsers() {
@@ -972,6 +1038,7 @@ function renderMetrics() {
 function renderAll() {
   renderClients();
   renderPlanOptions();
+  renderCrmDashboard();
   renderSubscriptions();
   renderPlanEditor();
   renderConnections();

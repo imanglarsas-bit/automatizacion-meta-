@@ -11,6 +11,8 @@ const replyButton = document.querySelector("#replyButton");
 const pendingCount = document.querySelector("#pendingCount");
 const answeredCount = document.querySelector("#answeredCount");
 const channelCount = document.querySelector("#channelCount");
+const clientPipeline = document.querySelector("#clientPipeline");
+const crmTaskList = document.querySelector("#crmTaskList");
 const supportThread = document.querySelector("#supportThread");
 const supportEmpty = document.querySelector("#supportEmpty");
 const supportForm = document.querySelector("#supportForm");
@@ -133,9 +135,60 @@ async function loadConversations() {
 }
 
 function renderSummary() {
-  pendingCount.textContent = conversations.filter((item) => item.status === "human_required").length;
-  answeredCount.textContent = conversations.filter((item) => item.status === "answered").length;
+  const pending = conversations.filter((item) => item.status === "human_required").length;
+  const answered = conversations.filter((item) => item.status === "answered").length;
+  pendingCount.textContent = pending;
+  answeredCount.textContent = answered;
   channelCount.textContent = new Set(conversations.map((item) => item.channel)).size;
+  renderClientCrmBoard({ pending, answered });
+}
+
+function renderClientCrmBoard({ pending, answered }) {
+  const highPriority = conversations.filter((item) => item.priority === "alta").length;
+  const channels = new Set(conversations.map((item) => item.channel)).size;
+
+  clientPipeline.innerHTML = [
+    { label: "Nuevos / pendientes", value: pending, note: "requieren respuesta humana" },
+    { label: "Alta prioridad", value: highPriority, note: "atender primero" },
+    { label: "Respondidos", value: answered, note: "cerrados o gestionados" },
+    { label: "Canales activos", value: channels, note: "fuentes de conversación" },
+  ].map((item) => `
+    <article class="client-stage">
+      <span>${escapeHTML(item.label)}</span>
+      <strong>${item.value}</strong>
+      <small>${escapeHTML(item.note)}</small>
+    </article>
+  `).join("");
+
+  const tasks = conversations
+    .filter((item) => item.status === "human_required")
+    .sort((a, b) => priorityScore(b.priority) - priorityScore(a.priority))
+    .slice(0, 4);
+
+  if (!tasks.length) {
+    crmTaskList.innerHTML = `<div class="empty-state">No hay tareas pendientes por ahora.</div>`;
+    return;
+  }
+
+  crmTaskList.innerHTML = tasks.map((item) => `
+    <button class="crm-task" type="button" data-id="${escapeHTML(item.conversationId)}">
+      <span>${channelBadge(item.channel)} <strong>${escapeHTML(item.customerName)}</strong></span>
+      <small>${escapeHTML(item.summary)}</small>
+    </button>
+  `).join("");
+
+  crmTaskList.querySelectorAll(".crm-task").forEach((button) => {
+    button.addEventListener("click", async () => {
+      activeConversationId = button.dataset.id;
+      renderConversationList();
+      await renderActiveConversation();
+      document.querySelector("#conversacion")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function priorityScore(priority) {
+  return { alta: 3, media: 2, baja: 1 }[priority] || 0;
 }
 
 function renderConversationList() {
