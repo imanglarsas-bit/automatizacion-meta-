@@ -35,6 +35,7 @@ import { handleWebhookVerification as saasWebhookVerify,
          handleWebhookEvent as saasWebhookEvent } from "./routes/metaWebhook.mjs";
 import { ensureDataFile } from "./utils/dataPaths.mjs";
 import { confirmLeadWhatsApp } from "./services/leads/leadService.mjs";
+import { buildLeadWorkbook } from "./services/export/leadWorkbookService.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const root = join(fileURLToPath(new URL("..", import.meta.url)));
@@ -142,6 +143,17 @@ function sendLogoutCookie(request, response) {
 function sendJson(response, status, payload) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(payload));
+}
+
+function sendXlsx(response, { buffer, filename }) {
+  const safeFilename = String(filename || "base-clientes.xlsx").replace(/[^a-zA-Z0-9._-]/g, "-");
+  response.writeHead(200, {
+    "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "Content-Disposition": `attachment; filename="${safeFilename}"`,
+    "Content-Length": Buffer.byteLength(buffer),
+    "Cache-Control": "no-store",
+  });
+  response.end(Buffer.from(buffer));
 }
 
 function sendPublicJson(request, response, status, payload) {
@@ -678,6 +690,23 @@ async function handleApi(request, response) {
 
     const result = await handleGetAllLeads();
     sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "GET" && url.pathname === "/api/export/leads.xlsx") {
+    const requestedCompanyId = url.searchParams.get("companyId") || "all";
+    const exportCompanyId = role === "client" ? companyId : requestedCompanyId;
+    if (role === "client" && requestedCompanyId !== "all" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes exportar contactos de otra empresa." });
+      return true;
+    }
+
+    const result = await buildLeadWorkbook({
+      companyId: exportCompanyId,
+      stage: url.searchParams.get("stage") || "all",
+      search: url.searchParams.get("search") || "",
+    });
+    sendXlsx(response, result);
     return true;
   }
 

@@ -25,6 +25,7 @@ const leadSalesForm = document.querySelector("#leadSalesForm");
 const leadDialogTitle = document.querySelector("#leadDialogTitle");
 const closeLeadDialog = document.querySelector("#closeLeadDialog");
 const cancelLeadDialog = document.querySelector("#cancelLeadDialog");
+const downloadClientLeads = document.querySelector("#downloadClientLeads");
 const supportThread = document.querySelector("#supportThread");
 const supportEmpty = document.querySelector("#supportEmpty");
 const supportForm = document.querySelector("#supportForm");
@@ -417,6 +418,14 @@ replyForm.addEventListener("submit", async (event) => {
 
 leadSearch?.addEventListener("input", renderLeadList);
 leadStageFilter?.addEventListener("change", renderLeadList);
+downloadClientLeads?.addEventListener("click", () => {
+  const params = new URLSearchParams({
+    companyId: activeCompanyId,
+    stage: leadStageFilter?.value || "all",
+    search: leadSearch?.value || "",
+  });
+  window.location.href = `/api/export/leads.xlsx?${params.toString()}`;
+});
 closeLeadDialog?.addEventListener("click", () => leadDialog.close());
 cancelLeadDialog?.addEventListener("click", () => leadDialog.close());
 

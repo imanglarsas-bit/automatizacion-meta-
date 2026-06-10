@@ -186,6 +186,7 @@ const adminLeadDialogTitle = document.querySelector("#adminLeadDialogTitle");
 const adminLeadDialogCompany = document.querySelector("#adminLeadDialogCompany");
 const closeAdminLeadDialog = document.querySelector("#closeAdminLeadDialog");
 const cancelAdminLeadDialog = document.querySelector("#cancelAdminLeadDialog");
+const exportAdminLeads = document.querySelector("#exportAdminLeads");
 const activeClientPlanSelect = document.querySelector("#activeClientPlanSelect");
 const activeClientPlanButton = document.querySelector("#activeClientPlanButton");
 const accessPlanCard = document.querySelector("#accessPlanCard");
@@ -1563,6 +1564,14 @@ if (refreshIdigitalLeads) {
 adminLeadSearch?.addEventListener("input", renderAdminLeadList);
 adminLeadCompanyFilter?.addEventListener("change", renderAdminLeadList);
 adminLeadStageFilter?.addEventListener("change", renderAdminLeadList);
+exportAdminLeads?.addEventListener("click", () => {
+  const params = new URLSearchParams({
+    companyId: adminLeadCompanyFilter?.value || "all",
+    stage: adminLeadStageFilter?.value || "all",
+    search: adminLeadSearch?.value || "",
+  });
+  window.location.href = `/api/export/leads.xlsx?${params.toString()}`;
+});
 closeAdminLeadDialog?.addEventListener("click", () => adminLeadDialog.close());
 cancelAdminLeadDialog?.addEventListener("click", () => adminLeadDialog.close());
 

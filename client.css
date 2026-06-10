@@ -372,6 +372,7 @@ textarea {
 }
 
 .lead-edit-button,
+.export-button,
 .primary-action,
 .secondary-action,
 .dialog-close {
@@ -382,6 +383,7 @@ textarea {
 }
 
 .lead-edit-button,
+.export-button,
 .primary-action {
   border: 0;
   background: var(--teal);
@@ -390,6 +392,12 @@ textarea {
 
 .lead-edit-button {
   padding: 0 14px;
+}
+
+.export-button {
+  min-height: 46px;
+  padding: 0 16px;
+  white-space: nowrap;
 }
 
 .sales-stage {
