@@ -81,11 +81,13 @@ leadForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const data = new FormData(leadForm);
   const name = data.get("name");
+  const business = data.get("business");
   const channel = data.get("channel");
   const volume = Number(data.get("volume"));
-  const responseTime = volume > 60 ? "priorizar respuestas automáticas y derivación comercial" : "empezar con preguntas frecuentes y captación de datos";
+  const message = `Hola, soy ${name} de ${business}. Quiero una demostración de iDIGITAL para ${channel}. Recibimos aproximadamente ${volume} mensajes al día.`;
 
-  formNote.textContent = `${name}, listo. Para ${channel}, conviene ${responseTime}.`;
+  formNote.textContent = `${name}, abrimos el asistente para continuar tu solicitud.`;
+  window.dispatchEvent(new CustomEvent("idigital:open-chat", { detail: { message } }));
   leadForm.reset();
 });
 
@@ -96,12 +98,10 @@ websiteForm.addEventListener("submit", (event) => {
   const business = data.get("business");
   const websiteType = data.get("websiteType");
   const message = data.get("message");
-  const whatsappText = encodeURIComponent(
-    `Hola, soy ${name}. Quiero una página web para ${business}. Tipo: ${websiteType}. Necesito promocionar: ${message}. Vi la oferta desde $599.000 COP*.`,
-  );
+  const chatMessage = `Hola, soy ${name}. Quiero una página web para ${business}. Tipo: ${websiteType}. Necesito promocionar: ${message}. Vi la oferta desde $599.000 COP*.`;
 
-  websiteFormNote.textContent = `${name}, listo. Te abrimos WhatsApp para continuar la cotización de tu página web.`;
-  window.open(`https://wa.me/573224591377?text=${whatsappText}`, "_blank", "noopener,noreferrer");
+  websiteFormNote.textContent = `${name}, listo. Abrimos el asistente para continuar la cotización.`;
+  window.dispatchEvent(new CustomEvent("idigital:open-chat", { detail: { message: chatMessage } }));
   websiteForm.reset();
 });
 

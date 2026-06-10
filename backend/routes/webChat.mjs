@@ -65,12 +65,18 @@ async function processWebChatMessage(body) {
 
   const routingMessage = pageContext ? `${pageContext} ${message}` : message;
   const senderId = `web:${sessionId}`;
-  let menu = await evaluateLeadMenu(companyId, senderId, message);
-  if (!menu && pageContext) {
+  const isNumericChoice = /^\d+$/.test(message);
+  let menu = isNumericChoice ? await evaluateLeadMenu(companyId, senderId, message) : null;
+  let funnel = menu ? null : await evaluateLeadFunnel(companyId, message);
+  if (!menu && !funnel) {
+    menu = await evaluateLeadMenu(companyId, senderId, message);
+  }
+  if (!menu && !funnel && pageContext) {
     menu = await evaluateLeadMenu(companyId, senderId, routingMessage);
   }
-  const funnel = await evaluateLeadFunnel(companyId, message)
-    || (pageContext ? await evaluateLeadFunnel(companyId, routingMessage) : null);
+  if (!menu && !funnel && pageContext) {
+    funnel = await evaluateLeadFunnel(companyId, routingMessage);
+  }
   const leadRules = await getLeadRules(companyId);
   const unit = detectUnit(routingMessage, company);
   const result = menu
@@ -107,7 +113,7 @@ async function processWebChatMessage(body) {
       customerName,
       customerId: sessionId,
       channel: "webchat",
-      unit: unit?.name || "Sitio web",
+      unit: unit?.name || defaultWebUnit(companyId),
       status: "answered",
       priority: result.priority,
       lastMessageAt: now,
@@ -118,7 +124,7 @@ async function processWebChatMessage(body) {
   }
 
   conversation.customerName = customerName || conversation.customerName;
-  conversation.unit = unit?.name || conversation.unit || "Sitio web";
+  conversation.unit = unit?.name || conversation.unit || defaultWebUnit(companyId);
   conversation.status = result.shouldHandoff ? "human_required" : conversation.status;
   conversation.priority = result.shouldHandoff ? result.priority : conversation.priority || "media";
   conversation.lastMessageAt = now;
@@ -295,5 +301,10 @@ function normalizePageContext(value) {
   const context = cleanText(value, 80).toLowerCase();
   if (context === "cardenas-romero") return "Cárdenas Romero Abogados asesoría jurídica";
   if (context === "src-consulting") return "SRC Consulting";
+  if (context === "idigital") return "iDIGITAL automatización digital";
   return "";
+}
+
+function defaultWebUnit(companyId) {
+  return companyId === "idigital" ? "Ventas iDIGITAL" : "Sitio web";
 }

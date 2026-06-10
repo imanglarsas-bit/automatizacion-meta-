@@ -1,4 +1,160 @@
 {
+  "idigital": {
+    "requiredData": "Nombre, teléfono, correo, ciudad, empresa y servicio de interés.",
+    "qualificationQuestions": "¿Qué servicio necesitas? ¿Qué canales utilizas? ¿Cuántos mensajes recibes? ¿Cuándo quieres iniciar?",
+    "hotLead": "Solicita cotización, demostración, contratación, página web, integración Meta o automatización para implementar pronto.",
+    "warmLead": "Pregunta por planes, funcionamiento, beneficios, canales disponibles o compara alternativas.",
+    "handoffRules": "Pasar a humano cuando solicite cotización, demo, contratación, integración personalizada, página web o soporte comercial.",
+    "funnels": [
+      {
+        "id": "idigital-website-direct",
+        "name": "Cotización de página web",
+        "trigger": "página web, pagina web, sitio web, landing page, tienda virtual, desarrollo web, diseño web",
+        "action": "human",
+        "priority": "alta",
+        "response": "Creamos páginas web comerciales, rápidas y adaptadas a móviles. Registraremos tus datos para preparar una cotización según el tipo de página, dominio, contenido y complejidad."
+      },
+      {
+        "id": "idigital-meta-direct",
+        "name": "Integración de canales Meta",
+        "trigger": "integrar whatsapp, conectar whatsapp, integrar instagram, integrar facebook, redes de meta, canales meta",
+        "action": "human",
+        "priority": "alta",
+        "response": "Podemos integrar WhatsApp, Instagram y Facebook para centralizar consultas, automatizar respuestas y derivar casos a personas. Registraremos tus datos para revisar tus canales."
+      },
+      {
+        "id": "idigital-demo-direct",
+        "name": "Demostración iDIGITAL",
+        "trigger": "quiero una demo, solicitar demo, demostración de idigital, demostracion de idigital, agendar demostración, agendar demostracion, quiero una asesoría, quiero una asesoria",
+        "action": "human",
+        "priority": "alta",
+        "response": "Perfecto. Registraremos tus datos para que un asesor prepare una demostración de iDIGITAL enfocada en tu empresa."
+      },
+      {
+        "id": "idigital-main-menu",
+        "name": "Menú comercial iDIGITAL",
+        "trigger": "idigital, automatización digital, automatizacion digital, asistente comercial",
+        "action": "auto",
+        "priority": "media",
+        "response": "¡Bienvenido a iDIGITAL! Elige el servicio sobre el que deseas información:",
+        "options": [
+          {
+            "id": "idigital-automation",
+            "number": "1",
+            "label": "Automatización y chatbots",
+            "action": "auto",
+            "nextFunnelId": "idigital-automation-menu",
+            "response": "Podemos automatizar respuestas, capturar leads y derivar conversaciones a tu equipo."
+          },
+          {
+            "id": "idigital-websites",
+            "number": "2",
+            "label": "Creación de páginas web",
+            "action": "human",
+            "response": "Creamos páginas web comerciales, rápidas y adaptadas a móviles. Para preparar una cotización necesitamos conocer tu negocio, objetivo y tipo de página."
+          },
+          {
+            "id": "idigital-meta",
+            "number": "3",
+            "label": "Integración de WhatsApp, Instagram y Facebook",
+            "action": "human",
+            "response": "Integramos los canales de Meta para centralizar mensajes, automatizar respuestas y escalar casos a personas. Un asesor revisará tus canales y necesidades."
+          },
+          {
+            "id": "idigital-plans",
+            "number": "4",
+            "label": "Planes de automatización",
+            "action": "auto",
+            "nextFunnelId": "idigital-plans-menu",
+            "response": "Tenemos alternativas según el volumen de mensajes, usuarios e integraciones."
+          },
+          {
+            "id": "idigital-demo",
+            "number": "5",
+            "label": "Solicitar demostración o asesoría",
+            "action": "human",
+            "response": "Perfecto. Registraremos tus datos para que un asesor prepare una demostración enfocada en tu empresa."
+          }
+        ]
+      },
+      {
+        "id": "idigital-automation-menu",
+        "name": "Soluciones de automatización",
+        "trigger": "automatización, automatizacion, chatbot, respuestas automáticas, respuestas automaticas",
+        "action": "auto",
+        "priority": "alta",
+        "response": "¿Qué deseas automatizar?",
+        "options": [
+          {
+            "id": "idigital-whatsapp",
+            "number": "1",
+            "label": "WhatsApp Business",
+            "action": "human",
+            "response": "Podemos automatizar atención, preguntas frecuentes, captura de leads y traspaso a asesores en WhatsApp. Un asesor revisará tu volumen y proceso."
+          },
+          {
+            "id": "idigital-social",
+            "number": "2",
+            "label": "Instagram y Facebook",
+            "action": "human",
+            "response": "Podemos centralizar y automatizar consultas de Instagram y Facebook. Registraremos tus datos para revisar las cuentas y permisos necesarios."
+          },
+          {
+            "id": "idigital-multichannel",
+            "number": "3",
+            "label": "Atención multicanal",
+            "action": "human",
+            "response": "Diseñamos una operación unificada para varios canales, con embudos y atención humana. Un asesor preparará una propuesta según tu empresa."
+          },
+          {
+            "id": "idigital-process",
+            "number": "4",
+            "label": "Automatizar un proceso empresarial",
+            "action": "human",
+            "response": "Podemos revisar formularios, seguimiento, clasificación de leads y tareas repetitivas. Cuéntanos tu proceso para evaluar la solución."
+          }
+        ]
+      },
+      {
+        "id": "idigital-plans-menu",
+        "name": "Planes iDIGITAL",
+        "trigger": "planes idigital, plan start, plan pro, plan business, precio automatización, precio automatizacion",
+        "action": "auto",
+        "priority": "media",
+        "response": "Elige el plan que deseas conocer:",
+        "options": [
+          {
+            "id": "idigital-plan-start",
+            "number": "1",
+            "label": "Plan Start",
+            "action": "human",
+            "response": "Start está orientado a automatizaciones preconfiguradas, respuestas rápidas y captura básica de leads. Un asesor confirmará si cubre tu operación."
+          },
+          {
+            "id": "idigital-plan-pro",
+            "number": "2",
+            "label": "Plan Pro",
+            "action": "human",
+            "response": "Pro incluye mayor capacidad, automatizaciones avanzadas y herramientas adicionales. Registraremos tus datos para dimensionar el servicio."
+          },
+          {
+            "id": "idigital-plan-business",
+            "number": "3",
+            "label": "Plan Business",
+            "action": "human",
+            "response": "Business está diseñado para operaciones empresariales, múltiples usuarios e integraciones avanzadas. Un asesor preparará una propuesta."
+          },
+          {
+            "id": "idigital-plan-compare",
+            "number": "4",
+            "label": "Comparar planes",
+            "action": "human",
+            "response": "Te ayudaremos a comparar los planes según mensajes, canales, usuarios y automatizaciones necesarias."
+          }
+        ]
+      }
+    ]
+  },
   "inversiones-manglar": {
     "requiredData": "Nombre, teléfono, empresa, ciudad y tema de interés.",
     "qualificationQuestions": "¿Qué tipo de asesoría necesitas? ¿Ya iniciaste el trámite o estás evaluando opciones? ¿Quieres que un asesor te contacte?",

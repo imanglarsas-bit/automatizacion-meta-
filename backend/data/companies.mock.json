@@ -1,5 +1,62 @@
 [
   {
+    "companyId": "idigital",
+    "name": "iDIGITAL",
+    "active": true,
+    "internal": true,
+    "plan": "start",
+    "monthlyMessageLimit": 1000,
+    "monthlyConversationLimit": 1000,
+    "monthlyAiRequestLimit": 0,
+    "planFeatures": {
+      "aiApi": false,
+      "limitedAiApi": false,
+      "advancedAutomations": false,
+      "advancedIntegrations": false,
+      "businessDashboard": false,
+      "multiUser": false,
+      "formAutomations": true,
+      "customIntegrations": false,
+      "metaIntegration": true,
+      "leadCapture": true
+    },
+    "currentUsage": 0,
+    "billingEnabled": false,
+    "aiProvider": null,
+    "model": "preconfigured-flow",
+    "fallbackProvider": null,
+    "fallbackModel": null,
+    "tone": "profesional",
+    "promptFile": "idigital.txt",
+    "meta": {
+      "whatsappPhoneNumberIds": [],
+      "instagramAccountIds": [],
+      "facebookPageIds": []
+    },
+    "channels": ["webchat", "whatsapp", "instagram", "facebook"],
+    "units": [
+      {
+        "id": "ventas-digitales",
+        "name": "Ventas iDIGITAL",
+        "type": "general",
+        "contact": {
+          "whatsapp": "573224591377",
+          "email": "imanglarsas@gmail.com"
+        }
+      }
+    ],
+    "schedule": {
+      "timezone": "America/Bogota",
+      "hours": { "open": "08:00", "close": "18:00" },
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    },
+    "contact": {
+      "whatsapp": "573224591377",
+      "email": "imanglarsas@gmail.com",
+      "website": "https://app.imanglar.com"
+    }
+  },
+  {
     "companyId": "inversiones-manglar",
     "name": "Inversiones Manglar",
     "active": true,

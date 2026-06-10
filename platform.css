@@ -337,6 +337,70 @@ h2 {
   font-size: 0.78rem;
 }
 
+.idigital-lead-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.idigital-lead-list {
+  display: grid;
+  gap: 10px;
+}
+
+.idigital-lead-card {
+  display: grid;
+  grid-template-columns: minmax(240px, 1.1fr) minmax(320px, 0.9fr);
+  gap: 18px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.idigital-lead-main {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.idigital-lead-main h3,
+.idigital-lead-main p {
+  margin: 0;
+}
+
+.idigital-lead-main p {
+  color: var(--muted);
+}
+
+.idigital-lead-contact {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  margin: 0;
+}
+
+.idigital-lead-contact div {
+  min-width: 0;
+}
+
+.idigital-lead-contact dt {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.idigital-lead-contact dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-weight: 750;
+}
+
+.idigital-lead-contact a {
+  color: var(--teal-dark);
+}
+
 .metric-card {
   display: grid;
   gap: 4px;
@@ -1678,8 +1742,14 @@ textarea {
   }
 
   .crm-table-row,
-  .crm-table-row.head {
+  .crm-table-row.head,
+  .idigital-lead-card {
     grid-template-columns: 1fr;
+  }
+
+  .idigital-lead-tools {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .active-meta-client {

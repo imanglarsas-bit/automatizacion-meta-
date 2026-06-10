@@ -168,6 +168,9 @@ const subscriptionList = document.querySelector("#subscriptionList");
 const crmPipeline = document.querySelector("#crmPipeline");
 const crmAccountsTable = document.querySelector("#crmAccountsTable");
 const crmAccountCount = document.querySelector("#crmAccountCount");
+const idigitalLeadList = document.querySelector("#idigitalLeadList");
+const idigitalLeadCount = document.querySelector("#idigitalLeadCount");
+const refreshIdigitalLeads = document.querySelector("#refreshIdigitalLeads");
 const activeClientPlanSelect = document.querySelector("#activeClientPlanSelect");
 const activeClientPlanButton = document.querySelector("#activeClientPlanButton");
 const accessPlanCard = document.querySelector("#accessPlanCard");
@@ -285,7 +288,7 @@ function countRoutedChannels(company) {
 }
 
 function renderCrmDashboard() {
-  const clients = storage.clients || [];
+  const clients = (storage.clients || []).filter((client) => !client.internal);
   const active = clients.filter((client) => client.active !== false).length;
   const connected = clients.filter((client) => countRoutedChannels(client) > 0).length;
   const startPlan = clients.filter((client) => (client.plan || "start") === "start").length;
@@ -335,6 +338,61 @@ function renderCrmDashboard() {
       await renderClientUsers();
       showToast("Cuenta CRM seleccionada.");
     });
+  });
+}
+
+async function loadIdigitalLeads() {
+  if (!idigitalLeadList) return;
+
+  try {
+    const result = await getJSON("/api/conversations/idigital");
+    const conversations = (result?.conversations || [])
+      .filter((item) => item.channel === "webchat")
+      .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
+    const pending = conversations.filter((item) => item.status === "human_required").length;
+
+    idigitalLeadCount.textContent = `${pending} pendiente${pending === 1 ? "" : "s"}`;
+    if (!conversations.length) {
+      idigitalLeadList.innerHTML = `<div class="empty-state">Aún no hay leads recibidos desde la página iDIGITAL.</div>`;
+      return;
+    }
+
+    idigitalLeadList.innerHTML = conversations.map((conversation) => {
+      const lead = conversation.lead || {};
+      return `
+        <article class="idigital-lead-card">
+          <div class="idigital-lead-main">
+            <span class="status-dot ${conversation.status === "human_required" ? "active" : "inactive"}">
+              ${conversation.status === "human_required" ? "Pendiente" : "Gestionado"}
+            </span>
+            <h3>${escapeHTML(conversation.customerName || "Visitante web")}</h3>
+            <p>${escapeHTML(conversation.summary || "Solicitud desde el chat web")}</p>
+            <div class="meta-row">
+              <span class="tag">${escapeHTML(conversation.unit || "Ventas iDIGITAL")}</span>
+              <span class="tag">${escapeHTML(formatLeadDate(conversation.lastMessageAt))}</span>
+            </div>
+          </div>
+          <dl class="idigital-lead-contact">
+            <div><dt>Teléfono</dt><dd>${lead.phone ? `<a href="tel:${escapeHTML(lead.phone)}">${escapeHTML(lead.phone)}</a>` : "Pendiente"}</dd></div>
+            <div><dt>Correo</dt><dd>${lead.email ? `<a href="mailto:${escapeHTML(lead.email)}">${escapeHTML(lead.email)}</a>` : "Pendiente"}</dd></div>
+            <div><dt>Ciudad</dt><dd>${escapeHTML(lead.city || "Pendiente")}</dd></div>
+            <div><dt>Empresa</dt><dd>${escapeHTML(lead.company || "No indicada")}</dd></div>
+          </dl>
+        </article>
+      `;
+    }).join("");
+  } catch (error) {
+    idigitalLeadList.innerHTML = `<div class="empty-state">${escapeHTML(error.message)}</div>`;
+  }
+}
+
+function formatLeadDate(value) {
+  if (!value) return "Sin fecha";
+  return new Date(value).toLocaleString("es-CO", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -1350,6 +1408,11 @@ async function init() {
   await loadLeadRules();
   renderAll();
   await renderClientUsers();
+  await loadIdigitalLeads();
+}
+
+if (refreshIdigitalLeads) {
+  refreshIdigitalLeads.addEventListener("click", loadIdigitalLeads);
 }
 
 async function loadCompanySettings() {

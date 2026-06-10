@@ -2,6 +2,21 @@
 
 El chat se sirve desde el proyecto web y procesa las conversaciones en `app.imanglar.com`.
 
+## Landing de iDIGITAL
+
+La landing de iDIGITAL utiliza el perfil interno `idigital`. Sus conversaciones aparecen en la
+sección `CRM comercial iDIGITAL` del panel administrador y no se mezclan con los perfiles cliente.
+
+```html
+<script
+  src="chat-widget.js"
+  data-company-id="idigital"
+  data-page-context="idigital"
+  data-api-base="https://app.imanglar.com"
+  defer
+></script>
+```
+
 ## Integración general
 
 Agrega este código antes del cierre de `</body>` en la plantilla compartida por las páginas:

@@ -148,14 +148,23 @@
   launcher.addEventListener("click", () => togglePanel(true));
   close.addEventListener("click", () => togglePanel(false));
   form.addEventListener("submit", sendMessage);
+  window.addEventListener("idigital:open-chat", (event) => {
+    togglePanel(true);
+    const message = String(event.detail?.message || "").trim();
+    if (message) submitMessage(message);
+  });
 
   async function sendMessage(event) {
     event.preventDefault();
     const text = input.value.trim();
     if (!text) return;
 
-    appendMessage("user", text);
     input.value = "";
+    await submitMessage(text);
+  }
+
+  async function submitMessage(text) {
+    appendMessage("user", text);
     send.disabled = true;
 
     try {
@@ -300,6 +309,9 @@
     if (page.includes("src") || page.includes("consulting") || page.includes("upme")) {
       return "src-consulting";
     }
+    if (page.includes("idigital") || page.includes("automatizacion") || page.includes("automatización")) {
+      return "idigital";
+    }
     return "inversiones-manglar";
   }
 
@@ -319,6 +331,15 @@
         subtitle: "SRC Consulting",
         ariaLabel: "Chat de SRC Consulting",
         greeting: "Hola. Soy el asistente de SRC Consulting. Puedo orientarte sobre trámites UPME, devolución de IVA, finalización de pagos, movilidad eléctrica y otros trámites.",
+      };
+    }
+
+    if (context === "idigital") {
+      return {
+        title: "Asistente comercial",
+        subtitle: "iDIGITAL",
+        ariaLabel: "Chat comercial de iDIGITAL",
+        greeting: "Hola. Soy el asistente comercial de iDIGITAL. Puedo ayudarte con automatización de WhatsApp y redes Meta, chatbots, páginas web, planes o una asesoría para tu empresa.",
       };
     }
 
