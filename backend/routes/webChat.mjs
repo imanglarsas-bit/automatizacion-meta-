@@ -28,7 +28,15 @@ async function saveConversations(conversations) {
 }
 
 export function handleWebChatMessage(body) {
-  const task = webChatQueue.then(() => processWebChatMessage(body));
+  return enqueueWebChat(() => processWebChatMessage(body));
+}
+
+export function handleWebChatContact(body) {
+  return enqueueWebChat(() => processWebChatContact(body));
+}
+
+function enqueueWebChat(operation) {
+  const task = webChatQueue.then(operation);
   webChatQueue = task.catch(() => {});
   return task;
 }
@@ -149,8 +157,99 @@ async function processWebChatMessage(body) {
       ok: true,
       reply: result.text,
       handoff: result.shouldHandoff,
+      requiresContact: result.shouldHandoff,
       conversationId: conversation.conversationId,
-      whatsappUrl: result.shouldHandoff ? buildWhatsAppUrl(company, conversation) : "",
+      whatsappUrl: "",
+    },
+  };
+}
+
+async function processWebChatContact(body) {
+  const companyId = cleanText(body.companyId || "inversiones-manglar", 80);
+  const sessionId = cleanText(body.sessionId, 120);
+  const conversationId = cleanText(body.conversationId, 120);
+  const lead = {
+    name: cleanText(body.name, 100),
+    phone: cleanText(body.phone, 30),
+    email: cleanText(body.email, 140).toLowerCase(),
+    city: cleanText(body.city, 100),
+    company: cleanText(body.company, 140),
+    consent: body.consent === true,
+  };
+
+  if (!sessionId || !conversationId || !lead.name || !lead.phone || !lead.email || !lead.city) {
+    return {
+      status: 400,
+      body: { error: "Nombre, teléfono, correo y ciudad son obligatorios." },
+    };
+  }
+  if (!lead.consent) {
+    return {
+      status: 400,
+      body: { error: "Debes autorizar el tratamiento de datos para continuar." },
+    };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email)) {
+    return {
+      status: 400,
+      body: { error: "Ingresa un correo electrónico válido." },
+    };
+  }
+
+  const company = await getCompany(companyId);
+  if (!company || company.active === false) {
+    return {
+      status: 404,
+      body: { error: "El chat no está disponible en este momento." },
+    };
+  }
+
+  const conversations = await readConversations();
+  const conversation = conversations.find(
+    (item) =>
+      item.companyId === companyId &&
+      item.conversationId === conversationId &&
+      item.customerId === sessionId &&
+      item.channel === "webchat",
+  );
+
+  if (!conversation || conversation.status !== "human_required") {
+    return {
+      status: 404,
+      body: { error: "No encontramos una solicitud pendiente para estos datos." },
+    };
+  }
+
+  const now = new Date().toISOString();
+  conversation.customerName = lead.name;
+  conversation.lead = {
+    ...lead,
+    capturedAt: now,
+    source: "webchat",
+  };
+  conversation.summary = `${conversation.summary} · ${lead.name} · ${lead.city}`;
+  conversation.lastMessageAt = now;
+  conversation.messages.push({
+    id: `web-contact-${randomUUID()}`,
+    sender: "system",
+    text: [
+      "Datos del lead recibidos:",
+      `Nombre: ${lead.name}`,
+      `Teléfono: ${lead.phone}`,
+      `Correo: ${lead.email}`,
+      `Ciudad: ${lead.city}`,
+      `Empresa: ${lead.company || "No indicada"}`,
+    ].join("\n"),
+    createdAt: now,
+  });
+  await saveConversations(conversations);
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      message: "Gracias. Tus datos quedaron registrados para el asesor.",
+      whatsappUrl: buildWhatsAppUrl(company, conversation),
     },
   };
 }
@@ -167,6 +266,16 @@ function buildWhatsAppUrl(company, conversation) {
   const text = [
     "Hola, vengo del chat de imanglar.com y quiero continuar con un asesor.",
     "",
+    conversation.lead
+      ? [
+          `Nombre: ${conversation.lead.name}`,
+          `Teléfono: ${conversation.lead.phone}`,
+          `Correo: ${conversation.lead.email}`,
+          `Ciudad: ${conversation.lead.city}`,
+          `Empresa: ${conversation.lead.company || "No indicada"}`,
+          "",
+        ].join("\n")
+      : "",
     transcript,
     "",
     `Referencia: ${conversation.conversationId}`,

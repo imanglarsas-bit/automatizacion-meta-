@@ -67,7 +67,30 @@
         display: inline-flex; justify-content: center; padding: 10px 12px; border-radius: 7px;
         background: #08766b; color: #fff; text-decoration: none; font-weight: 800;
       }
+      .lead-form {
+        display: grid; gap: 9px; padding: 12px; border: 1px solid #b7dfd9;
+        border-radius: 9px; background: #fff;
+      }
+      .lead-form strong { font-size: 14px; }
+      .lead-form input {
+        width: 100%; border: 1px solid #cdd8df; border-radius: 7px;
+        padding: 9px 10px; color: #15212b; font: inherit; outline: none;
+      }
+      .lead-form input:focus { border-color: #00aeef; box-shadow: 0 0 0 3px rgba(0, 174, 239, .13); }
+      .lead-form button {
+        min-height: 40px; border: 0; border-radius: 7px; background: #08766b;
+        color: #fff; cursor: pointer; font-weight: 800;
+      }
+      .lead-form button:disabled { opacity: .55; cursor: wait; }
+      .consent {
+        display: grid; grid-template-columns: auto 1fr; gap: 7px; align-items: start;
+        color: #536570; font-size: 11px; line-height: 1.35;
+      }
+      .consent input { width: 15px; height: 15px; margin-top: 1px; }
+      .consent a { color: #08766b; }
+      .lead-error { min-height: 16px; margin: 0; color: #b42318; font-size: 11px; }
       .form { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 12px; border-top: 1px solid #dce5eb; }
+      .form[hidden] { display: none; }
       .form input {
         width: 100%; min-width: 0; border: 1px solid #cdd8df; border-radius: 8px;
         padding: 11px 12px; color: #15212b; font: inherit; outline: none;
@@ -145,12 +168,12 @@
       if (!response.ok) throw new Error(payload.error || "No fue posible responder.");
 
       appendMessage("bot", payload.reply);
-      if (payload.handoff && payload.whatsappUrl) {
-        appendHandoff(payload.whatsappUrl);
+      if (payload.handoff && payload.requiresContact) {
+        form.hidden = true;
+        appendLeadForm(payload.conversationId);
       }
     } catch {
-      appendMessage("bot", "No pude conectarme en este momento. Puedes continuar directamente por WhatsApp.");
-      appendHandoff("https://wa.me/573224591377?text=Hola%2C%20vengo%20del%20chat%20de%20imanglar.com.");
+      appendMessage("bot", "No pude conectarme en este momento. Intenta nuevamente en unos minutos.");
     } finally {
       send.disabled = false;
       input.focus();
@@ -176,6 +199,63 @@
     box.appendChild(link);
     messages.appendChild(box);
     messages.scrollTop = messages.scrollHeight;
+  }
+
+  function appendLeadForm(conversationId) {
+    const leadForm = document.createElement("form");
+    leadForm.className = "lead-form";
+    leadForm.innerHTML = `
+      <strong>Datos para que el asesor continúe</strong>
+      <input name="name" autocomplete="name" maxlength="100" placeholder="Nombre completo" required />
+      <input name="phone" autocomplete="tel" maxlength="30" placeholder="Teléfono" required />
+      <input name="email" autocomplete="email" maxlength="140" type="email" placeholder="Correo electrónico" required />
+      <input name="city" autocomplete="address-level2" maxlength="100" placeholder="Ciudad" required />
+      <input name="company" autocomplete="organization" maxlength="140" placeholder="Empresa u organización (opcional)" />
+      <label class="consent">
+        <input name="consent" type="checkbox" required />
+        <span>Autorizo el tratamiento de mis datos para atender esta solicitud. <a href="${apiBase}/privacy-policy" target="_blank" rel="noopener">Ver política</a>.</span>
+      </label>
+      <p class="lead-error" role="alert"></p>
+      <button type="submit">Enviar datos al asesor</button>
+    `;
+    messages.appendChild(leadForm);
+    messages.scrollTop = messages.scrollHeight;
+
+    leadForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const submit = leadForm.querySelector("button");
+      const error = leadForm.querySelector(".lead-error");
+      const data = new FormData(leadForm);
+      submit.disabled = true;
+      error.textContent = "";
+
+      try {
+        const response = await fetch(`${apiBase}/api/web-chat/contact`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyId,
+            sessionId,
+            conversationId,
+            name: data.get("name"),
+            phone: data.get("phone"),
+            email: data.get("email"),
+            city: data.get("city"),
+            company: data.get("company"),
+            consent: data.get("consent") === "on",
+          }),
+        });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "No fue posible guardar tus datos.");
+
+        leadForm.remove();
+        appendMessage("bot", payload.message);
+        if (payload.whatsappUrl) appendHandoff(payload.whatsappUrl);
+      } catch (requestError) {
+        error.textContent = requestError.message;
+        submit.disabled = false;
+      }
+    });
   }
 
   function renderHistory() {

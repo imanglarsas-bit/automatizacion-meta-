@@ -50,4 +50,7 @@ En la página de SRC Consulting:
 - No consume APIs de inteligencia artificial.
 - Guarda las conversaciones como canal `Chat web`.
 - Los casos derivados aparecen en el CRM como pendientes.
-- WhatsApp se ofrece dentro del chat únicamente cuando el flujo requiere atención humana.
+- Antes de derivar solicita nombre, teléfono, correo, ciudad y empresa u organización.
+- Exige autorización de tratamiento de datos.
+- Los datos quedan guardados en la conversación del CRM.
+- WhatsApp se ofrece dentro del chat únicamente después de registrar los datos del lead.

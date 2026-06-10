@@ -23,7 +23,7 @@ import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs"
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleGetMetaConnectUrl, handleMetaOAuthCallback } from "./routes/metaConnect.mjs";
-import { handleWebChatMessage } from "./routes/webChat.mjs";
+import { handleWebChatContact, handleWebChatMessage } from "./routes/webChat.mjs";
 import {
   handleGetAllTickets,
   handleGetClientTicket,
@@ -806,7 +806,7 @@ createServer(async (request, response) => {
       return;
     }
 
-    if (url.pathname === "/api/web-chat/message" && request.method === "OPTIONS") {
+    if (url.pathname.startsWith("/api/web-chat/") && request.method === "OPTIONS") {
       if (!isAllowedWebChatRequest(request)) {
         sendPublicJson(request, response, 403, { error: "Origen no permitido." });
         return;
@@ -826,6 +826,21 @@ createServer(async (request, response) => {
       }
       const body = await readBody(request);
       const result = await handleWebChatMessage(body);
+      sendPublicJson(request, response, result.status, result.body);
+      return;
+    }
+
+    if (url.pathname === "/api/web-chat/contact" && request.method === "POST") {
+      if (!isAllowedWebChatRequest(request)) {
+        sendPublicJson(request, response, 403, { error: "Origen no permitido." });
+        return;
+      }
+      if (!consumeWebChatRateLimit(request)) {
+        sendPublicJson(request, response, 429, { error: "Espera un momento antes de enviar más mensajes." });
+        return;
+      }
+      const body = await readBody(request);
+      const result = await handleWebChatContact(body);
       sendPublicJson(request, response, result.status, result.body);
       return;
     }
