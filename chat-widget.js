@@ -3,7 +3,9 @@
   const companyId = script?.dataset.companyId || "inversiones-manglar";
   const sourceUrl = new URL(script?.src || window.location.href, window.location.href);
   const apiBase = script?.dataset.apiBase || sourceUrl.origin;
-  const storageKey = `idigital-webchat:${companyId}`;
+  const pageContext = script?.dataset.pageContext || detectPageContext();
+  const contextConfig = getContextConfig(pageContext);
+  const storageKey = `idigital-webchat:${companyId}:${pageContext}`;
   const sessionKey = `${storageKey}:session`;
   const sessionId = localStorage.getItem(sessionKey) || createSessionId();
   localStorage.setItem(sessionKey, sessionId);
@@ -86,11 +88,11 @@
         <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/>
       </svg>
     </button>
-    <section class="panel" aria-label="Chat de Inversiones Manglar">
+    <section class="panel" aria-label="${contextConfig.ariaLabel}">
       <header class="header">
         <div class="identity">
           <span class="mark">iD</span>
-          <span><strong>Asistente iDIGITAL</strong><small>Inversiones Manglar</small></span>
+          <span><strong>${contextConfig.title}</strong><small>${contextConfig.subtitle}</small></span>
         </div>
         <button class="close" type="button" aria-label="Cerrar chat">×</button>
       </header>
@@ -114,7 +116,7 @@
   if (!history.length) {
     history = [{
       sender: "bot",
-      text: "Hola. Soy el asistente de Inversiones Manglar. Cuéntame si necesitas asesoría jurídica, trámites UPME, movilidad eléctrica u otro servicio.",
+      text: contextConfig.greeting,
     }];
     saveHistory();
   }
@@ -137,7 +139,7 @@
       const response = await fetch(`${apiBase}/api/web-chat/message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyId, sessionId, message: text }),
+        body: JSON.stringify({ companyId, sessionId, message: text, pageContext }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "No fue posible responder.");
@@ -208,5 +210,43 @@
 
   function createSessionId() {
     return globalThis.crypto?.randomUUID?.() || `web-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  }
+
+  function detectPageContext() {
+    const page = `${window.location.pathname} ${document.title}`.toLowerCase();
+    if (page.includes("cardenas") || page.includes("cárdenas") || page.includes("abogado")) {
+      return "cardenas-romero";
+    }
+    if (page.includes("src") || page.includes("consulting") || page.includes("upme")) {
+      return "src-consulting";
+    }
+    return "inversiones-manglar";
+  }
+
+  function getContextConfig(context) {
+    if (context === "cardenas-romero") {
+      return {
+        title: "Asistente jurídico",
+        subtitle: "Cárdenas Romero Abogados",
+        ariaLabel: "Chat de Cárdenas Romero Abogados",
+        greeting: "Hola. Soy el asistente de Cárdenas Romero Abogados. Cuéntame si necesitas asesoría jurídica, revisión de documentos, información de un proceso o conocer nuestros planes.",
+      };
+    }
+
+    if (context === "src-consulting") {
+      return {
+        title: "Asistente de consultoría",
+        subtitle: "SRC Consulting",
+        ariaLabel: "Chat de SRC Consulting",
+        greeting: "Hola. Soy el asistente de SRC Consulting. Puedo orientarte sobre trámites UPME, devolución de IVA, finalización de pagos, movilidad eléctrica y otros trámites.",
+      };
+    }
+
+    return {
+      title: "Asistente iDIGITAL",
+      subtitle: "Inversiones Manglar",
+      ariaLabel: "Chat de Inversiones Manglar",
+      greeting: "Hola. Soy el asistente de Inversiones Manglar. Cuéntame si necesitas asesoría jurídica, trámites UPME, movilidad eléctrica u otro servicio.",
+    };
   }
 })();

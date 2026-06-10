@@ -8,6 +8,7 @@ import { evaluateLeadFunnel, evaluateLeadMenu, getLeadRules } from "./leadRules.
 
 const MAX_MESSAGE_LENGTH = 1200;
 let conversationsPath = null;
+let webChatQueue = Promise.resolve();
 
 async function getConversationsPath() {
   conversationsPath = conversationsPath || await ensureDataFile("conversations.mock.json");
@@ -26,11 +27,18 @@ async function saveConversations(conversations) {
   await writeFile(await getConversationsPath(), JSON.stringify(conversations, null, 2));
 }
 
-export async function handleWebChatMessage(body) {
+export function handleWebChatMessage(body) {
+  const task = webChatQueue.then(() => processWebChatMessage(body));
+  webChatQueue = task.catch(() => {});
+  return task;
+}
+
+async function processWebChatMessage(body) {
   const companyId = cleanText(body.companyId || "inversiones-manglar", 80);
   const sessionId = cleanText(body.sessionId, 120);
   const message = cleanText(body.message, MAX_MESSAGE_LENGTH);
   const customerName = cleanText(body.customerName || "Visitante web", 100);
+  const pageContext = normalizePageContext(body.pageContext);
 
   if (!sessionId || !message) {
     return {
@@ -47,10 +55,16 @@ export async function handleWebChatMessage(body) {
     };
   }
 
-  const menu = await evaluateLeadMenu(companyId, `web:${sessionId}`, message);
-  const funnel = await evaluateLeadFunnel(companyId, message);
+  const routingMessage = pageContext ? `${pageContext} ${message}` : message;
+  const senderId = `web:${sessionId}`;
+  let menu = await evaluateLeadMenu(companyId, senderId, message);
+  if (!menu && pageContext) {
+    menu = await evaluateLeadMenu(companyId, senderId, routingMessage);
+  }
+  const funnel = await evaluateLeadFunnel(companyId, message)
+    || (pageContext ? await evaluateLeadFunnel(companyId, routingMessage) : null);
   const leadRules = await getLeadRules(companyId);
-  const unit = detectUnit(message, company);
+  const unit = detectUnit(routingMessage, company);
   const result = menu
     ? {
         text: menu.text,
@@ -166,4 +180,11 @@ function cleanText(value, maxLength) {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
     .trim()
     .slice(0, maxLength);
+}
+
+function normalizePageContext(value) {
+  const context = cleanText(value, 80).toLowerCase();
+  if (context === "cardenas-romero") return "Cárdenas Romero Abogados asesoría jurídica";
+  if (context === "src-consulting") return "SRC Consulting";
+  return "";
 }
