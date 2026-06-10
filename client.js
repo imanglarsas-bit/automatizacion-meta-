@@ -13,6 +13,8 @@ const answeredCount = document.querySelector("#answeredCount");
 const channelCount = document.querySelector("#channelCount");
 const clientPipeline = document.querySelector("#clientPipeline");
 const crmTaskList = document.querySelector("#crmTaskList");
+const clientLeadList = document.querySelector("#clientLeadList");
+const clientLeadCount = document.querySelector("#clientLeadCount");
 const supportThread = document.querySelector("#supportThread");
 const supportEmpty = document.querySelector("#supportEmpty");
 const supportForm = document.querySelector("#supportForm");
@@ -117,12 +119,42 @@ async function getJSON(url, options) {
 // ── Company / welcome ─────────────────────────────────────────────────────────
 
 async function loadCompany() {
-  const companies = await getJSON("/api/companies");
-  if (!companies?.length) return;
-
-  const company = companies[0];
+  const session = await getJSON("/api/session");
+  if (!session?.companyId) return;
+  const company = await getJSON(`/api/companies/${encodeURIComponent(session.companyId)}`);
+  if (!company) return;
   activeCompanyId = company.companyId;
   welcomeMsg.textContent = `Bienvenido, ${company.name}`;
+}
+
+async function loadLeads() {
+  const payload = await getJSON(`/api/leads/${encodeURIComponent(activeCompanyId)}`);
+  const leads = payload?.leads || [];
+  clientLeadCount.textContent = `${leads.length} lead${leads.length === 1 ? "" : "s"}`;
+
+  if (!leads.length) {
+    clientLeadList.innerHTML = `<div class="empty-state">Todavía no hay leads capturados.</div>`;
+    return;
+  }
+
+  clientLeadList.innerHTML = leads.map((lead) => {
+    const confirmed = lead.status === "whatsapp_received";
+    return `
+      <article class="client-lead-item">
+        <div>
+          <span class="tag ${confirmed ? "" : "warning"}">${confirmed ? "Recibido por WhatsApp" : "Esperando WhatsApp"}</span>
+          <strong>${escapeHTML(lead.name)}</strong>
+          <p>${escapeHTML(lead.interest || "Solicitud comercial")}</p>
+        </div>
+        <dl>
+          <div><dt>Teléfono</dt><dd><a href="tel:${escapeHTML(lead.phone)}">${escapeHTML(lead.phone)}</a></dd></div>
+          <div><dt>Correo</dt><dd><a href="mailto:${escapeHTML(lead.email)}">${escapeHTML(lead.email)}</a></dd></div>
+          <div><dt>Ciudad</dt><dd>${escapeHTML(lead.city)}</dd></div>
+          <div><dt>Empresa</dt><dd>${escapeHTML(lead.business || "No indicada")}</dd></div>
+        </dl>
+      </article>
+    `;
+  }).join("");
 }
 
 // ── Conversaciones ────────────────────────────────────────────────────────────
@@ -350,6 +382,7 @@ function stopSupportPolling() {
 async function init() {
   initTabs();
   await loadCompany();
+  await loadLeads();
   await loadConversations();
 }
 

@@ -12,6 +12,7 @@ const files = {
   users: "client-users.mock.json",
   plans: "plans.mock.json",
   conversations: "conversations.mock.json",
+  leads: "leads.json",
   usage: "usage.mock.json",
   leadRules: "lead-rules.mock.json",
   leadSessions: "lead-sessions.mock.json",
@@ -174,6 +175,11 @@ results.push(await syncFile(files.users, {
 results.push(await syncFile(files.conversations, {
   empty: [],
   apply: (current, seed) => mergeArrayByKey(current, seed, "conversationId"),
+}));
+
+results.push(await syncFile(files.leads, {
+  empty: [],
+  apply: (current, seed) => mergeArrayByKey(current, seed, "leadId"),
 }));
 
 results.push(await syncFile(files.leadRules, {

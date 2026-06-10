@@ -266,6 +266,60 @@ textarea {
   color: var(--muted);
 }
 
+.client-lead-list {
+  display: grid;
+  gap: 10px;
+}
+
+.client-lead-item {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(320px, 1fr);
+  gap: 18px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.client-lead-item > div {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+}
+
+.client-lead-item strong,
+.client-lead-item p {
+  margin: 0;
+}
+
+.client-lead-item p,
+.client-lead-item dt {
+  color: var(--muted);
+}
+
+.client-lead-item dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.client-lead-item dt {
+  font-size: 0.75rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.client-lead-item dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-weight: 750;
+}
+
+.client-lead-item a {
+  color: var(--teal-dark);
+}
+
 .summary-grid article {
   display: grid;
   gap: 4px;
@@ -554,6 +608,7 @@ a:focus {
 
   .client-header,
   .crm-client-board,
+  .client-lead-item,
   .client-workspace,
   .panel-heading {
     grid-template-columns: 1fr;

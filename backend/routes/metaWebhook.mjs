@@ -9,6 +9,7 @@ import { recordConversation } from "../services/billing/usageTracker.mjs";
 import { evaluateLeadFunnel, evaluateLeadMenu, getLeadRules } from "./leadRules.mjs";
 import { buildAutomationReply } from "../services/automation/automationReplyService.mjs";
 import { logger }             from "../utils/logger.mjs";
+import { confirmLeadWhatsApp } from "../services/leads/leadService.mjs";
 
 export function handleWebhookVerification(url) {
   const mode      = url.searchParams.get("hub.mode");
@@ -27,6 +28,13 @@ export async function handleWebhookEvent(payload) {
   const incoming = extractMessage(payload);
   if (!incoming) {
     return { status: 200, body: { ok: true, received: false } };
+  }
+
+  const confirmedLead = incoming.channel === "whatsapp"
+    ? await confirmLeadWhatsApp({ phone: incoming.senderId, message: incoming.text })
+    : null;
+  if (confirmedLead) {
+    incoming.companyId = confirmedLead.companyId;
   }
 
   const company = await resolveIncomingCompany(incoming);
@@ -80,7 +88,13 @@ export async function handleWebhookEvent(payload) {
     estimatedCostUSD: aiResult.estimatedCostUSD ?? 0,
   });
 
-  logger.info("Webhook message handled", { companyId: company.companyId, channel: incoming.channel, funnel: funnel?.id, menu: menu?.id });
+  logger.info("Webhook message handled", {
+    companyId: company.companyId,
+    channel: incoming.channel,
+    funnel: funnel?.id,
+    menu: menu?.id,
+    confirmedLeadId: confirmedLead?.leadId,
+  });
   return { status: 200, body: { ok: true, received: true, handoff: Boolean(funnel?.shouldHandoff || menu?.shouldHandoff) } };
 }
 

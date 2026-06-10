@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { buildAutomationReply } from "../services/automation/automationReplyService.mjs";
 import { getCompany } from "../services/company/companyConfigService.mjs";
+import { saveLeadFromWebChat } from "../services/leads/leadService.mjs";
 import { detectUnit } from "../services/router/routerService.mjs";
 import { ensureDataFile } from "../utils/dataPaths.mjs";
 import { evaluateLeadFunnel, evaluateLeadMenu, getLeadRules } from "./leadRules.mjs";
@@ -249,6 +250,10 @@ async function processWebChatContact(body) {
     createdAt: now,
   });
   await saveConversations(conversations);
+  await saveLeadFromWebChat({
+    conversation,
+    lead: conversation.lead,
+  });
 
   return {
     status: 200,

@@ -345,38 +345,36 @@ async function loadIdigitalLeads() {
   if (!idigitalLeadList) return;
 
   try {
-    const result = await getJSON("/api/conversations/idigital");
-    const conversations = (result?.conversations || [])
-      .filter((item) => item.channel === "webchat")
-      .sort((a, b) => new Date(b.lastMessageAt) - new Date(a.lastMessageAt));
-    const pending = conversations.filter((item) => item.status === "human_required").length;
+    const result = await getJSON("/api/leads/idigital");
+    const leads = result?.leads || [];
+    const pending = leads.filter((item) => item.status === "awaiting_whatsapp").length;
 
     idigitalLeadCount.textContent = `${pending} pendiente${pending === 1 ? "" : "s"}`;
-    if (!conversations.length) {
+    if (!leads.length) {
       idigitalLeadList.innerHTML = `<div class="empty-state">Aún no hay leads recibidos desde la página iDIGITAL.</div>`;
       return;
     }
 
-    idigitalLeadList.innerHTML = conversations.map((conversation) => {
-      const lead = conversation.lead || {};
+    idigitalLeadList.innerHTML = leads.map((lead) => {
+      const confirmed = lead.status === "whatsapp_received";
       return `
         <article class="idigital-lead-card">
           <div class="idigital-lead-main">
-            <span class="status-dot ${conversation.status === "human_required" ? "active" : "inactive"}">
-              ${conversation.status === "human_required" ? "Pendiente" : "Gestionado"}
+            <span class="status-dot ${confirmed ? "active" : "inactive"}">
+              ${confirmed ? "Recibido por WhatsApp" : "Esperando WhatsApp"}
             </span>
-            <h3>${escapeHTML(conversation.customerName || "Visitante web")}</h3>
-            <p>${escapeHTML(conversation.summary || "Solicitud desde el chat web")}</p>
+            <h3>${escapeHTML(lead.name || "Visitante web")}</h3>
+            <p>${escapeHTML(lead.interest || "Solicitud desde el chat web")}</p>
             <div class="meta-row">
-              <span class="tag">${escapeHTML(conversation.unit || "Ventas iDIGITAL")}</span>
-              <span class="tag">${escapeHTML(formatLeadDate(conversation.lastMessageAt))}</span>
+              <span class="tag">${escapeHTML(lead.unit || "Ventas iDIGITAL")}</span>
+              <span class="tag">${escapeHTML(formatLeadDate(lead.whatsappReceivedAt || lead.capturedAt))}</span>
             </div>
           </div>
           <dl class="idigital-lead-contact">
             <div><dt>Teléfono</dt><dd>${lead.phone ? `<a href="tel:${escapeHTML(lead.phone)}">${escapeHTML(lead.phone)}</a>` : "Pendiente"}</dd></div>
             <div><dt>Correo</dt><dd>${lead.email ? `<a href="mailto:${escapeHTML(lead.email)}">${escapeHTML(lead.email)}</a>` : "Pendiente"}</dd></div>
             <div><dt>Ciudad</dt><dd>${escapeHTML(lead.city || "Pendiente")}</dd></div>
-            <div><dt>Empresa</dt><dd>${escapeHTML(lead.company || "No indicada")}</dd></div>
+            <div><dt>Empresa</dt><dd>${escapeHTML(lead.business || "No indicada")}</dd></div>
           </dl>
         </article>
       `;

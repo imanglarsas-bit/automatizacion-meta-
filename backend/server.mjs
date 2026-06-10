@@ -21,6 +21,7 @@ import { handleGetMetrics }       from "./routes/metrics.mjs";
 import { handleGetCompanySettings, handleSaveCompanySettings } from "./routes/companySettings.mjs";
 import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
+import { handleGetLeads } from "./routes/leads.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleGetMetaConnectUrl, handleMetaOAuthCallback } from "./routes/metaConnect.mjs";
 import { handleWebChatContact, handleWebChatMessage } from "./routes/webChat.mjs";
@@ -33,6 +34,7 @@ import {
 import { handleWebhookVerification as saasWebhookVerify,
          handleWebhookEvent as saasWebhookEvent } from "./routes/metaWebhook.mjs";
 import { ensureDataFile } from "./utils/dataPaths.mjs";
+import { confirmLeadWhatsApp } from "./services/leads/leadService.mjs";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const root = join(fileURLToPath(new URL("..", import.meta.url)));
@@ -375,6 +377,9 @@ async function handleWebhookEvent(request, response) {
   const incoming = extractIncomingMessage(payload);
 
   if (incoming) {
+    if (incoming.channel === "whatsapp") {
+      await confirmLeadWhatsApp({ phone: incoming.senderId, message: incoming.text });
+    }
     await respondToIncomingMessage(incoming);
   }
 
@@ -631,8 +636,12 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "GET" && url.pathname.startsWith("/api/companies/")) {
-    const companyId = url.pathname.replace("/api/companies/", "");
-    const result = await handleGetCompany(companyId);
+    const requestedCompanyId = url.pathname.replace("/api/companies/", "");
+    if (role === "client" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes ver otra empresa." });
+      return true;
+    }
+    const result = await handleGetCompany(requestedCompanyId);
     sendJson(response, result.status, result.body);
     return true;
   }
@@ -657,6 +666,18 @@ async function handleApi(request, response) {
     }
 
     const result = await handleGetConversations(requestedCompanyId);
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (request.method === "GET" && url.pathname.startsWith("/api/leads/")) {
+    const requestedCompanyId = decodeURIComponent(url.pathname.replace("/api/leads/", ""));
+    if (role === "client" && requestedCompanyId !== companyId) {
+      sendJson(response, 403, { error: "No puedes ver leads de otra empresa." });
+      return true;
+    }
+
+    const result = await handleGetLeads(requestedCompanyId);
     sendJson(response, result.status, result.body);
     return true;
   }
