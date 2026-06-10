@@ -79,7 +79,13 @@ function formatSender(sender) {
 
 function channelMeta(channel) {
   const key = String(channel || "").toLowerCase();
-  const labels = { whatsapp: "WhatsApp", instagram: "Instagram", facebook: "Facebook", messenger: "Messenger" };
+  const labels = {
+    whatsapp: "WhatsApp",
+    instagram: "Instagram",
+    facebook: "Facebook",
+    messenger: "Messenger",
+    webchat: "Chat web",
+  };
   return { key, label: labels[key] || channel || "Canal" };
 }
 
@@ -244,7 +250,7 @@ async function renderActiveConversation() {
   conversationStatus.textContent = formatStatus(conversation.status);
   conversationStatus.classList.toggle("warning", conversation.status === "human_required");
   replyButton.textContent = `Enviar por ${meta.label}`;
-  replyForm.hidden = false;
+  replyForm.hidden = conversation.channel === "webchat";
 
   messageThread.innerHTML = conversation.messages
     .map(

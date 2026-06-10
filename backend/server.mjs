@@ -23,6 +23,7 @@ import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs"
 import { handleGetConversations } from "./routes/conversations.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleGetMetaConnectUrl, handleMetaOAuthCallback } from "./routes/metaConnect.mjs";
+import { handleWebChatMessage } from "./routes/webChat.mjs";
 import {
   handleGetAllTickets,
   handleGetClientTicket,
@@ -65,6 +66,14 @@ const privatePaths = new Set([
   "/cliente.html",
   "/client.css",
   "/client.js",
+]);
+const webChatRateLimits = new Map();
+const webChatOrigins = new Set([
+  "https://imanglar.com",
+  "https://www.imanglar.com",
+  "https://app.imanglar.com",
+  "http://localhost:3000",
+  "http://localhost:3003",
 ]);
 
 function parseCookies(request) {
@@ -131,6 +140,40 @@ function sendLogoutCookie(request, response) {
 function sendJson(response, status, payload) {
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(payload));
+}
+
+function sendPublicJson(request, response, status, payload) {
+  const origin = request.headers.origin || "";
+  const corsOrigin = webChatOrigins.has(origin) ? origin : "https://imanglar.com";
+
+  response.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Access-Control-Allow-Origin": corsOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    Vary: "Origin",
+  });
+  response.end(status === 204 ? "" : JSON.stringify(payload));
+}
+
+function isAllowedWebChatRequest(request) {
+  const origin = request.headers.origin || "";
+  return !origin || webChatOrigins.has(origin);
+}
+
+function consumeWebChatRateLimit(request) {
+  const forwarded = String(request.headers["x-forwarded-for"] || "").split(",")[0].trim();
+  const key = forwarded || request.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const current = webChatRateLimits.get(key);
+
+  if (!current || now - current.startedAt > 60_000) {
+    webChatRateLimits.set(key, { startedAt: now, count: 1 });
+    return true;
+  }
+
+  current.count += 1;
+  return current.count <= 30;
 }
 
 async function readBody(request) {
@@ -760,6 +803,30 @@ createServer(async (request, response) => {
       const file = await readFile(join(root, "privacy.html"));
       response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       response.end(file);
+      return;
+    }
+
+    if (url.pathname === "/api/web-chat/message" && request.method === "OPTIONS") {
+      if (!isAllowedWebChatRequest(request)) {
+        sendPublicJson(request, response, 403, { error: "Origen no permitido." });
+        return;
+      }
+      sendPublicJson(request, response, 204, {});
+      return;
+    }
+
+    if (url.pathname === "/api/web-chat/message" && request.method === "POST") {
+      if (!isAllowedWebChatRequest(request)) {
+        sendPublicJson(request, response, 403, { error: "Origen no permitido." });
+        return;
+      }
+      if (!consumeWebChatRateLimit(request)) {
+        sendPublicJson(request, response, 429, { error: "Espera un momento antes de enviar más mensajes." });
+        return;
+      }
+      const body = await readBody(request);
+      const result = await handleWebChatMessage(body);
+      sendPublicJson(request, response, result.status, result.body);
       return;
     }
 

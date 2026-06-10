@@ -1277,7 +1277,7 @@ a:focus {
 .whatsapp-float {
   position: fixed;
   right: 22px;
-  bottom: 22px;
+  bottom: 94px;
   z-index: 30;
   min-height: 58px;
   display: inline-flex;
@@ -1473,7 +1473,7 @@ a:focus {
 
   .whatsapp-float {
     right: 14px;
-    bottom: 14px;
+    bottom: 82px;
     min-height: 54px;
     padding-right: 14px;
   }

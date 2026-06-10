@@ -378,6 +378,10 @@ textarea {
   background: linear-gradient(135deg, #00b2ff, #7f3cff);
 }
 
+.channel-badge.webchat {
+  background: #08766b;
+}
+
 .kicker .channel-badge {
   margin-right: 8px;
 }
