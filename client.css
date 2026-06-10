@@ -34,6 +34,7 @@ a {
 }
 
 button,
+input,
 select,
 textarea {
   font: inherit;
@@ -142,8 +143,8 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(2rem, 4vw, 3.6rem);
-  line-height: 1.02;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  line-height: 1.1;
   letter-spacing: 0;
 }
 
@@ -162,6 +163,7 @@ h2 {
   font-weight: 850;
 }
 
+input,
 select,
 textarea {
   width: 100%;
@@ -169,6 +171,11 @@ textarea {
   border-radius: 8px;
   background: #fff;
   color: var(--ink);
+}
+
+input {
+  min-height: 46px;
+  padding: 0 12px;
 }
 
 select {
@@ -196,7 +203,7 @@ textarea {
 
 .crm-client-board {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
   gap: 18px;
   margin-bottom: 18px;
 }
@@ -208,8 +215,9 @@ textarea {
 
 .client-pipeline {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(118px, 1fr));
   gap: 10px;
+  overflow-x: auto;
 }
 
 .client-stage {
@@ -219,6 +227,27 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfcfd;
+  border-top: 3px solid #94a3b8;
+}
+
+.client-stage.stage-contacted {
+  border-top-color: #00aeef;
+}
+
+.client-stage.stage-qualified {
+  border-top-color: #7dba2e;
+}
+
+.client-stage.stage-proposal {
+  border-top-color: #f59e0b;
+}
+
+.client-stage.stage-won {
+  border-top-color: #16a34a;
+}
+
+.client-stage.stage-lost {
+  border-top-color: #dc2626;
 }
 
 .client-stage span,
@@ -273,18 +302,29 @@ textarea {
 
 .client-lead-item {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(220px, 1.1fr) minmax(280px, 0.9fr) minmax(180px, 0.65fr) auto;
   gap: 18px;
+  align-items: center;
   padding: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
 }
 
-.client-lead-item > div {
+.lead-identity {
   display: grid;
   align-content: start;
   gap: 7px;
+}
+
+.lead-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.lead-identity small {
+  color: var(--muted);
 }
 
 .client-lead-item strong,
@@ -318,6 +358,162 @@ textarea {
 
 .client-lead-item a {
   color: var(--teal-dark);
+}
+
+.lead-next-action {
+  display: grid;
+  gap: 3px;
+}
+
+.lead-next-action span,
+.lead-next-action small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.lead-edit-button,
+.primary-action,
+.secondary-action,
+.dialog-close {
+  min-height: 42px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.lead-edit-button,
+.primary-action {
+  border: 0;
+  background: var(--teal);
+  color: #fff;
+}
+
+.lead-edit-button {
+  padding: 0 14px;
+}
+
+.sales-stage {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.sales-stage.stage-contacted {
+  background: #e0f7ff;
+  color: #03698f;
+}
+
+.sales-stage.stage-qualified {
+  background: #effbdc;
+  color: #4d7c0f;
+}
+
+.sales-stage.stage-proposal {
+  background: #fff7df;
+  color: #9a6700;
+}
+
+.sales-stage.stage-won {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sales-stage.stage-lost {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.sales-toolbar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.sales-filters {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.sales-filters label,
+.lead-dialog label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.sales-filters input {
+  min-width: 260px;
+}
+
+.conversation-metrics {
+  max-width: 720px;
+}
+
+.lead-dialog {
+  width: min(720px, calc(100vw - 28px));
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 30px 90px rgba(7, 27, 45, 0.28);
+}
+
+.lead-dialog::backdrop {
+  background: rgba(7, 27, 45, 0.58);
+}
+
+.lead-dialog-shell {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.lead-dialog-shell header,
+.lead-dialog-shell footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.lead-dialog-shell footer {
+  justify-content: flex-end;
+}
+
+.lead-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dialog-close {
+  width: 42px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-size: 1.5rem;
+}
+
+.primary-action,
+.secondary-action {
+  padding: 0 16px;
+}
+
+.secondary-action {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
 }
 
 .summary-grid article {
@@ -617,11 +813,26 @@ a:focus {
   .client-pipeline {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .sales-toolbar,
+  .sales-filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sales-filters input {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 680px) {
   .summary-grid,
   .client-pipeline {
+    grid-template-columns: 1fr;
+  }
+
+  .lead-dialog-grid,
+  .client-lead-item dl {
     grid-template-columns: 1fr;
   }
 }

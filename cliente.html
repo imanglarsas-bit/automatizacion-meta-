@@ -14,7 +14,8 @@
         CRM cliente
       </a>
       <nav>
-        <a class="active" href="#" data-tab="conversacion">CRM</a>
+        <a class="active" href="#" data-tab="ventas">Ventas</a>
+        <a href="#" data-tab="conversacion">Conversaciones</a>
         <a href="#" data-tab="soporte">Soporte</a>
       </nav>
       <form method="post" action="/logout">
@@ -25,10 +26,86 @@
     <main class="client-shell">
       <header class="client-header">
         <div>
-          <p class="kicker">CRM del cliente</p>
+          <p class="kicker">CRM de ventas</p>
           <h1 id="welcomeMsg">Bienvenido</h1>
         </div>
-        <div class="summary-grid" aria-label="Resumen de atención">
+        <div class="summary-grid" aria-label="Resumen comercial">
+          <article>
+            <span>Oportunidades</span>
+            <strong id="salesLeadCount">0</strong>
+          </article>
+          <article>
+            <span>Pipeline</span>
+            <strong id="pipelineValue">$0</strong>
+          </article>
+          <article>
+            <span>Ganado</span>
+            <strong id="wonValue">$0</strong>
+          </article>
+        </div>
+      </header>
+
+      <!-- ── TAB: Ventas ──────────────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="ventas">
+        <section class="sales-toolbar" aria-label="Filtros comerciales">
+          <div>
+            <p class="kicker">Espacio comercial</p>
+            <h2>Pipeline de oportunidades</h2>
+          </div>
+          <div class="sales-filters">
+            <label>
+              Buscar
+              <input id="leadSearch" type="search" placeholder="Nombre, empresa o interés" />
+            </label>
+            <label>
+              Etapa
+              <select id="leadStageFilter">
+                <option value="all">Todas las etapas</option>
+                <option value="new">Nuevo</option>
+                <option value="contacted">Contactado</option>
+                <option value="qualified">Calificado</option>
+                <option value="proposal">Propuesta</option>
+                <option value="won">Ganado</option>
+                <option value="lost">Perdido</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section class="crm-client-board" aria-label="Resumen CRM">
+          <article class="panel crm-client-card sales-pipeline-panel">
+            <div>
+              <p class="kicker">Pipeline</p>
+              <h2>Etapas de venta</h2>
+            </div>
+            <div class="client-pipeline" id="clientPipeline"></div>
+          </article>
+
+          <article class="panel crm-client-card">
+            <div>
+              <p class="kicker">Actividad</p>
+              <h2>Próximas acciones</h2>
+            </div>
+            <div class="crm-task-list" id="crmTaskList"></div>
+          </article>
+        </section>
+
+        <section class="panel client-leads-panel" aria-label="Leads capturados">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker">Leads</p>
+              <h2>Oportunidades comerciales</h2>
+              <p>Califica, asigna y da seguimiento a cada contacto.</p>
+            </div>
+            <span class="status-pill" id="clientLeadCount">0 leads</span>
+          </div>
+          <div class="client-lead-list" id="clientLeadList"></div>
+        </section>
+      </div>
+
+      <!-- ── TAB: Conversaciones ───────────────────────────────────────── -->
+      <div class="tab-pane" data-pane="conversacion" hidden>
+        <section class="conversation-metrics summary-grid" aria-label="Resumen de atención">
           <article>
             <span>Pendientes</span>
             <strong id="pendingCount">0</strong>
@@ -41,41 +118,7 @@
             <span>Canales</span>
             <strong id="channelCount">0</strong>
           </article>
-        </div>
-      </header>
-
-      <!-- ── TAB: Conversación ─────────────────────────────────────────── -->
-      <div class="tab-pane" data-pane="conversacion">
-        <section class="crm-client-board" aria-label="Resumen CRM">
-          <article class="panel crm-client-card">
-            <div>
-              <p class="kicker">Pipeline</p>
-              <h2>Oportunidades por atender</h2>
-            </div>
-            <div class="client-pipeline" id="clientPipeline"></div>
-          </article>
-
-          <article class="panel crm-client-card">
-            <div>
-              <p class="kicker">Tareas rápidas</p>
-              <h2>Prioridad de hoy</h2>
-            </div>
-            <div class="crm-task-list" id="crmTaskList"></div>
-          </article>
         </section>
-
-        <section class="panel client-leads-panel" aria-label="Leads capturados">
-          <div class="panel-heading">
-            <div>
-              <p class="kicker">Leads</p>
-              <h2>Contactos capturados</h2>
-              <p>Datos recibidos desde tus formularios y canales digitales.</p>
-            </div>
-            <span class="status-pill" id="clientLeadCount">0 leads</span>
-          </div>
-          <div class="client-lead-list" id="clientLeadList"></div>
-        </section>
-
         <section class="client-workspace">
           <article class="panel inbox-panel" id="bandeja">
             <div class="panel-heading">
@@ -151,6 +194,56 @@
         </section>
       </div>
     </main>
+
+    <dialog class="lead-dialog" id="leadDialog">
+      <form method="dialog" class="lead-dialog-shell" id="leadSalesForm">
+        <header>
+          <div>
+            <p class="kicker">Oportunidad de venta</p>
+            <h2 id="leadDialogTitle">Editar lead</h2>
+          </div>
+          <button class="dialog-close" type="button" id="closeLeadDialog" aria-label="Cerrar">×</button>
+        </header>
+        <input name="leadId" type="hidden" />
+        <div class="lead-dialog-grid">
+          <label>
+            Etapa comercial
+            <select name="salesStage">
+              <option value="new">Nuevo</option>
+              <option value="contacted">Contactado</option>
+              <option value="qualified">Calificado</option>
+              <option value="proposal">Propuesta</option>
+              <option value="won">Ganado</option>
+              <option value="lost">Perdido</option>
+            </select>
+          </label>
+          <label>
+            Valor estimado (COP)
+            <input name="estimatedValue" type="number" min="0" step="1000" />
+          </label>
+          <label>
+            Responsable
+            <input name="owner" type="text" placeholder="Ej. Laura Gómez" />
+          </label>
+          <label>
+            Fecha de seguimiento
+            <input name="nextActionAt" type="datetime-local" />
+          </label>
+        </div>
+        <label>
+          Próxima acción
+          <input name="nextAction" type="text" placeholder="Ej. Llamar y enviar propuesta" />
+        </label>
+        <label>
+          Notas comerciales
+          <textarea name="notes" rows="5" placeholder="Necesidad, presupuesto, objeciones y acuerdos."></textarea>
+        </label>
+        <footer>
+          <button class="secondary-action" type="button" id="cancelLeadDialog">Cancelar</button>
+          <button class="primary-action" type="submit">Guardar oportunidad</button>
+        </footer>
+      </form>
+    </dialog>
 
     <div class="toast" id="toast" role="status"></div>
     <script src="client.js"></script>

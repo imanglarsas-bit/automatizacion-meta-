@@ -26,8 +26,8 @@
     <main class="platform-shell">
       <header class="platform-header">
         <div>
-          <p class="kicker">CRM administrativo</p>
-          <h1>Gestión de clientes y automatización</h1>
+          <p class="kicker">Ventas y marketing</p>
+          <h1>CRM comercial iDIGITAL</h1>
         </div>
         <div class="header-tools">
           <label class="client-picker">
@@ -44,26 +44,26 @@
       <!-- ── TAB: Clientes ─────────────────────────────────────────────── -->
       <div class="tab-pane" data-pane="clientes">
 
-        <section class="metric-grid" aria-label="Resumen del cliente activo">
+        <section class="metric-grid sales-metric-grid" aria-label="Resumen comercial">
           <article class="metric-card">
-            <span>Canales activos</span>
-            <strong id="activeChannels">0</strong>
-            <small>conectados a Meta</small>
+            <span>Oportunidades abiertas</span>
+            <strong id="adminOpenDeals">0</strong>
+            <small>en seguimiento comercial</small>
           </article>
           <article class="metric-card">
-            <span>Respuestas entrenadas</span>
-            <strong id="trainedAnswers">0</strong>
-            <small>en la base del bot</small>
+            <span>Valor del pipeline</span>
+            <strong id="adminPipelineValue">$0</strong>
+            <small>negocios potenciales</small>
           </article>
           <article class="metric-card">
-            <span>Confianza mínima</span>
-            <strong id="confidenceLabel">75%</strong>
-            <small>umbral antes de escalar</small>
+            <span>Ventas ganadas</span>
+            <strong id="adminWonValue">$0</strong>
+            <small>valor comercial registrado</small>
           </article>
           <article class="metric-card">
-            <span>Derivación humana</span>
-            <strong>Activa</strong>
-            <small>cuando el bot no sabe</small>
+            <span>Conversión</span>
+            <strong id="adminConversionRate">0%</strong>
+            <small>ganados sobre negocios cerrados</small>
           </article>
         </section>
 
@@ -71,38 +71,68 @@
           <article class="panel crm-pipeline-panel">
             <div class="panel-heading compact">
               <div>
-                <p class="kicker">Pipeline CRM</p>
-                <h2>Estado operativo de cuentas</h2>
+                <p class="kicker">Pipeline global</p>
+                <h2>Embudo de ventas</h2>
               </div>
             </div>
             <div class="crm-pipeline" id="crmPipeline"></div>
           </article>
 
-          <article class="panel crm-accounts-panel">
+          <article class="panel marketing-panel">
             <div class="panel-heading compact">
               <div>
-                <p class="kicker">Cuentas</p>
-                <h2>Clientes en administración</h2>
+                <p class="kicker">Marketing</p>
+                <h2>Origen de oportunidades</h2>
               </div>
-              <span class="status-pill" id="crmAccountCount">0 clientes</span>
+              <span class="status-pill" id="marketingSourceCount">0 fuentes</span>
             </div>
-            <div class="crm-table" id="crmAccountsTable"></div>
+            <div class="marketing-sources" id="marketingSources"></div>
           </article>
         </section>
 
-        <section class="panel idigital-leads-panel" aria-label="Leads comerciales de iDIGITAL">
+        <section class="panel idigital-leads-panel" aria-label="Oportunidades comerciales">
           <div class="panel-heading compact">
             <div>
-              <p class="kicker">CRM comercial iDIGITAL</p>
-              <h2>Leads recibidos desde la página</h2>
-              <p>Solicitudes de automatización, páginas web, integraciones Meta y planes.</p>
+              <p class="kicker">Base comercial</p>
+              <h2>Contactos y oportunidades</h2>
+              <p>Leads recibidos desde páginas, chat y canales conectados de todas las empresas.</p>
             </div>
             <div class="idigital-lead-tools">
-              <span class="status-pill warning" id="idigitalLeadCount">0 pendientes</span>
+              <input id="adminLeadSearch" type="search" placeholder="Buscar contacto o empresa" aria-label="Buscar oportunidades" />
+              <select id="adminLeadCompanyFilter" aria-label="Filtrar por empresa">
+                <option value="all">Todas las empresas</option>
+              </select>
+              <select id="adminLeadStageFilter" aria-label="Filtrar por etapa">
+                <option value="all">Todas las etapas</option>
+                <option value="new">Nuevo</option>
+                <option value="contacted">Contactado</option>
+                <option value="qualified">Calificado</option>
+                <option value="proposal">Propuesta</option>
+                <option value="won">Ganado</option>
+                <option value="lost">Perdido</option>
+              </select>
+              <span class="status-pill warning" id="idigitalLeadCount">0 oportunidades</span>
               <button class="secondary-button" id="refreshIdigitalLeads" type="button">Actualizar</button>
             </div>
           </div>
           <div class="idigital-lead-list" id="idigitalLeadList"></div>
+        </section>
+
+        <section class="panel crm-accounts-panel">
+          <div class="panel-heading compact">
+            <div>
+              <p class="kicker">Cuentas administradas</p>
+              <h2>Clientes de la plataforma</h2>
+            </div>
+            <span class="status-pill" id="crmAccountCount">0 clientes</span>
+          </div>
+          <div class="crm-table" id="crmAccountsTable"></div>
+        </section>
+
+        <section class="automation-health" aria-label="Estado de automatización del cliente activo">
+          <article><span>Canales activos</span><strong id="activeChannels">0</strong></article>
+          <article><span>Respuestas entrenadas</span><strong id="trainedAnswers">0</strong></article>
+          <article><span>Confianza del bot</span><strong id="confidenceLabel">75%</strong></article>
         </section>
 
         <section class="panel client-summary" id="clientes">
@@ -562,6 +592,58 @@
 
       </div>
     </main>
+
+    <dialog class="admin-lead-dialog" id="adminLeadDialog">
+      <form method="dialog" class="admin-lead-dialog-shell" id="adminLeadForm">
+        <header>
+          <div>
+            <p class="kicker">Gestión comercial</p>
+            <h2 id="adminLeadDialogTitle">Editar oportunidad</h2>
+            <small id="adminLeadDialogCompany">Empresa</small>
+          </div>
+          <button class="dialog-close" type="button" id="closeAdminLeadDialog" aria-label="Cerrar">×</button>
+        </header>
+        <input name="companyId" type="hidden" />
+        <input name="leadId" type="hidden" />
+        <div class="admin-lead-grid">
+          <label>
+            Etapa comercial
+            <select name="salesStage">
+              <option value="new">Nuevo</option>
+              <option value="contacted">Contactado</option>
+              <option value="qualified">Calificado</option>
+              <option value="proposal">Propuesta</option>
+              <option value="won">Ganado</option>
+              <option value="lost">Perdido</option>
+            </select>
+          </label>
+          <label>
+            Valor estimado (COP)
+            <input name="estimatedValue" type="number" min="0" step="1000" />
+          </label>
+          <label>
+            Responsable comercial
+            <input name="owner" type="text" placeholder="Nombre del asesor" />
+          </label>
+          <label>
+            Fecha de seguimiento
+            <input name="nextActionAt" type="datetime-local" />
+          </label>
+        </div>
+        <label>
+          Próxima acción
+          <input name="nextAction" type="text" placeholder="Ej. Presentar propuesta comercial" />
+        </label>
+        <label>
+          Notas de venta
+          <textarea name="notes" rows="5" placeholder="Necesidad, presupuesto, objeciones y acuerdos."></textarea>
+        </label>
+        <footer>
+          <button class="ghost-button" type="button" id="cancelAdminLeadDialog">Cancelar</button>
+          <button class="solid-button" type="submit">Guardar oportunidad</button>
+        </footer>
+      </form>
+    </dialog>
 
     <div class="toast" id="toast" role="status"></div>
     <script src="platform.js"></script>

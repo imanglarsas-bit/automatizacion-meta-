@@ -15,6 +15,16 @@ const clientPipeline = document.querySelector("#clientPipeline");
 const crmTaskList = document.querySelector("#crmTaskList");
 const clientLeadList = document.querySelector("#clientLeadList");
 const clientLeadCount = document.querySelector("#clientLeadCount");
+const salesLeadCount = document.querySelector("#salesLeadCount");
+const pipelineValue = document.querySelector("#pipelineValue");
+const wonValue = document.querySelector("#wonValue");
+const leadSearch = document.querySelector("#leadSearch");
+const leadStageFilter = document.querySelector("#leadStageFilter");
+const leadDialog = document.querySelector("#leadDialog");
+const leadSalesForm = document.querySelector("#leadSalesForm");
+const leadDialogTitle = document.querySelector("#leadDialogTitle");
+const closeLeadDialog = document.querySelector("#closeLeadDialog");
+const cancelLeadDialog = document.querySelector("#cancelLeadDialog");
 const supportThread = document.querySelector("#supportThread");
 const supportEmpty = document.querySelector("#supportEmpty");
 const supportForm = document.querySelector("#supportForm");
@@ -23,6 +33,7 @@ const toast = document.querySelector("#toast");
 
 let activeCompanyId = "";
 let conversations = [];
+let leads = [];
 let activeConversationId = "";
 let supportPollTimer = null;
 
@@ -102,6 +113,44 @@ function formatTime(iso) {
   return d.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
 }
 
+const salesStages = [
+  { key: "new", label: "Nuevo" },
+  { key: "contacted", label: "Contactado" },
+  { key: "qualified", label: "Calificado" },
+  { key: "proposal", label: "Propuesta" },
+  { key: "won", label: "Ganado" },
+  { key: "lost", label: "Perdido" },
+];
+
+function stageLabel(stage) {
+  return salesStages.find((item) => item.key === stage)?.label || "Nuevo";
+}
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
+
+function toLocalDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16);
+}
+
+function formatActionDate(value) {
+  if (!value) return "Sin fecha";
+  return new Date(value).toLocaleString("es-CO", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 async function getJSON(url, options) {
   const response = await fetch(url, options);
   if (response.status === 401) {
@@ -129,32 +178,77 @@ async function loadCompany() {
 
 async function loadLeads() {
   const payload = await getJSON(`/api/leads/${encodeURIComponent(activeCompanyId)}`);
-  const leads = payload?.leads || [];
-  clientLeadCount.textContent = `${leads.length} lead${leads.length === 1 ? "" : "s"}`;
+  leads = payload?.leads || [];
+  renderSalesWorkspace();
+}
 
-  if (!leads.length) {
+function renderSalesWorkspace() {
+  const openLeads = leads.filter((lead) => !["won", "lost"].includes(lead.salesStage || "new"));
+  const openValue = openLeads.reduce((total, lead) => total + (Number(lead.estimatedValue) || 0), 0);
+  const closedValue = leads
+    .filter((lead) => lead.salesStage === "won")
+    .reduce((total, lead) => total + (Number(lead.estimatedValue) || 0), 0);
+
+  salesLeadCount.textContent = openLeads.length;
+  pipelineValue.textContent = formatCurrency(openValue);
+  wonValue.textContent = formatCurrency(closedValue);
+  clientLeadCount.textContent = `${leads.length} lead${leads.length === 1 ? "" : "s"}`;
+  renderClientCrmBoard();
+  renderLeadList();
+}
+
+function getVisibleLeads() {
+  const query = String(leadSearch?.value || "").trim().toLowerCase();
+  const stage = leadStageFilter?.value || "all";
+  return leads.filter((lead) => {
+    const matchesStage = stage === "all" || (lead.salesStage || "new") === stage;
+    const haystack = [lead.name, lead.business, lead.interest, lead.email, lead.phone]
+      .join(" ")
+      .toLowerCase();
+    return matchesStage && (!query || haystack.includes(query));
+  });
+}
+
+function renderLeadList() {
+  const visibleLeads = getVisibleLeads();
+  if (!visibleLeads.length) {
     clientLeadList.innerHTML = `<div class="empty-state">Todavía no hay leads capturados.</div>`;
     return;
   }
 
-  clientLeadList.innerHTML = leads.map((lead) => {
+  clientLeadList.innerHTML = visibleLeads.map((lead) => {
     const confirmed = lead.status === "whatsapp_received";
+    const stage = lead.salesStage || "new";
     return `
       <article class="client-lead-item">
-        <div>
-          <span class="tag ${confirmed ? "" : "warning"}">${confirmed ? "Recibido por WhatsApp" : "Esperando WhatsApp"}</span>
-          <strong>${escapeHTML(lead.name)}</strong>
-          <p>${escapeHTML(lead.interest || "Solicitud comercial")}</p>
+        <div class="lead-identity">
+          <div class="lead-status-row">
+            <span class="sales-stage stage-${escapeHTML(stage)}">${escapeHTML(stageLabel(stage))}</span>
+            <span class="tag ${confirmed ? "" : "warning"}">${confirmed ? "WhatsApp confirmado" : "Contacto web"}</span>
+          </div>
+          <strong>${escapeHTML(lead.name || "Lead sin nombre")}</strong>
+          <p>${escapeHTML(lead.business || lead.interest || "Solicitud comercial")}</p>
+          <small>${escapeHTML(lead.interest || "")}</small>
         </div>
-        <dl>
+        <dl class="lead-contact-data">
           <div><dt>Teléfono</dt><dd><a href="tel:${escapeHTML(lead.phone)}">${escapeHTML(lead.phone)}</a></dd></div>
           <div><dt>Correo</dt><dd><a href="mailto:${escapeHTML(lead.email)}">${escapeHTML(lead.email)}</a></dd></div>
-          <div><dt>Ciudad</dt><dd>${escapeHTML(lead.city)}</dd></div>
-          <div><dt>Empresa</dt><dd>${escapeHTML(lead.business || "No indicada")}</dd></div>
+          <div><dt>Valor</dt><dd>${escapeHTML(formatCurrency(lead.estimatedValue))}</dd></div>
+          <div><dt>Responsable</dt><dd>${escapeHTML(lead.owner || "Sin asignar")}</dd></div>
         </dl>
+        <div class="lead-next-action">
+          <span>Próxima acción</span>
+          <strong>${escapeHTML(lead.nextAction || "Contactar al lead")}</strong>
+          <small>${escapeHTML(formatActionDate(lead.nextActionAt))}</small>
+        </div>
+        <button class="lead-edit-button" type="button" data-lead-id="${escapeHTML(lead.leadId)}">Gestionar</button>
       </article>
     `;
   }).join("");
+
+  clientLeadList.querySelectorAll(".lead-edit-button").forEach((button) => {
+    button.addEventListener("click", () => openLeadEditor(button.dataset.leadId));
+  });
 }
 
 // ── Conversaciones ────────────────────────────────────────────────────────────
@@ -178,55 +272,59 @@ function renderSummary() {
   pendingCount.textContent = pending;
   answeredCount.textContent = answered;
   channelCount.textContent = new Set(conversations.map((item) => item.channel)).size;
-  renderClientCrmBoard({ pending, answered });
 }
 
-function renderClientCrmBoard({ pending, answered }) {
-  const highPriority = conversations.filter((item) => item.priority === "alta").length;
-  const channels = new Set(conversations.map((item) => item.channel)).size;
-
-  clientPipeline.innerHTML = [
-    { label: "Nuevos / pendientes", value: pending, note: "requieren respuesta humana" },
-    { label: "Alta prioridad", value: highPriority, note: "atender primero" },
-    { label: "Respondidos", value: answered, note: "cerrados o gestionados" },
-    { label: "Canales activos", value: channels, note: "fuentes de conversación" },
-  ].map((item) => `
-    <article class="client-stage">
-      <span>${escapeHTML(item.label)}</span>
-      <strong>${item.value}</strong>
-      <small>${escapeHTML(item.note)}</small>
+function renderClientCrmBoard() {
+  clientPipeline.innerHTML = salesStages.map((stage) => {
+    const stageLeads = leads.filter((lead) => (lead.salesStage || "new") === stage.key);
+    const value = stageLeads.reduce((total, lead) => total + (Number(lead.estimatedValue) || 0), 0);
+    return `
+    <article class="client-stage stage-${escapeHTML(stage.key)}">
+      <span>${escapeHTML(stage.label)}</span>
+      <strong>${stageLeads.length}</strong>
+      <small>${escapeHTML(formatCurrency(value))}</small>
     </article>
-  `).join("");
+  `;
+  }).join("");
 
-  const tasks = conversations
-    .filter((item) => item.status === "human_required")
-    .sort((a, b) => priorityScore(b.priority) - priorityScore(a.priority))
-    .slice(0, 4);
+  const tasks = leads
+    .filter((lead) => !["won", "lost"].includes(lead.salesStage || "new"))
+    .sort((a, b) => {
+      if (!a.nextActionAt) return 1;
+      if (!b.nextActionAt) return -1;
+      return new Date(a.nextActionAt) - new Date(b.nextActionAt);
+    })
+    .slice(0, 5);
 
   if (!tasks.length) {
-    crmTaskList.innerHTML = `<div class="empty-state">No hay tareas pendientes por ahora.</div>`;
+    crmTaskList.innerHTML = `<div class="empty-state">No hay seguimientos pendientes.</div>`;
     return;
   }
 
   crmTaskList.innerHTML = tasks.map((item) => `
-    <button class="crm-task" type="button" data-id="${escapeHTML(item.conversationId)}">
-      <span>${channelBadge(item.channel)} <strong>${escapeHTML(item.customerName)}</strong></span>
-      <small>${escapeHTML(item.summary)}</small>
+    <button class="crm-task" type="button" data-lead-id="${escapeHTML(item.leadId)}">
+      <span><strong>${escapeHTML(item.name)}</strong> <span class="sales-stage stage-${escapeHTML(item.salesStage || "new")}">${escapeHTML(stageLabel(item.salesStage || "new"))}</span></span>
+      <small>${escapeHTML(item.nextAction || "Contactar al lead")} · ${escapeHTML(formatActionDate(item.nextActionAt))}</small>
     </button>
   `).join("");
 
   crmTaskList.querySelectorAll(".crm-task").forEach((button) => {
-    button.addEventListener("click", async () => {
-      activeConversationId = button.dataset.id;
-      renderConversationList();
-      await renderActiveConversation();
-      document.querySelector("#conversacion")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    button.addEventListener("click", () => openLeadEditor(button.dataset.leadId));
   });
 }
 
-function priorityScore(priority) {
-  return { alta: 3, media: 2, baja: 1 }[priority] || 0;
+function openLeadEditor(leadId) {
+  const lead = leads.find((item) => item.leadId === leadId);
+  if (!lead) return;
+  leadDialogTitle.textContent = lead.name || "Editar oportunidad";
+  leadSalesForm.elements.leadId.value = lead.leadId;
+  leadSalesForm.elements.salesStage.value = lead.salesStage || "new";
+  leadSalesForm.elements.estimatedValue.value = lead.estimatedValue || "";
+  leadSalesForm.elements.owner.value = lead.owner || "";
+  leadSalesForm.elements.nextAction.value = lead.nextAction || "";
+  leadSalesForm.elements.nextActionAt.value = toLocalDateTime(lead.nextActionAt);
+  leadSalesForm.elements.notes.value = lead.notes || "";
+  leadDialog.showModal();
 }
 
 function renderConversationList() {
@@ -315,6 +413,39 @@ replyForm.addEventListener("submit", async (event) => {
   replyForm.reset();
   showToast("Respuesta enviada desde la plataforma.");
   await loadConversations();
+});
+
+leadSearch?.addEventListener("input", renderLeadList);
+leadStageFilter?.addEventListener("change", renderLeadList);
+closeLeadDialog?.addEventListener("click", () => leadDialog.close());
+cancelLeadDialog?.addEventListener("click", () => leadDialog.close());
+
+leadSalesForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(leadSalesForm);
+  const leadId = data.get("leadId");
+
+  try {
+    await getJSON(`/api/leads/${encodeURIComponent(activeCompanyId)}/${encodeURIComponent(leadId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        salesStage: data.get("salesStage"),
+        estimatedValue: Number(data.get("estimatedValue") || 0),
+        owner: data.get("owner"),
+        nextAction: data.get("nextAction"),
+        nextActionAt: data.get("nextActionAt")
+          ? new Date(data.get("nextActionAt")).toISOString()
+          : "",
+        notes: data.get("notes"),
+      }),
+    });
+    leadDialog.close();
+    await loadLeads();
+    showToast("Oportunidad comercial actualizada.");
+  } catch (error) {
+    showToast(error.message);
+  }
 });
 
 // ── Soporte interno ───────────────────────────────────────────────────────────

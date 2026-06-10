@@ -263,7 +263,7 @@ h2 {
 
 .crm-pipeline {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -275,6 +275,27 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fbfcfd;
+  border-top: 3px solid #94a3b8;
+}
+
+.crm-stage.stage-contacted {
+  border-top-color: #00aeef;
+}
+
+.crm-stage.stage-qualified {
+  border-top-color: #7dba2e;
+}
+
+.crm-stage.stage-proposal {
+  border-top-color: #f59e0b;
+}
+
+.crm-stage.stage-won {
+  border-top-color: #16a34a;
+}
+
+.crm-stage.stage-lost {
+  border-top-color: #dc2626;
 }
 
 .crm-stage span,
@@ -341,6 +362,14 @@ h2 {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.idigital-lead-tools input,
+.idigital-lead-tools select {
+  min-height: 40px;
+  width: auto;
+  min-width: 170px;
 }
 
 .idigital-lead-list {
@@ -350,12 +379,194 @@ h2 {
 
 .idigital-lead-card {
   display: grid;
-  grid-template-columns: minmax(240px, 1.1fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(260px, 1.15fr) minmax(310px, 0.85fr) auto;
   gap: 18px;
+  align-items: center;
   padding: 15px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+}
+
+.lead-card-badges,
+.lead-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lead-card-actions {
+  justify-content: flex-end;
+}
+
+.secondary-button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 850;
+}
+
+.sales-stage {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  min-height: 27px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: #eef2f7;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.sales-stage.stage-contacted {
+  background: #e0f7ff;
+  color: #03698f;
+}
+
+.sales-stage.stage-qualified {
+  background: #effbdc;
+  color: #4d7c0f;
+}
+
+.sales-stage.stage-proposal {
+  background: #fff7df;
+  color: #9a6700;
+}
+
+.sales-stage.stage-won {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.sales-stage.stage-lost {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.marketing-sources {
+  display: grid;
+  gap: 14px;
+}
+
+.marketing-source-row {
+  display: grid;
+  gap: 7px;
+}
+
+.marketing-source-row > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.marketing-source-row span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.source-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #e8eef2;
+}
+
+.source-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--teal);
+}
+
+.automation-health {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.automation-health article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.automation-health span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.admin-lead-dialog {
+  width: min(760px, calc(100vw - 28px));
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 30px 90px rgba(7, 27, 45, 0.28);
+}
+
+.admin-lead-dialog::backdrop {
+  background: rgba(7, 27, 45, 0.58);
+}
+
+.admin-lead-dialog-shell {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.admin-lead-dialog-shell header,
+.admin-lead-dialog-shell footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.admin-lead-dialog-shell footer {
+  justify-content: flex-end;
+}
+
+.admin-lead-dialog-shell label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.admin-lead-dialog-shell header small {
+  color: var(--muted);
+}
+
+.admin-lead-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.dialog-close {
+  width: 42px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 1.5rem;
 }
 
 .idigital-lead-main {
@@ -1708,6 +1919,7 @@ textarea {
   .metric-grid,
   .connection-grid,
   .plan-editor-grid,
+  .automation-health,
   .task-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1737,6 +1949,7 @@ textarea {
   .plan-editor-grid,
   .access-plan-card,
   .crm-dashboard,
+  .automation-health,
   .task-strip {
     grid-template-columns: 1fr;
   }
@@ -1745,6 +1958,15 @@ textarea {
   .crm-table-row.head,
   .idigital-lead-card {
     grid-template-columns: 1fr;
+  }
+
+  .crm-pipeline,
+  .admin-lead-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lead-card-actions {
+    justify-content: flex-start;
   }
 
   .idigital-lead-tools {

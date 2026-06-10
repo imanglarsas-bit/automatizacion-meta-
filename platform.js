@@ -171,6 +171,21 @@ const crmAccountCount = document.querySelector("#crmAccountCount");
 const idigitalLeadList = document.querySelector("#idigitalLeadList");
 const idigitalLeadCount = document.querySelector("#idigitalLeadCount");
 const refreshIdigitalLeads = document.querySelector("#refreshIdigitalLeads");
+const adminOpenDeals = document.querySelector("#adminOpenDeals");
+const adminPipelineValue = document.querySelector("#adminPipelineValue");
+const adminWonValue = document.querySelector("#adminWonValue");
+const adminConversionRate = document.querySelector("#adminConversionRate");
+const marketingSources = document.querySelector("#marketingSources");
+const marketingSourceCount = document.querySelector("#marketingSourceCount");
+const adminLeadSearch = document.querySelector("#adminLeadSearch");
+const adminLeadCompanyFilter = document.querySelector("#adminLeadCompanyFilter");
+const adminLeadStageFilter = document.querySelector("#adminLeadStageFilter");
+const adminLeadDialog = document.querySelector("#adminLeadDialog");
+const adminLeadForm = document.querySelector("#adminLeadForm");
+const adminLeadDialogTitle = document.querySelector("#adminLeadDialogTitle");
+const adminLeadDialogCompany = document.querySelector("#adminLeadDialogCompany");
+const closeAdminLeadDialog = document.querySelector("#closeAdminLeadDialog");
+const cancelAdminLeadDialog = document.querySelector("#cancelAdminLeadDialog");
 const activeClientPlanSelect = document.querySelector("#activeClientPlanSelect");
 const activeClientPlanButton = document.querySelector("#activeClientPlanButton");
 const accessPlanCard = document.querySelector("#accessPlanCard");
@@ -202,6 +217,16 @@ const liveMetaPreview = document.querySelector("#liveMetaPreview");
 const publishButton = document.querySelector("#publishButton");
 const confidenceRange = document.querySelector("#confidenceRange");
 const toast = document.querySelector("#toast");
+let salesLeads = [];
+
+const salesStages = [
+  { key: "new", label: "Nuevo" },
+  { key: "contacted", label: "Contactado" },
+  { key: "qualified", label: "Calificado" },
+  { key: "proposal", label: "Propuesta" },
+  { key: "won", label: "Ganado" },
+  { key: "lost", label: "Perdido" },
+];
 
 async function getJSON(url, options) {
   const response = await fetch(url, options);
@@ -249,6 +274,29 @@ function formatLimit(value) {
   return value === null || value === undefined ? "sin límite fijo" : Number(value).toLocaleString("es-CO");
 }
 
+function formatCurrency(value) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);
+}
+
+function salesStageLabel(stage) {
+  return salesStages.find((item) => item.key === stage)?.label || "Nuevo";
+}
+
+function companyLabel(companyId) {
+  return storage.clients.find((client) => client.companyId === companyId)?.name || companyId;
+}
+
+function toLocalDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset();
+  return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16);
+}
+
 function renderClients() {
   const clients = storage.clients;
   const activeClient = storage.activeClient;
@@ -289,23 +337,31 @@ function countRoutedChannels(company) {
 
 function renderCrmDashboard() {
   const clients = (storage.clients || []).filter((client) => !client.internal);
-  const active = clients.filter((client) => client.active !== false).length;
-  const connected = clients.filter((client) => countRoutedChannels(client) > 0).length;
-  const startPlan = clients.filter((client) => (client.plan || "start") === "start").length;
-  const premium = clients.filter((client) => ["pro", "business"].includes(client.plan)).length;
+  const openLeads = salesLeads.filter((lead) => !["won", "lost"].includes(lead.salesStage || "new"));
+  const wonLeads = salesLeads.filter((lead) => lead.salesStage === "won");
+  const lostLeads = salesLeads.filter((lead) => lead.salesStage === "lost");
+  const pipelineTotal = openLeads.reduce((sum, lead) => sum + (Number(lead.estimatedValue) || 0), 0);
+  const wonTotal = wonLeads.reduce((sum, lead) => sum + (Number(lead.estimatedValue) || 0), 0);
+  const closedTotal = wonLeads.length + lostLeads.length;
 
-  crmPipeline.innerHTML = [
-    { label: "Cuentas activas", value: active, note: "clientes operativos" },
-    { label: "Meta conectado", value: connected, note: "con al menos una red" },
-    { label: "Plan Start", value: startPlan, note: "automatización básica" },
-    { label: "Pro / Business", value: premium, note: "cuentas premium" },
-  ].map((item) => `
-    <article class="crm-stage">
-      <span>${escapeHTML(item.label)}</span>
-      <strong>${item.value}</strong>
-      <small>${escapeHTML(item.note)}</small>
+  adminOpenDeals.textContent = openLeads.length;
+  adminPipelineValue.textContent = formatCurrency(pipelineTotal);
+  adminWonValue.textContent = formatCurrency(wonTotal);
+  adminConversionRate.textContent = `${closedTotal ? Math.round((wonLeads.length / closedTotal) * 100) : 0}%`;
+
+  crmPipeline.innerHTML = salesStages.map((stage) => {
+    const stageLeads = salesLeads.filter((lead) => (lead.salesStage || "new") === stage.key);
+    const value = stageLeads.reduce((sum, lead) => sum + (Number(lead.estimatedValue) || 0), 0);
+    return `
+    <article class="crm-stage stage-${escapeHTML(stage.key)}">
+      <span>${escapeHTML(stage.label)}</span>
+      <strong>${stageLeads.length}</strong>
+      <small>${escapeHTML(formatCurrency(value))}</small>
     </article>
-  `).join("");
+  `;
+  }).join("");
+
+  renderMarketingSources();
 
   crmAccountCount.textContent = `${clients.length} clientes`;
   crmAccountsTable.innerHTML = `
@@ -341,47 +397,138 @@ function renderCrmDashboard() {
   });
 }
 
+function renderMarketingSources() {
+  const sources = salesLeads.reduce((result, lead) => {
+    const source = marketingSourceLabel(lead);
+    result[source] = (result[source] || 0) + 1;
+    return result;
+  }, {});
+  const entries = Object.entries(sources).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(...entries.map((entry) => entry[1]), 1);
+  marketingSourceCount.textContent = `${entries.length} fuente${entries.length === 1 ? "" : "s"}`;
+
+  if (!entries.length) {
+    marketingSources.innerHTML = `<div class="empty-state">Aún no hay datos de adquisición.</div>`;
+    return;
+  }
+
+  marketingSources.innerHTML = entries.map(([source, count]) => `
+    <article class="marketing-source-row">
+      <div><strong>${escapeHTML(source)}</strong><span>${count} lead${count === 1 ? "" : "s"}</span></div>
+      <div class="source-bar"><span style="width:${Math.round((count / max) * 100)}%"></span></div>
+    </article>
+  `).join("");
+}
+
+function marketingSourceLabel(lead) {
+  const source = String(lead.source || "").toLowerCase();
+  if (source.includes("instagram")) return "Instagram";
+  if (source.includes("facebook") || source.includes("messenger")) return "Facebook / Messenger";
+  if (source.includes("whatsapp")) return "WhatsApp";
+  if (source.includes("form")) return "Formulario web";
+  return "Chat del sitio web";
+}
+
 async function loadIdigitalLeads() {
   if (!idigitalLeadList) return;
 
   try {
-    const result = await getJSON("/api/leads/idigital");
-    const leads = result?.leads || [];
-    const pending = leads.filter((item) => item.status === "awaiting_whatsapp").length;
-
-    idigitalLeadCount.textContent = `${pending} pendiente${pending === 1 ? "" : "s"}`;
-    if (!leads.length) {
-      idigitalLeadList.innerHTML = `<div class="empty-state">Aún no hay leads recibidos desde la página iDIGITAL.</div>`;
-      return;
-    }
-
-    idigitalLeadList.innerHTML = leads.map((lead) => {
-      const confirmed = lead.status === "whatsapp_received";
-      return `
-        <article class="idigital-lead-card">
-          <div class="idigital-lead-main">
-            <span class="status-dot ${confirmed ? "active" : "inactive"}">
-              ${confirmed ? "Recibido por WhatsApp" : "Esperando WhatsApp"}
-            </span>
-            <h3>${escapeHTML(lead.name || "Visitante web")}</h3>
-            <p>${escapeHTML(lead.interest || "Solicitud desde el chat web")}</p>
-            <div class="meta-row">
-              <span class="tag">${escapeHTML(lead.unit || "Ventas iDIGITAL")}</span>
-              <span class="tag">${escapeHTML(formatLeadDate(lead.whatsappReceivedAt || lead.capturedAt))}</span>
-            </div>
-          </div>
-          <dl class="idigital-lead-contact">
-            <div><dt>Teléfono</dt><dd>${lead.phone ? `<a href="tel:${escapeHTML(lead.phone)}">${escapeHTML(lead.phone)}</a>` : "Pendiente"}</dd></div>
-            <div><dt>Correo</dt><dd>${lead.email ? `<a href="mailto:${escapeHTML(lead.email)}">${escapeHTML(lead.email)}</a>` : "Pendiente"}</dd></div>
-            <div><dt>Ciudad</dt><dd>${escapeHTML(lead.city || "Pendiente")}</dd></div>
-            <div><dt>Empresa</dt><dd>${escapeHTML(lead.business || "No indicada")}</dd></div>
-          </dl>
-        </article>
-      `;
-    }).join("");
+    const result = await getJSON("/api/leads");
+    salesLeads = result?.leads || [];
+    renderAdminLeadFilters();
+    renderAdminLeadList();
+    renderCrmDashboard();
   } catch (error) {
     idigitalLeadList.innerHTML = `<div class="empty-state">${escapeHTML(error.message)}</div>`;
   }
+}
+
+function renderAdminLeadFilters() {
+  const selected = adminLeadCompanyFilter.value || "all";
+  adminLeadCompanyFilter.innerHTML = [
+    `<option value="all">Todas las empresas</option>`,
+    ...storage.clients.map((client) =>
+      `<option value="${escapeHTML(client.companyId)}">${escapeHTML(client.name)}</option>`),
+  ].join("");
+  adminLeadCompanyFilter.value = [...adminLeadCompanyFilter.options].some((option) => option.value === selected)
+    ? selected
+    : "all";
+}
+
+function getVisibleAdminLeads() {
+  const query = String(adminLeadSearch.value || "").trim().toLowerCase();
+  const companyId = adminLeadCompanyFilter.value;
+  const stage = adminLeadStageFilter.value;
+  return salesLeads.filter((lead) => {
+    const matchesCompany = companyId === "all" || lead.companyId === companyId;
+    const matchesStage = stage === "all" || (lead.salesStage || "new") === stage;
+    const haystack = [
+      lead.name,
+      lead.business,
+      lead.interest,
+      lead.email,
+      companyLabel(lead.companyId),
+    ].join(" ").toLowerCase();
+    return matchesCompany && matchesStage && (!query || haystack.includes(query));
+  });
+}
+
+function renderAdminLeadList() {
+  const leads = getVisibleAdminLeads();
+  idigitalLeadCount.textContent = `${leads.length} oportunidad${leads.length === 1 ? "" : "es"}`;
+  if (!leads.length) {
+    idigitalLeadList.innerHTML = `<div class="empty-state">No hay oportunidades para estos filtros.</div>`;
+    return;
+  }
+
+  idigitalLeadList.innerHTML = leads.map((lead) => `
+    <article class="idigital-lead-card">
+      <div class="idigital-lead-main">
+        <div class="lead-card-badges">
+          <span class="sales-stage stage-${escapeHTML(lead.salesStage || "new")}">${escapeHTML(salesStageLabel(lead.salesStage || "new"))}</span>
+          <span class="tag">${escapeHTML(companyLabel(lead.companyId))}</span>
+        </div>
+        <h3>${escapeHTML(lead.name || "Visitante web")}</h3>
+        <p>${escapeHTML(lead.interest || "Solicitud comercial")}</p>
+        <div class="meta-row">
+          <span class="tag">${escapeHTML(lead.unit || "Ventas")}</span>
+          <span class="tag">${escapeHTML(marketingSourceLabel(lead))}</span>
+          <span class="tag">${escapeHTML(formatLeadDate(lead.capturedAt))}</span>
+        </div>
+      </div>
+      <dl class="idigital-lead-contact">
+        <div><dt>Valor</dt><dd>${escapeHTML(formatCurrency(lead.estimatedValue))}</dd></div>
+        <div><dt>Responsable</dt><dd>${escapeHTML(lead.owner || "Sin asignar")}</dd></div>
+        <div><dt>Próxima acción</dt><dd>${escapeHTML(lead.nextAction || "Contactar al lead")}</dd></div>
+        <div><dt>Seguimiento</dt><dd>${escapeHTML(formatLeadDate(lead.nextActionAt))}</dd></div>
+      </dl>
+      <div class="lead-card-actions">
+        ${lead.phone ? `<a class="secondary-button" href="tel:${escapeHTML(lead.phone)}">Llamar</a>` : ""}
+        ${lead.email ? `<a class="secondary-button" href="mailto:${escapeHTML(lead.email)}">Correo</a>` : ""}
+        <button class="solid-button manage-admin-lead" type="button" data-company-id="${escapeHTML(lead.companyId)}" data-lead-id="${escapeHTML(lead.leadId)}">Gestionar</button>
+      </div>
+    </article>
+  `).join("");
+
+  idigitalLeadList.querySelectorAll(".manage-admin-lead").forEach((button) => {
+    button.addEventListener("click", () => openAdminLeadEditor(button.dataset.companyId, button.dataset.leadId));
+  });
+}
+
+function openAdminLeadEditor(companyId, leadId) {
+  const lead = salesLeads.find((item) => item.companyId === companyId && item.leadId === leadId);
+  if (!lead) return;
+  adminLeadDialogTitle.textContent = lead.name || "Editar oportunidad";
+  adminLeadDialogCompany.textContent = companyLabel(companyId);
+  adminLeadForm.elements.companyId.value = companyId;
+  adminLeadForm.elements.leadId.value = leadId;
+  adminLeadForm.elements.salesStage.value = lead.salesStage || "new";
+  adminLeadForm.elements.estimatedValue.value = lead.estimatedValue || "";
+  adminLeadForm.elements.owner.value = lead.owner || "";
+  adminLeadForm.elements.nextAction.value = lead.nextAction || "";
+  adminLeadForm.elements.nextActionAt.value = toLocalDateTime(lead.nextActionAt);
+  adminLeadForm.elements.notes.value = lead.notes || "";
+  adminLeadDialog.showModal();
 }
 
 function formatLeadDate(value) {
@@ -1412,6 +1559,41 @@ async function init() {
 if (refreshIdigitalLeads) {
   refreshIdigitalLeads.addEventListener("click", loadIdigitalLeads);
 }
+
+adminLeadSearch?.addEventListener("input", renderAdminLeadList);
+adminLeadCompanyFilter?.addEventListener("change", renderAdminLeadList);
+adminLeadStageFilter?.addEventListener("change", renderAdminLeadList);
+closeAdminLeadDialog?.addEventListener("click", () => adminLeadDialog.close());
+cancelAdminLeadDialog?.addEventListener("click", () => adminLeadDialog.close());
+
+adminLeadForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const data = new FormData(adminLeadForm);
+  const companyId = data.get("companyId");
+  const leadId = data.get("leadId");
+
+  try {
+    await getJSON(`/api/leads/${encodeURIComponent(companyId)}/${encodeURIComponent(leadId)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        salesStage: data.get("salesStage"),
+        estimatedValue: Number(data.get("estimatedValue") || 0),
+        owner: data.get("owner"),
+        nextAction: data.get("nextAction"),
+        nextActionAt: data.get("nextActionAt")
+          ? new Date(data.get("nextActionAt")).toISOString()
+          : "",
+        notes: data.get("notes"),
+      }),
+    });
+    adminLeadDialog.close();
+    await loadIdigitalLeads();
+    showToast("Oportunidad comercial actualizada.");
+  } catch (error) {
+    showToast(error.message);
+  }
+});
 
 async function loadCompanySettings() {
   const result = await getJSON(`/api/company-settings/${encodeURIComponent(storage.activeClientId)}`);

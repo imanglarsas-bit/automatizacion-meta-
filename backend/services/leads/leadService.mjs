@@ -34,6 +34,7 @@ export function saveLeadFromWebChat({ conversation, lead }) {
     const leads = await readJson(await getLeadsPath(), []);
     const now = new Date().toISOString();
     const index = leads.findIndex((item) => item.leadId === conversation.conversationId);
+    const existing = index === -1 ? null : leads[index];
     const record = {
       leadId: conversation.conversationId,
       companyId: conversation.companyId,
@@ -46,6 +47,12 @@ export function saveLeadFromWebChat({ conversation, lead }) {
       interest: conversation.summary,
       source: "webchat",
       status: "awaiting_whatsapp",
+      salesStage: existing?.salesStage || "new",
+      estimatedValue: existing?.estimatedValue || 0,
+      owner: existing?.owner || "",
+      nextAction: existing?.nextAction || "Contactar al lead",
+      nextActionAt: existing?.nextActionAt || "",
+      notes: existing?.notes || "",
       consent: true,
       capturedAt: lead.capturedAt || now,
       updatedAt: now,
@@ -70,6 +77,41 @@ export function getCompanyLeads(companyId) {
     return leads
       .filter((lead) => lead.companyId === companyId)
       .sort((a, b) => new Date(b.updatedAt || b.capturedAt) - new Date(a.updatedAt || a.capturedAt));
+  });
+}
+
+export function getAllLeads() {
+  return enqueue(async () => {
+    const leads = await readJson(await getLeadsPath(), []);
+    return leads.sort(
+      (a, b) => new Date(b.updatedAt || b.capturedAt) - new Date(a.updatedAt || a.capturedAt),
+    );
+  });
+}
+
+export function updateLead(companyId, leadId, patch) {
+  return enqueue(async () => {
+    const leads = await readJson(await getLeadsPath(), []);
+    const lead = leads.find(
+      (item) => item.companyId === companyId && item.leadId === leadId,
+    );
+
+    if (!lead) return null;
+
+    const salesStage = normalizeSalesStage(patch.salesStage ?? lead.salesStage);
+    const estimatedValue = Number(patch.estimatedValue ?? lead.estimatedValue ?? 0);
+    lead.salesStage = salesStage;
+    lead.estimatedValue = Number.isFinite(estimatedValue) && estimatedValue >= 0
+      ? Math.round(estimatedValue)
+      : 0;
+    lead.owner = cleanField(patch.owner ?? lead.owner, 100);
+    lead.nextAction = cleanField(patch.nextAction ?? lead.nextAction, 240);
+    lead.nextActionAt = normalizeDate(patch.nextActionAt ?? lead.nextActionAt);
+    lead.notes = cleanField(patch.notes ?? lead.notes, 2000);
+    lead.updatedAt = new Date().toISOString();
+
+    await writeFile(await getLeadsPath(), JSON.stringify(leads, null, 2));
+    return lead;
   });
 }
 
@@ -119,4 +161,21 @@ function phonesMatch(first, second) {
 
 function normalizePhone(value) {
   return String(value || "").replace(/\D/g, "");
+}
+
+function normalizeSalesStage(value) {
+  const allowed = new Set(["new", "contacted", "qualified", "proposal", "won", "lost"]);
+  const stage = String(value || "").trim().toLowerCase();
+  return allowed.has(stage) ? stage : "new";
+}
+
+function normalizeDate(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
+function cleanField(value, maxLength) {
+  return String(value || "").trim().slice(0, maxLength);
 }

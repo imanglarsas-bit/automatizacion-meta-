@@ -21,7 +21,7 @@ import { handleGetMetrics }       from "./routes/metrics.mjs";
 import { handleGetCompanySettings, handleSaveCompanySettings } from "./routes/companySettings.mjs";
 import { handleGetLeadRules, handleSaveLeadRules } from "./routes/leadRules.mjs";
 import { handleGetConversations } from "./routes/conversations.mjs";
-import { handleGetLeads } from "./routes/leads.mjs";
+import { handleGetAllLeads, handleGetLeads, handleUpdateLead } from "./routes/leads.mjs";
 import { handleGetMessages, handleReplyToConversation } from "./routes/messages.mjs";
 import { handleGetMetaConnectUrl, handleMetaOAuthCallback } from "./routes/metaConnect.mjs";
 import { handleWebChatContact, handleWebChatMessage } from "./routes/webChat.mjs";
@@ -670,16 +670,37 @@ async function handleApi(request, response) {
     return true;
   }
 
-  if (request.method === "GET" && url.pathname.startsWith("/api/leads/")) {
-    const requestedCompanyId = decodeURIComponent(url.pathname.replace("/api/leads/", ""));
+  if (request.method === "GET" && url.pathname === "/api/leads") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
+
+    const result = await handleGetAllLeads();
+    sendJson(response, result.status, result.body);
+    return true;
+  }
+
+  if (url.pathname.startsWith("/api/leads/")) {
+    const leadParts = url.pathname.replace("/api/leads/", "").split("/").map(decodeURIComponent);
+    const requestedCompanyId = leadParts[0];
     if (role === "client" && requestedCompanyId !== companyId) {
       sendJson(response, 403, { error: "No puedes ver leads de otra empresa." });
       return true;
     }
 
-    const result = await handleGetLeads(requestedCompanyId);
-    sendJson(response, result.status, result.body);
-    return true;
+    if (request.method === "GET" && leadParts.length === 1) {
+      const result = await handleGetLeads(requestedCompanyId);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
+
+    if (request.method === "PATCH" && leadParts.length === 2) {
+      const body = await readBody(request);
+      const result = await handleUpdateLead(requestedCompanyId, leadParts[1], body);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
   }
 
   if (request.method === "GET" && url.pathname.startsWith("/api/messages/")) {
