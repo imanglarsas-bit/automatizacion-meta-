@@ -8,15 +8,30 @@
     <link rel="stylesheet" href="client.css" />
   </head>
   <body>
-    <aside class="client-sidebar" aria-label="Navegación cliente">
+    <!-- Mobile sidebar toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Abrir menú">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="17" y2="14"/></svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <aside class="client-sidebar" id="sidebar" aria-label="Navegación cliente">
       <a class="client-brand" href="index.html">
         <img src="assets/idigital-logo-wide.png" alt="iDIGITAL" />
-        CRM cliente
+        Portal
       </a>
       <nav>
-        <a class="active" href="#" data-tab="ventas">Ventas</a>
-        <a href="#" data-tab="conversacion">Conversaciones</a>
-        <a href="#" data-tab="soporte">Soporte</a>
+        <a class="active" href="#" data-tab="ventas">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Ventas
+        </a>
+        <a href="#" data-tab="conversacion">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Conversaciones
+        </a>
+        <a href="#" data-tab="soporte">
+          <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Soporte
+        </a>
       </nav>
       <form method="post" action="/logout">
         <button type="submit">Salir</button>
@@ -248,5 +263,17 @@
 
     <div class="toast" id="toast" role="status"></div>
     <script src="client.js"></script>
+    <script>
+      (function () {
+        var toggle = document.getElementById('sidebarToggle');
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        if (!toggle || !sidebar || !overlay) return;
+        function open() { sidebar.classList.add('open'); overlay.classList.add('visible'); }
+        function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
+        toggle.addEventListener('click', function () { sidebar.classList.contains('open') ? close() : open(); });
+        overlay.addEventListener('click', close);
+      })();
+    </script>
   </body>
 </html>
