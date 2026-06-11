@@ -93,6 +93,35 @@ const platformOrigins = new Set([
   "http://localhost:3003",
 ]);
 
+// ── Security headers ──────────────────────────────────────────────────────────
+const CSP_API = [
+  "default-src 'none'",
+].join("; ");
+
+const CSP_HTML = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",   // inline scripts used by existing platform JS
+  "style-src 'self' 'unsafe-inline'",    // inline styles / CSS custom properties
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join("; ");
+
+function applySecurityHeaders(response, { isHtml = false } = {}) {
+  response.setHeader("X-Content-Type-Options", "nosniff");
+  response.setHeader("X-Frame-Options", "DENY");
+  response.setHeader("X-XSS-Protection", "0");                // modern browsers ignore it; CSP is the real guard
+  response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  response.setHeader("Content-Security-Policy", isHtml ? CSP_HTML : CSP_API);
+  response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  response.setHeader("Cache-Control", "no-store");
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function applyCorsHeaders(request, response, { allowCredentials = false } = {}) {
   const origin = request.headers.origin || "";
   if (!origin) return; // same-origin request — no CORS headers needed
@@ -191,12 +220,14 @@ function sendLogoutCookie(request, response) {
 }
 
 function sendJson(response, status, payload) {
+  applySecurityHeaders(response, { isHtml: false });
   response.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(payload));
 }
 
 function sendXlsx(response, { buffer, filename }) {
   const safeFilename = String(filename || "base-clientes.xlsx").replace(/[^a-zA-Z0-9._-]/g, "-");
+  applySecurityHeaders(response, { isHtml: false });
   response.writeHead(200, {
     "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "Content-Disposition": `attachment; filename="${safeFilename}"`,
@@ -931,8 +962,13 @@ async function serveStatic(request, response) {
 
   try {
     const file = await readFile(filePath);
+    const ext = extname(filePath);
+    const isHtml = ext === ".html";
+    applySecurityHeaders(response, { isHtml });
     response.writeHead(200, {
-      "Content-Type": contentTypes[extname(filePath)] || "application/octet-stream",
+      "Content-Type": contentTypes[ext] || "application/octet-stream",
+      // Allow static assets (CSS, JS, images) to be cached by the browser
+      ...(isHtml ? {} : { "Cache-Control": "public, max-age=3600" }),
     });
     response.end(file);
   } catch {
