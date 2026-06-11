@@ -273,6 +273,9 @@
         function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
         toggle.addEventListener('click', function () { sidebar.classList.contains('open') ? close() : open(); });
         overlay.addEventListener('click', close);
+        sidebar.querySelectorAll('a[data-tab]').forEach(function (link) {
+          link.addEventListener('click', close);
+        });
       })();
     </script>
   </body>

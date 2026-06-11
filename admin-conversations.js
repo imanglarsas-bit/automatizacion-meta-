@@ -27,7 +27,7 @@
   let allLeads         = [];
   let activeConv       = null;
   let activeChannel    = "all";
-  let loadedForCompany = null;   // track which company is currently loaded
+  let inboxPollTimer   = null;
 
   /* ── Helpers ──────────────────────────────────────────────────────── */
   function esc(str) {
@@ -79,8 +79,17 @@
     return m[s] || s || "Nuevo";
   }
 
-  function getJSON(url) {
-    return fetch(url).then((r) => r.json());
+  async function getJSON(url) {
+    const response = await fetch(url);
+    if (response.status === 401) {
+      window.location.href = "/admin-login.html";
+      return null;
+    }
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: "No se pudo cargar la información." }));
+      throw new Error(error.error || "No se pudo cargar la información.");
+    }
+    return response.json();
   }
 
   /* ── Get active company from clientSelect (same source platform.js uses) */
@@ -122,26 +131,22 @@
   }
 
   /* ── Load data for active company ─────────────────────────────────── */
-  async function loadAll() {
+  async function loadAll({ silent = false } = {}) {
     const companyId = getActiveCompanyId();
     if (!companyId) {
       inboxList.innerHTML = `<div class="empty-state">Selecciona un cliente activo en el selector de arriba.</div>`;
       return;
     }
 
-    // Avoid re-loading if company hasn't changed and we already have data
-    if (loadedForCompany === companyId && allConversations.length > 0) {
-      renderList();
-      return;
+    if (!silent) {
+      inboxList.innerHTML = `<div class="inbox-loading">Cargando conversaciones de ${esc(companyId)}…</div>`;
+      resetChat();
     }
-
-    inboxList.innerHTML = `<div class="inbox-loading">Cargando conversaciones de ${esc(companyId)}…</div>`;
-    resetChat();
 
     try {
       const [convRes, leadsRes] = await Promise.all([
         getJSON(`/api/conversations/${encodeURIComponent(companyId)}`),
-        getJSON(`/api/leads?companyId=${encodeURIComponent(companyId)}`),
+        getJSON(`/api/leads/${encodeURIComponent(companyId)}`),
       ]);
 
       allConversations = (convRes.conversations || []).sort((a, b) =>
@@ -151,11 +156,34 @@
       const raw = leadsRes.leads ?? leadsRes;
       allLeads = Array.isArray(raw) ? raw : [];
 
-      loadedForCompany = companyId;
+      if (activeConv) {
+        activeConv = allConversations.find(
+          (conversation) =>
+            conversation.companyId === activeConv.companyId &&
+            conversation.conversationId === activeConv.conversationId,
+        ) || null;
+      }
       renderList();
     } catch (err) {
-      inboxList.innerHTML = `<div class="empty-state">${esc(err.message)}</div>`;
+      if (!silent) {
+        inboxList.innerHTML = `<div class="empty-state">${esc(err.message)}</div>`;
+      }
     }
+  }
+
+  function stopInboxPolling() {
+    window.clearInterval(inboxPollTimer);
+    inboxPollTimer = null;
+  }
+
+  function startInboxPolling() {
+    stopInboxPolling();
+    inboxPollTimer = window.setInterval(() => {
+      const pane = document.querySelector('.tab-pane[data-pane="conversaciones"]');
+      if (pane && !pane.hidden && document.visibilityState === "visible") {
+        loadAll({ silent: true });
+      }
+    }, 10000);
   }
 
   /* ── Render conversation list ─────────────────────────────────────── */
@@ -386,7 +414,6 @@
 
   /* ── Reload when active client changes (respects clientSelect) ────── */
   clientSelect?.addEventListener("change", () => {
-    loadedForCompany = null;
     allConversations = [];
     allLeads = [];
     activeChannel = "all";
@@ -402,12 +429,22 @@
   /* ── Load when tab becomes visible ───────────────────────────────── */
   document.querySelectorAll(".side-nav a[data-tab]").forEach((link) => {
     link.addEventListener("click", () => {
-      if (link.dataset.tab === "conversaciones") loadAll();
+      if (link.dataset.tab === "conversaciones") {
+        loadAll();
+        startInboxPolling();
+      } else {
+        stopInboxPolling();
+      }
     });
   });
 
   // Load if already on this tab at page load
   const pane = document.querySelector('.tab-pane[data-pane="conversaciones"]');
-  if (pane && !pane.hidden) loadAll();
+  if (pane && !pane.hidden) {
+    loadAll();
+    startInboxPolling();
+  }
+
+  window.addEventListener("beforeunload", stopInboxPolling);
 
 })();

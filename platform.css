@@ -1553,18 +1553,6 @@ button:focus, a:focus { outline: 2px solid var(--primary); outline-offset: 2px; 
   color: #fff;
 }
 
-/* Company filter */
-.inbox-company-filter-row {
-  padding: 6px 12px 8px;
-  border-bottom: 1px solid var(--line);
-}
-
-.inbox-company-filter-row select {
-  min-height: 32px;
-  padding: 0 8px;
-  font-size: 0.8rem;
-}
-
 /* Conversation list */
 .inbox-list {
   flex: 1;

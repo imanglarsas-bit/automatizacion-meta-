@@ -313,11 +313,6 @@
               <button class="inbox-channel-btn" data-channel="messenger">Messenger</button>
               <button class="inbox-channel-btn" data-channel="webchat">Web</button>
             </div>
-            <div class="inbox-company-filter-row">
-              <select id="inboxCompanyFilter" aria-label="Filtrar por empresa">
-                <option value="all">Todas las empresas</option>
-              </select>
-            </div>
             <div class="inbox-list" id="inboxList">
               <div class="empty-state">Cargando conversaciones…</div>
             </div>
@@ -752,6 +747,9 @@
         function close() { sidebar.classList.remove('open'); overlay.classList.remove('visible'); }
         toggle.addEventListener('click', function () { sidebar.classList.contains('open') ? close() : open(); });
         overlay.addEventListener('click', close);
+        sidebar.querySelectorAll('a[data-tab]').forEach(function (link) {
+          link.addEventListener('click', close);
+        });
       })();
     </script>
   </body>
