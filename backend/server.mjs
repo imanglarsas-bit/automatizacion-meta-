@@ -419,11 +419,19 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/training") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
     sendJson(response, 200, await readTraining());
     return true;
   }
 
   if (request.method === "POST" && url.pathname === "/api/training") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
     const body = await readBody(request);
     const training = await readTraining();
     const nextItem = {
@@ -445,6 +453,10 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/test") {
+    if (role !== "admin") {
+      sendJson(response, 403, { error: "Admin required" });
+      return true;
+    }
     const body = await readBody(request);
     const match = findBestAnswer(body.message || "", await readTraining());
     sendJson(response, 200, {
@@ -683,13 +695,32 @@ async function handleApi(request, response) {
   }
 
   if (request.method === "GET" && url.pathname === "/api/leads") {
+    const requestedCompanyId = url.searchParams.get("companyId") || "";
+
+    // Client can only access their own company leads
+    if (role === "client") {
+      if (!requestedCompanyId || requestedCompanyId !== companyId) {
+        sendJson(response, 403, { error: "No puedes ver leads de otra empresa." });
+        return true;
+      }
+      const result = await handleGetLeads(requestedCompanyId);
+      sendJson(response, result.status, result.body);
+      return true;
+    }
+
     if (role !== "admin") {
       sendJson(response, 403, { error: "Admin required" });
       return true;
     }
 
-    const result = await handleGetAllLeads();
-    sendJson(response, result.status, result.body);
+    // Admin: filter by companyId if provided, otherwise return all
+    if (requestedCompanyId) {
+      const result = await handleGetLeads(requestedCompanyId);
+      sendJson(response, result.status, result.body);
+    } else {
+      const result = await handleGetAllLeads();
+      sendJson(response, result.status, result.body);
+    }
     return true;
   }
 
