@@ -488,13 +488,15 @@ function renderAdminLeadList() {
         <div class="lead-card-badges">
           <span class="sales-stage stage-${escapeHTML(lead.salesStage || "new")}">${escapeHTML(salesStageLabel(lead.salesStage || "new"))}</span>
           <span class="tag">${escapeHTML(companyLabel(lead.companyId))}</span>
+          <span class="tag">${escapeHTML(marketingSourceLabel(lead))}</span>
         </div>
         <h3>${escapeHTML(lead.name || "Visitante web")}</h3>
         <p>${escapeHTML(lead.interest || "Solicitud comercial")}</p>
-        <div class="meta-row">
-          <span class="tag">${escapeHTML(lead.unit || "Ventas")}</span>
-          <span class="tag">${escapeHTML(marketingSourceLabel(lead))}</span>
-          <span class="tag">${escapeHTML(formatLeadDate(lead.capturedAt))}</span>
+        <div class="lead-contact-inline">
+          ${lead.email ? `<span class="lead-contact-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>${escapeHTML(lead.email)}</span>` : ""}
+          ${lead.phone ? `<span class="lead-contact-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 4.95 12 19.79 19.79 0 0 1 1.87 3.38 2 2 0 0 1 3.85 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${escapeHTML(lead.phone)}</span>` : ""}
+          ${lead.business ? `<span class="lead-contact-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>${escapeHTML(lead.business)}</span>` : ""}
+          <span class="lead-contact-chip muted">${escapeHTML(formatLeadDate(lead.capturedAt))}</span>
         </div>
       </div>
       <dl class="idigital-lead-contact">
