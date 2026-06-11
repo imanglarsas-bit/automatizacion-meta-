@@ -773,7 +773,9 @@ async function handleApi(request, response) {
       return true;
     }
 
-    const result = await handleGetConversations(requestedCompanyId);
+    const result = await handleGetConversations(requestedCompanyId, {
+      channel: url.searchParams.get("channel") || "",
+    });
     sendJson(response, result.status, result.body);
     return true;
   }

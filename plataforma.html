@@ -299,19 +299,14 @@
           <!-- ── Col 1: lista de conversaciones ── -->
           <aside class="inbox-sidebar">
             <div class="inbox-sidebar-header">
-              <p class="kicker">Bandeja unificada</p>
-              <h2>Conversaciones</h2>
+              <p class="kicker">Chatbot de app.imanglar.com</p>
+              <h2>Conversaciones iDIGITAL</h2>
             </div>
             <div class="inbox-search-row">
               <input class="inbox-search-input" id="inboxSearch" type="search" placeholder="Nombre, correo, empresa, teléfono…" />
             </div>
-            <div class="inbox-channel-filters" id="inboxChannelFilters">
-              <button class="inbox-channel-btn active" data-channel="all">Todas</button>
-              <button class="inbox-channel-btn" data-channel="whatsapp">WhatsApp</button>
-              <button class="inbox-channel-btn" data-channel="instagram">Instagram</button>
-              <button class="inbox-channel-btn" data-channel="facebook">Facebook</button>
-              <button class="inbox-channel-btn" data-channel="messenger">Messenger</button>
-              <button class="inbox-channel-btn" data-channel="webchat">Web</button>
+            <div class="inbox-channel-filters" aria-label="Canal de la bandeja">
+              <span class="inbox-channel-btn active">Chat web iDIGITAL</span>
             </div>
             <div class="inbox-list" id="inboxList">
               <div class="empty-state">Cargando conversaciones…</div>
@@ -736,7 +731,7 @@
 
     <div class="toast" id="toast" role="status"></div>
     <script src="platform.js"></script>
-    <script src="admin-conversations.js?v=20260610-1"></script>
+    <script src="admin-conversations.js?v=20260610-2"></script>
     <script>
       (function () {
         var toggle = document.getElementById('sidebarToggle');

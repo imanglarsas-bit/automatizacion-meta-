@@ -15,10 +15,14 @@ async function readConversations() {
   return JSON.parse(await readFile(await getConversationsPath(), "utf8"));
 }
 
-export async function handleGetConversations(companyId) {
+export async function handleGetConversations(companyId, { channel = "" } = {}) {
   const conversations = await readConversations();
   const companyConversations = conversations
-    .filter((conversation) => conversation.companyId === companyId)
+    .filter(
+      (conversation) =>
+        conversation.companyId === companyId &&
+        (!channel || conversation.channel === channel),
+    )
     .map(({ messages, ...conversation }) => ({
       ...conversation,
       messageCount: messages.length,

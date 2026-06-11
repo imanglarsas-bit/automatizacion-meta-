@@ -1,24 +1,24 @@
 /* ═══════════════════════════════════════════════════════════════════════
    iDIGITAL — Admin Conversations Inbox
-   Muestra SOLO las conversaciones del cliente activo seleccionado en el
-   header (clientSelect), igual que el resto de secciones del panel admin.
-   NO modifica platform.js ni endpoints existentes.
+   Muestra exclusivamente conversaciones del chatbot web de iDIGITAL.
+   Esta bandeja es independiente del selector de clientes del panel admin.
    ═══════════════════════════════════════════════════════════════════════ */
 
 (function () {
   "use strict";
 
+  const INBOX_COMPANY_ID = "idigital";
+  const INBOX_CHANNEL = "webchat";
+
   /* ── DOM refs ─────────────────────────────────────────────────────── */
   const inboxList          = document.getElementById("inboxList");
   const inboxSearch        = document.getElementById("inboxSearch");
-  const inboxChannelFilters= document.getElementById("inboxChannelFilters");
   const inboxChatHeader    = document.getElementById("inboxChatHeader");
   const inboxMessages      = document.getElementById("inboxMessages");
   const inboxReplyForm     = document.getElementById("inboxReplyForm");
   const inboxReplyBtn      = document.getElementById("inboxReplyBtn");
   const inboxReplyChannel  = document.getElementById("inboxReplyChannel");
   const inboxProfile       = document.getElementById("inboxProfile");
-  const clientSelect       = document.getElementById("clientSelect");   // from platform.js
 
   if (!inboxList) return;
 
@@ -26,7 +26,6 @@
   let allConversations = [];
   let allLeads         = [];
   let activeConv       = null;
-  let activeChannel    = "all";
   let inboxPollTimer   = null;
 
   /* ── Helpers ──────────────────────────────────────────────────────── */
@@ -92,11 +91,6 @@
     return response.json();
   }
 
-  /* ── Get active company from clientSelect (same source platform.js uses) */
-  function getActiveCompanyId() {
-    return clientSelect?.value || localStorage.getItem("r360_active_client") || "";
-  }
-
   /* ── Find matching lead for a conversation ─────────────────────────── */
   function findLead(conv) {
     if (!conv) return null;
@@ -132,29 +126,35 @@
 
   /* ── Load data for active company ─────────────────────────────────── */
   async function loadAll({ silent = false } = {}) {
-    const companyId = getActiveCompanyId();
-    if (!companyId) {
-      inboxList.innerHTML = `<div class="empty-state">Selecciona un cliente activo en el selector de arriba.</div>`;
-      return;
-    }
-
     if (!silent) {
-      inboxList.innerHTML = `<div class="inbox-loading">Cargando conversaciones de ${esc(companyId)}…</div>`;
+      inboxList.innerHTML = `<div class="inbox-loading">Cargando conversaciones del chatbot iDIGITAL…</div>`;
       resetChat();
     }
 
     try {
       const [convRes, leadsRes] = await Promise.all([
-        getJSON(`/api/conversations/${encodeURIComponent(companyId)}`),
-        getJSON(`/api/leads/${encodeURIComponent(companyId)}`),
+        getJSON(`/api/conversations/${INBOX_COMPANY_ID}?channel=${INBOX_CHANNEL}`),
+        getJSON(`/api/leads/${INBOX_COMPANY_ID}`),
       ]);
 
-      allConversations = (convRes.conversations || []).sort((a, b) =>
-        new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0)
-      );
+      allConversations = (convRes.conversations || [])
+        .filter(
+          (conversation) =>
+            conversation.companyId === INBOX_COMPANY_ID &&
+            conversation.channel === INBOX_CHANNEL,
+        )
+        .sort((a, b) =>
+          new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0)
+        );
 
       const raw = leadsRes.leads ?? leadsRes;
-      allLeads = Array.isArray(raw) ? raw : [];
+      allLeads = Array.isArray(raw)
+        ? raw.filter(
+            (lead) =>
+              lead.companyId === INBOX_COMPANY_ID &&
+              lead.source === INBOX_CHANNEL,
+          )
+        : [];
 
       if (activeConv) {
         activeConv = allConversations.find(
@@ -189,10 +189,7 @@
   /* ── Render conversation list ─────────────────────────────────────── */
   function renderList() {
     const query   = (inboxSearch?.value || "").toLowerCase().trim();
-    const channel = activeChannel;
-
     let items = allConversations;
-    if (channel !== "all") items = items.filter((c) => c.channel === channel);
 
     if (query) {
       items = items.filter((c) => {
@@ -203,7 +200,7 @@
     }
 
     if (!items.length) {
-      inboxList.innerHTML = `<div class="empty-state">No hay conversaciones para estos filtros.</div>`;
+      inboxList.innerHTML = `<div class="empty-state">No hay conversaciones del chatbot iDIGITAL para esta búsqueda.</div>`;
       return;
     }
 
@@ -399,32 +396,8 @@
     }
   });
 
-  /* ── Channel filter ───────────────────────────────────────────────── */
-  inboxChannelFilters?.addEventListener("click", (e) => {
-    const btn = e.target.closest(".inbox-channel-btn");
-    if (!btn) return;
-    inboxChannelFilters.querySelectorAll(".inbox-channel-btn").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    activeChannel = btn.dataset.channel;
-    renderList();
-  });
-
   /* ── Search ───────────────────────────────────────────────────────── */
   inboxSearch?.addEventListener("input", renderList);
-
-  /* ── Reload when active client changes (respects clientSelect) ────── */
-  clientSelect?.addEventListener("change", () => {
-    allConversations = [];
-    allLeads = [];
-    activeChannel = "all";
-    inboxChannelFilters?.querySelectorAll(".inbox-channel-btn").forEach((b) => b.classList.remove("active"));
-    inboxChannelFilters?.querySelector("[data-channel='all']")?.classList.add("active");
-    if (inboxSearch) inboxSearch.value = "";
-    resetChat();
-    // Only reload if the tab is currently visible
-    const pane = document.querySelector('.tab-pane[data-pane="conversaciones"]');
-    if (pane && !pane.hidden) loadAll();
-  });
 
   /* ── Load when tab becomes visible ───────────────────────────────── */
   document.querySelectorAll(".side-nav a[data-tab]").forEach((link) => {
