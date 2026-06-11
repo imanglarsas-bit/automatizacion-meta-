@@ -71,6 +71,8 @@ const privatePaths = new Set([
   "/client.js",
 ]);
 const webChatRateLimits = new Map();
+
+// Origins allowed for public web-chat widget (no credentials)
 const webChatOrigins = new Set([
   "https://imanglar.com",
   "https://www.imanglar.com",
@@ -78,6 +80,54 @@ const webChatOrigins = new Set([
   "http://localhost:3000",
   "http://localhost:3003",
 ]);
+
+// Origins allowed for authenticated platform API (with credentials/cookies)
+const platformOrigins = new Set([
+  "https://app.manglar.com",
+  "https://manglar.com",
+  "https://www.manglar.com",
+  "https://imanglar.com",
+  "https://www.imanglar.com",
+  "https://app.imanglar.com",
+  "http://localhost:3000",
+  "http://localhost:3003",
+]);
+
+function applyCorsHeaders(request, response, { allowCredentials = false } = {}) {
+  const origin = request.headers.origin || "";
+  if (!origin) return; // same-origin request — no CORS headers needed
+
+  const allowed = allowCredentials ? platformOrigins : webChatOrigins;
+  if (!allowed.has(origin)) return; // not an allowed origin — don't set headers
+
+  response.setHeader("Access-Control-Allow-Origin", origin);
+  response.setHeader("Vary", "Origin");
+  if (allowCredentials) {
+    response.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+}
+
+function handleCorsPreflight(request, response, { allowCredentials = false } = {}) {
+  const origin = request.headers.origin || "";
+  const allowed = allowCredentials ? platformOrigins : webChatOrigins;
+
+  if (!origin || !allowed.has(origin)) {
+    response.writeHead(403);
+    response.end("Forbidden");
+    return true;
+  }
+
+  response.writeHead(204, {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Cookie",
+    "Access-Control-Allow-Credentials": allowCredentials ? "true" : "false",
+    "Access-Control-Max-Age": "86400",
+    Vary: "Origin",
+  });
+  response.end();
+  return true;
+}
 
 function parseCookies(request) {
   return Object.fromEntries(
@@ -404,6 +454,9 @@ async function handleApi(request, response) {
   if (!url.pathname.startsWith("/api/")) {
     return false;
   }
+
+  // Apply CORS headers early so every response from this function includes them
+  applyCorsHeaders(request, response, { allowCredentials: true });
 
   if (!hasPlatformSession(request)) {
     sendJson(response, 401, { error: "Authentication required" });
@@ -908,14 +961,23 @@ createServer(async (request, response) => {
       return;
     }
 
-    if (url.pathname.startsWith("/api/web-chat/") && request.method === "OPTIONS") {
-      if (!isAllowedWebChatRequest(request)) {
-        sendPublicJson(request, response, 403, { error: "Origen no permitido." });
-        return;
+    // ── Global CORS preflight handler ─────────────────────────────────────────
+    if (request.method === "OPTIONS") {
+      if (url.pathname.startsWith("/api/web-chat/")) {
+        if (!isAllowedWebChatRequest(request)) {
+          sendPublicJson(request, response, 403, { error: "Origen no permitido." });
+          return;
+        }
+        handleCorsPreflight(request, response, { allowCredentials: false });
+      } else if (url.pathname.startsWith("/api/")) {
+        handleCorsPreflight(request, response, { allowCredentials: true });
+      } else {
+        response.writeHead(204);
+        response.end();
       }
-      sendPublicJson(request, response, 204, {});
       return;
     }
+    // ─────────────────────────────────────────────────────────────────────────
 
     if (url.pathname === "/api/web-chat/message" && request.method === "POST") {
       if (!isAllowedWebChatRequest(request)) {
