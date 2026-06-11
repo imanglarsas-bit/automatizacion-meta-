@@ -13,6 +13,7 @@ const stageLabels = {
 
 export async function buildLeadWorkbook({
   companyId = "all",
+  source = "all",
   stage = "all",
   search = "",
 } = {}) {
@@ -21,7 +22,7 @@ export async function buildLeadWorkbook({
   const sourceLeads = companyId === "all"
     ? await getAllLeads()
     : await getCompanyLeads(companyId);
-  const leads = filterLeads(sourceLeads, { stage, search, companyNames });
+  const leads = filterLeads(sourceLeads, { source, stage, search, companyNames });
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "iDIGITAL CRM";
@@ -155,9 +156,10 @@ function addContactsSheet(workbook, leads, companyNames) {
   });
 }
 
-function filterLeads(leads, { stage, search, companyNames }) {
+function filterLeads(leads, { source, stage, search, companyNames }) {
   const query = String(search || "").trim().toLowerCase();
   return leads.filter((lead) => {
+    if (source !== "all" && lead.source !== source) return false;
     if (stage !== "all" && (lead.salesStage || "new") !== stage) return false;
     if (!query) return true;
     return [

@@ -354,7 +354,7 @@
 
     inboxProfile.querySelectorAll("[data-action='goto-crm']").forEach((btn) => {
       btn.addEventListener("click", () => {
-        document.querySelector(".side-nav a[data-tab='clientes']")?.click();
+        document.querySelector(".side-nav a[data-tab='crm']")?.click();
         setTimeout(() => {
           document.querySelector(`.manage-admin-lead[data-company-id="${btn.dataset.companyId}"][data-lead-id="${btn.dataset.leadId}"]`)?.click();
         }, 200);

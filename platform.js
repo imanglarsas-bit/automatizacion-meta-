@@ -178,7 +178,6 @@ const adminConversionRate = document.querySelector("#adminConversionRate");
 const marketingSources = document.querySelector("#marketingSources");
 const marketingSourceCount = document.querySelector("#marketingSourceCount");
 const adminLeadSearch = document.querySelector("#adminLeadSearch");
-const adminLeadCompanyFilter = document.querySelector("#adminLeadCompanyFilter");
 const adminLeadStageFilter = document.querySelector("#adminLeadStageFilter");
 const adminLeadDialog = document.querySelector("#adminLeadDialog");
 const adminLeadForm = document.querySelector("#adminLeadForm");
@@ -191,6 +190,9 @@ const activeClientPlanSelect = document.querySelector("#activeClientPlanSelect")
 const activeClientPlanButton = document.querySelector("#activeClientPlanButton");
 const accessPlanCard = document.querySelector("#accessPlanCard");
 const clientSelect = document.querySelector("#clientSelect");
+const clientPicker = document.querySelector("#clientPicker");
+const platformHeaderKicker = document.querySelector(".platform-header .kicker");
+const platformHeaderTitle = document.querySelector(".platform-header h1");
 const clientName = document.querySelector("#clientName");
 const clientDescription = document.querySelector("#clientDescription");
 const clientScopeLabel = document.querySelector("#clientScopeLabel");
@@ -434,9 +436,10 @@ async function loadIdigitalLeads() {
   if (!idigitalLeadList) return;
 
   try {
-    const result = await getJSON("/api/leads");
-    salesLeads = result?.leads || [];
-    renderAdminLeadFilters();
+    const result = await getJSON("/api/leads/idigital");
+    salesLeads = (result?.leads || []).filter(
+      (lead) => lead.companyId === "idigital" && lead.source === "webchat",
+    );
     renderAdminLeadList();
     renderCrmDashboard();
   } catch (error) {
@@ -444,24 +447,10 @@ async function loadIdigitalLeads() {
   }
 }
 
-function renderAdminLeadFilters() {
-  const selected = adminLeadCompanyFilter.value || "all";
-  adminLeadCompanyFilter.innerHTML = [
-    `<option value="all">Todas las empresas</option>`,
-    ...storage.clients.map((client) =>
-      `<option value="${escapeHTML(client.companyId)}">${escapeHTML(client.name)}</option>`),
-  ].join("");
-  adminLeadCompanyFilter.value = [...adminLeadCompanyFilter.options].some((option) => option.value === selected)
-    ? selected
-    : "all";
-}
-
 function getVisibleAdminLeads() {
   const query = String(adminLeadSearch.value || "").trim().toLowerCase();
-  const companyId = adminLeadCompanyFilter.value;
   const stage = adminLeadStageFilter.value;
   return salesLeads.filter((lead) => {
-    const matchesCompany = companyId === "all" || lead.companyId === companyId;
     const matchesStage = stage === "all" || (lead.salesStage || "new") === stage;
     const haystack = [
       lead.name,
@@ -470,7 +459,7 @@ function getVisibleAdminLeads() {
       lead.email,
       companyLabel(lead.companyId),
     ].join(" ").toLowerCase();
-    return matchesCompany && matchesStage && (!query || haystack.includes(query));
+    return lead.companyId === "idigital" && matchesStage && (!query || haystack.includes(query));
   });
 }
 
@@ -1564,11 +1553,11 @@ if (refreshIdigitalLeads) {
 }
 
 adminLeadSearch?.addEventListener("input", renderAdminLeadList);
-adminLeadCompanyFilter?.addEventListener("change", renderAdminLeadList);
 adminLeadStageFilter?.addEventListener("change", renderAdminLeadList);
 exportAdminLeads?.addEventListener("click", () => {
   const params = new URLSearchParams({
-    companyId: adminLeadCompanyFilter?.value || "all",
+    companyId: "idigital",
+    source: "webchat",
     stage: adminLeadStageFilter?.value || "all",
     search: adminLeadSearch?.value || "",
   });
@@ -1666,6 +1655,22 @@ async function deleteClientUser(username) {
 function initTabs() {
   const tabLinks = document.querySelectorAll(".side-nav a[data-tab]");
   const tabPanes = document.querySelectorAll(".tab-pane");
+  const headerContexts = {
+    crm: ["Ventas y marketing", "CRM comercial iDIGITAL", false],
+    conversaciones: ["Atención comercial", "Conversaciones iDIGITAL", false],
+    "clientes-activos": ["Administración", "Clientes activos", true],
+  };
+
+  function updateHeaderContext(target) {
+    const [kicker, title, showClientPicker] = headerContexts[target] || [
+      "Configuración operativa",
+      "Gestión del cliente activo",
+      true,
+    ];
+    platformHeaderKicker.textContent = kicker;
+    platformHeaderTitle.textContent = title;
+    clientPicker.hidden = !showClientPicker;
+  }
 
   tabLinks.forEach((link) => {
     link.addEventListener("click", (e) => {
@@ -1676,10 +1681,13 @@ function initTabs() {
       if (pane) pane.hidden = false;
       tabLinks.forEach((a) => a.classList.remove("active"));
       link.classList.add("active");
+      updateHeaderContext(target);
 
       if (target === "soporte") loadSupportTickets();
     });
   });
+
+  updateHeaderContext(document.querySelector(".side-nav a.active")?.dataset.tab || "crm");
 }
 
 // ── Soporte admin ─────────────────────────────────────────────────────────────

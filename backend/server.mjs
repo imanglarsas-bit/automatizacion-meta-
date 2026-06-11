@@ -820,6 +820,7 @@ async function handleApi(request, response) {
 
     const result = await buildLeadWorkbook({
       companyId: exportCompanyId,
+      source: url.searchParams.get("source") || "all",
       stage: url.searchParams.get("stage") || "all",
       search: url.searchParams.get("search") || "",
     });
